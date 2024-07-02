@@ -10,7 +10,6 @@ class TerrainCollision:
 
     def createTerrainCollision( self ):
         root = self.terrain.getRoot()
-        # Iterate over each GeomNode
         for child in root.getChildren():
             if isinstance( child.node(), GeomNode ):
                 customCollisionPolygon = CustomCollisionPolygon( child )
