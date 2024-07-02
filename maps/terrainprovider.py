@@ -19,7 +19,7 @@ class TerrainProvider:
         heightmap = PNMImage( Filename( f"maps/{ terrainName }.png" ) )
         terrain.setHeightfield( heightmap )
         # Set terrain properties
-        terrain.setBlockSize( 32 )
+        terrain.setBlockSize( 16 )
         terrain.setNear( 40 )
         terrain.setFar( 200 )
         terrain.getRoot().setSz( 100 )

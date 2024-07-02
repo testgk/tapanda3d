@@ -77,6 +77,8 @@ def getNodePosition( name ):
 class CustomCollisionPolygon:
     def __init__( self, child: NodePath, *args, **kwargs ):
         super().__init__( *args, **kwargs )
+        self.__visible = None
+        self.__neighborsDic = None
         self.__col = None
         self.__row = None
         self.__area = None
@@ -116,6 +118,14 @@ class CustomCollisionPolygon:
         return self.__name
 
     @property
+    def row( self ) -> int:
+        return self.__row
+
+    @property
+    def col( self ) -> int:
+        return self.__col
+
+    @property
     def collisionPolygon( self ) -> GeomNode:
         return self.__poly
 
@@ -124,29 +134,45 @@ class CustomCollisionPolygon:
         return self.__collision_node_path
 
     def getNeighbors( self ):
-        self.__up = getPolygonFromPool( self.__row - 1, self.__col )
-        self.__down = getPolygonFromPool( self.__row + 1, self.__col )
-        self.__left = getPolygonFromPool( self.__row, self.__col + 1 )
-        self.__right = getPolygonFromPool( self.__row, self.__col - 1 )
+        neighborsDic = {
+            "up": getPolygonFromPool( self.__row - 1, self.__col ),
+            "down": getPolygonFromPool( self.__row + 1, self.__col ),
+            "left": getPolygonFromPool( self.__row, self.__col + 1 ),
+            "right": getPolygonFromPool( self.__row, self.__col - 1 ),
+            "upright": getPolygonFromPool( self.__row + 1, self.__col + 1 ),
+            "downright": getPolygonFromPool( self.__row - 1, self.__col + 1 ),
+            "upleft": getPolygonFromPool( self.__row + 1, self.__col - 1 ),
+            "downleft": getPolygonFromPool( self.__row - 1, self.__col - 1 ),
+        }
+        self.__neighborsDic = { pos: node for pos, node in neighborsDic.items() if node is not None }
 
-    def showNeighbors( self ):
-        self.__up.showDebugNode()
-        self.__down.showDebugNode()
-        self.__left.showDebugNode()
-        self.__right.showDebugNode()
+    def showNeighbors( self, startRow, startCol, level ):
+        if self.__visible:
+            return
+        if abs( self.row - startRow ) > level or abs( self.col - startCol ) > level:
+            return
+        self.showDebugNode()
+        self.colorDebugNode( level )
+        self.__visible = True
+        for neighbor in self.__neighborsDic.values():
+            neighbor.showNeighbors( startRow, startCol, level )
+
+    def hideNeighbors( self ):
+        if self.__visible:
+            self.hideDebugNode()
+            for neighbor in self.__neighborsDic.values():
+                neighbor.hideNeighbors()
 
     @property
     def getNeighbor( self ) -> 'CustomCollisionPolygon':
         return getPolygonFromPool( self.__row + 1, self.__col )
 
-
-    def createNeighbors( self ):
-        pass
-
     def hideDebugNode( self ):
+        self.__visible = False
         self.__debug_node_path.hide()
 
     def showDebugNode( self ):
+        self.__visible = True
         self.__debug_node_path.show()
 
     @property
@@ -192,12 +218,17 @@ class CustomCollisionPolygon:
         self.__debug_node_path = self.__child.attachNewNode( debug_geom_node )
         self.__debug_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
         # Set the color and render mode of the debug geometry
-        self.__debug_node_path.setColor( color )  # Set the color to red
-        self.__debug_node_path.setTransparency( True )
+        #self.__debug_node_path.setColor( color )  # Set the color to red
+        #self.__debug_node_path.setTransparency( True )
         self.__debug_node_path.hide()
 
         #debug_node_path.hide()
         print( f"Collision node {self.__name} created and attached to terrain" )  # Debugging
+
+    def colorDebugNode( self, level ):
+        color = Vec4( 1, 0, 2, 0.1 + 0.1 * level )
+        self.__debug_node_path.setColor( color )  # Set the color to red
+        self.__debug_node_path.setTransparency( True )
 
     @classmethod
     def acquireAllNeighbors( cls ):

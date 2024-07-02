@@ -10,6 +10,7 @@ class TerrainCamera:
     CLOSE_PROXIMITY = 400
 
     def __init__(self, camera, mouseWatcherNode, camNode, render, terrainCenter: Point3 ):
+        self.__last_custom_collision_polygon = None
         self.camera_controller = None
         self.camera = camera
         self.__render = render
@@ -86,20 +87,23 @@ class TerrainCamera:
                 entry = self.__terrainPicker.pickerQueue.getEntry( 0 )
                 point = entry.getSurfacePoint( self.__render )
 
-                print( f"Collision detected at: { point }" )  # Debugging
+                print( f"Collision detected at: { point }" )
                 picked_obj = entry.getIntoNodePath()
                 print( f"Clicked node: { picked_obj }" )
-                # Retrieve the CustomCollisionPolygon instance from the CollisionNode
                 custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
                 if custom_collision_polygon:
+                    if self.__last_custom_collision_polygon:
+                        self.__last_custom_collision_polygon.hideNeighbors()
                     print( f"CustomCollisionPolygon instance: { custom_collision_polygon }" )
                     # Access the parent class attributes or methods as needed
                     print( f"Parent node: { custom_collision_polygon.name }" )
-                    #print( f"Node neighbors: { custom_collision_polygon.getNeighbor }" )
+                    custom_collision_polygon.hideNeighbors()
+                    custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col, 3 )
                     custom_collision_polygon.showDebugNode()
-                    custom_collision_polygon.showNeighbors()
+                    custom_collision_polygon.colorDebugNode( 3 )
+                    self.__last_custom_collision_polygon = custom_collision_polygon
                 # Update the terrain __center to the clicked point
-                # Update the terrain __center to the clicked point
+
                 self.__center = point
                 self.__cameraRadius = self.CLOSE_PROXIMITY
                 self.__updateCameraPosition()
