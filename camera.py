@@ -2,10 +2,8 @@ import math
 from direct.task import Task
 from panda3d.core import Point3
 
-from cameracontroller import CameraController
-from customcollisionpolygon import CustomCollisionPolygon
 from picker import Picker
-from maps.terrainprovider import TerrainInfo
+from cameracontroller import CameraController
 
 
 class TerrainCamera:
@@ -18,40 +16,48 @@ class TerrainCamera:
         self.mouseWatcherNode = mouseWatcherNode
         self.camNode = camNode
         self.__terrainCenter = terrainCenter
+        self.__center = terrainCenter
         self.__cameraHeight = None
         self.__cameraRadius = None
         self.__cameraAngle = None
         self.__terrainPicker = Picker( self.camera )
-        self.camera.lookAt( self.__terrainCenter )
+        self.camera.lookAt( self.__center )
         self.setCamera()
 
     def setCamera( self ):
         self.__cameraAngle = 0  # Initial camera angle
-        self.__cameraRadius = 1200  # Distance from the center of the terrain
+        self.__cameraRadius = 1200  # Distance from the __center of the terrain
         self.__cameraHeight = 400  # Height of the camera
 
     def rotateCamera( self, direction = 1 ):
         self.__cameraAngle += math.radians( direction * 10 )  # Rotate by 10 degrees per click
         self.__updateCameraPosition()
 
+    def zoomCamera( self, value ):
+        self.__cameraHeight += value
+
     def hoverAbove( self ):
         self.__cameraAngle = 0  # Initial camera angle
-        self.__cameraRadius = 0  # Distance from the center of the terrain
+        self.__cameraRadius = 0  # Distance from the __center of the terrain
         self.__cameraHeight = 1200  # Height of the camera
-        self.__updateCameraPosition()
+        self.__updateCameraPositionAndCenter()
 
     def hoverDistance( self ):
         self.__cameraAngle = 0  # Initial camera angle
-        self.__cameraRadius = 1200  # Distance from the center of the terrain
+        self.__cameraRadius = 1200  # Distance from the __center of the terrain
         self.__cameraHeight = 400  # Height of the camera
         self.__updateCameraPosition()
 
-    def __updateCameraPosition( self ):
+    def __updateCameraPositionAndCenter( self ):
+        self.__center = self.__terrainCenter
+        print(f" center: { self.__terrainCenter }")
+
+    def __updateCameraPosition( self, center = None ):
         self.camera_controller = CameraController( self.camera,
-                                              self.__terrainCenter,
-                                              cameraRadius = self.__cameraRadius,
-                                              cameraHeight = self.__cameraHeight,
-                                              cameraAngle = self.__cameraAngle )
+                                                   self.__center,
+                                                   cameraRadius = self.__cameraRadius,
+                                                   cameraHeight = self.__cameraHeight,
+                                                   cameraAngle = self.__cameraAngle )
         self.camera_controller.updateCameraPosition()
 
     def updateCameraTask( self, task ):
@@ -92,9 +98,9 @@ class TerrainCamera:
                     #print( f"Node neighbors: { custom_collision_polygon.getNeighbor }" )
                     custom_collision_polygon.showDebugNode()
                     custom_collision_polygon.showNeighbors()
-                # Update the terrain center to the clicked point
-                # Update the terrain center to the clicked point
-                self.__terrainCenter = point
+                # Update the terrain __center to the clicked point
+                # Update the terrain __center to the clicked point
+                self.__center = point
                 self.__cameraRadius = self.CLOSE_PROXIMITY
                 self.__updateCameraPosition()
             else:
