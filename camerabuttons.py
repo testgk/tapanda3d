@@ -10,6 +10,8 @@ class CameraButtons:
         self.create_rotate_left_button()
         self.create_rotate_right_button()
         self.create_distance_view_button()
+        self.create_zoom_in_button()
+        self.create_zoom_out_button()
 
     def create_rotate_left_button( self ):
         rotate_button = DirectButton(
@@ -30,6 +32,26 @@ class CameraButtons:
             extraArgs = [ -1 ]
         )
 
+    def create_zoom_in_button( self ):
+        zoom_in_button = DirectButton(
+            text = "Zoom In",
+            command = self.camera.zoomCamera,
+            pos = ( -0.5, -0.9, 0 ),
+            text_scale = 0.5,
+            scale = 0.1,
+            extraArgs = [ -100 ]
+        )
+
+    def create_zoom_out_button( self ):
+        zoom_out_button = DirectButton(
+            text = "Zoom Out",
+            command = self.camera.zoomCamera,
+            pos = ( 0.5, -0.9, 0 ),
+            text_scale = 0.5,
+            scale = 0.1,
+            extraArgs = [ 100 ]
+        )
+
     def create_above_button( self ) :
         rotate_button = DirectButton(
             text = "Hover Above",
@@ -47,3 +69,5 @@ class CameraButtons:
             text_scale = 0.5,
             scale = 0.1
         )
+
+

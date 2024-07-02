@@ -23,7 +23,7 @@ class TerrainProvider:
         terrain.setNear( 40 )
         terrain.setFar( 200 )
         terrain.getRoot().setSz( 100 )
-        # Calculate the center of the terrain
+        # Calculate the __center of the terrain
         terrain.generate()
         texture = self._loader.loadTexture( "maps/terrain_texture.png" )
         terrain.getRoot().setTexture( texture )
