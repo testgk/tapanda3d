@@ -1,6 +1,6 @@
 import math
 from direct.task import Task
-from panda3d.core import Point3
+from panda3d.core import Point3, Vec4
 
 from picker import Picker
 from cameracontroller import CameraController
@@ -74,18 +74,19 @@ class TerrainCamera:
 
             # Perform the collision detection
             self.__terrainPicker.picker.traverse( self.__render )
-
             print( f"Mouse position: { mousePosition }" )  # Debugging
-            print( f"Traversing collisions..." )  # Debugging
-
             numEntries = self.__terrainPicker.pickerQueue.getNumEntries()
-            print( f"Number of collision entries: {numEntries}" )  # Debugging
+            print( f"Number of collision entries: { numEntries }" )  # Debugging
 
             if numEntries > 0:
                 # Sort entries so the closest is first
                 self.__terrainPicker.pickerQueue.sortEntries()
                 entry = self.__terrainPicker.pickerQueue.getEntry( 0 )
                 point = entry.getSurfacePoint( self.__render )
+                distance = ( point - self.__center ).length()
+                print( f"Distance: { distance }" )
+                if distance < 100:
+                    return
 
                 print( f"Collision detected at: { point }" )
                 picked_obj = entry.getIntoNodePath()
@@ -98,14 +99,15 @@ class TerrainCamera:
                     # Access the parent class attributes or methods as needed
                     print( f"Parent node: { custom_collision_polygon.name }" )
                     custom_collision_polygon.hideNeighbors()
-                    custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col, 3 )
+                    custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col,4 )
                     custom_collision_polygon.showDebugNode()
-                    custom_collision_polygon.colorDebugNode( 3 )
+                    #custom_collision_polygon.lightDebugNode()
+                    custom_collision_polygon.setColorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
                     self.__last_custom_collision_polygon = custom_collision_polygon
                 # Update the terrain __center to the clicked point
 
                 self.__center = point
-                self.__cameraRadius = self.CLOSE_PROXIMITY
-                self.__updateCameraPosition()
+                #self.__cameraRadius = self.CLOSE_PROXIMITY
+                #self.__updateCameraPosition()
             else:
                 print( "No collisions detected." )  # Debugging

@@ -1,7 +1,8 @@
 import math
 from typing import Any
 
-from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, GeomVertexReader, NodePath, Vec3, \
+from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, DirectionalLight, GeomVertexReader, LVector4, \
+    NodePath, Vec3, \
     GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4
 
 def getPolygonFromPool( row, column ) -> Any | None:
@@ -152,7 +153,7 @@ class CustomCollisionPolygon:
         if abs( self.row - startRow ) > level or abs( self.col - startCol ) > level:
             return
         self.showDebugNode()
-        self.colorDebugNode( level )
+        self.colorDebugNode()
         self.__visible = True
         for neighbor in self.__neighborsDic.values():
             neighbor.showNeighbors( startRow, startCol, level )
@@ -192,9 +193,6 @@ class CustomCollisionPolygon:
         self.attachDebugNode()
 
     def attachDebugNode( self, height_offset = 0.02, color = Vec4( 0, 1, 0, 0.5 ) ):
-        #if self.getAngle < 0.2:
-        #    return
-        # Create a separate GeomNode for visualization
         debug_geom_node = GeomNode( 'debug_geom' )
         vertex_format = GeomVertexFormat.getV3()
         vertex_data = GeomVertexData( 'vertices', vertex_format, Geom.UHDynamic )
@@ -214,19 +212,18 @@ class CustomCollisionPolygon:
 
         geom.addPrimitive( tris )
         debug_geom_node.addGeom( geom )
-        # Create NodePath for debug geometry and attach to collision node path
         self.__debug_node_path = self.__child.attachNewNode( debug_geom_node )
         self.__debug_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
-        # Set the color and render mode of the debug geometry
-        #self.__debug_node_path.setColor( color )  # Set the color to red
-        #self.__debug_node_path.setTransparency( True )
         self.__debug_node_path.hide()
-
         #debug_node_path.hide()
-        print( f"Collision node {self.__name} created and attached to terrain" )  # Debugging
+        print( f"Collision node { self.__name } created and attached to terrain" )  # Debugging
 
-    def colorDebugNode( self, level ):
-        color = Vec4( 1, 0, 2, 0.1 + 0.1 * level )
+    def colorDebugNode( self ):
+        color = Vec4( 1, 0, 0, 0.5 )
+        self.__debug_node_path.setColor( color )  # Set the color to red
+        self.__debug_node_path.setTransparency( True )
+
+    def setColorDebugNode( self, color ):
         self.__debug_node_path.setColor( color )  # Set the color to red
         self.__debug_node_path.setTransparency( True )
 
