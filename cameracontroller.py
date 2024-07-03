@@ -16,8 +16,8 @@ class CameraController:
 
     def updateCameraPosition( self ):
         # Calculate new camera position on a circular path around the terrain __center
-        x = self.__center.getX() + (self.__cameraRadius ) * math.sin( self.__cameraAngle )
-        y = self.__center.getY() + (self.__cameraRadius ) * math.cos( self.__cameraAngle )
+        x = self.__center.getX() + ( self.__cameraRadius ) * math.sin( self.__cameraAngle )
+        y = self.__center.getY() + ( self.__cameraRadius ) * math.cos( self.__cameraAngle )
         z = self.__cameraHeight
 
         # Target position
