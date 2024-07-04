@@ -95,7 +95,7 @@ class CustomCollisionPolygon:
         self.__vertices = getVertices( self.__geom )
         self.__collision_node = CollisionNode( f'terrain_{ self.__child.getName() }' )
         self.__collision_node.setIntoCollideMask( BitMask32.bit( 1 ) )
-        self.constructCollitionNode( self.__vertices )
+        self.constructCollitionNode( self.__vertices ) 
 
     def constructCollitionNode( self, vertices ):
         triangleCount = 0
