@@ -6,6 +6,7 @@ from picker import Picker
 from cameracontroller import CameraController
 
 
+
 class TerrainCamera:
     CLOSE_PROXIMITY = 400
 
@@ -37,6 +38,10 @@ class TerrainCamera:
     def zoomCamera( self, value ):
         self.__cameraHeight += value
 
+    @property
+    def center( self ):
+        return self.__center
+
     def hoverAbove( self ):
         self.__cameraAngle = 0  # Initial camera angle
         self.__cameraRadius = 0  # Distance from the __center of the terrain
@@ -65,49 +70,47 @@ class TerrainCamera:
         self.__updateCameraPosition()
         return Task.cont  # Continue the task
 
-    def on_map_click( self ):
+    @property
+    def surfaceCenter( self ):
+        return Point3( self.__center[ 0 ], self.__center[ 1 ], 0 )
+
+    def isCenterdOnPoly( self ):
+        if self.__last_custom_collision_polygon is None:
+            return True
+        distance = ( self.__last_custom_collision_polygon.surfacePosition - self.surfaceCenter ).length()
+        print(  f'position { self.__last_custom_collision_polygon.surfacePosition }, center: { self.surfaceCenter }, distance: { distance }' )
+        return distance < 20
+
+    def getNewEntry( self ):
         if self.mouseWatcherNode.hasMouse():
             mousePosition = self.mouseWatcherNode.getMouse()
-
-            # Set the position of the ray based on the mouse position
             self.__terrainPicker.pickerRay.setFromLens( self.camNode, mousePosition.getX(), mousePosition.getY() )
-
-            # Perform the collision detection
             self.__terrainPicker.picker.traverse( self.__render )
-            print( f"Mouse position: { mousePosition }" )  # Debugging
             numEntries = self.__terrainPicker.pickerQueue.getNumEntries()
-            print( f"Number of collision entries: { numEntries }" )  # Debugging
-
             if numEntries > 0:
-                # Sort entries so the closest is first
                 self.__terrainPicker.pickerQueue.sortEntries()
                 entry = self.__terrainPicker.pickerQueue.getEntry( 0 )
-                point = entry.getSurfacePoint( self.__render )
-                distance = ( point - self.__center ).length()
-                print( f"Distance: { distance }" )
-                if distance < 100:
-                    return
+                return entry
 
-                print( f"Collision detected at: { point }" )
-                picked_obj = entry.getIntoNodePath()
-                print( f"Clicked node: { picked_obj }" )
-                custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
-                if custom_collision_polygon:
-                    if self.__last_custom_collision_polygon:
-                        self.__last_custom_collision_polygon.hideNeighbors()
-                    print( f"CustomCollisionPolygon instance: { custom_collision_polygon }" )
-                    # Access the parent class attributes or methods as needed
-                    print( f"Parent node: { custom_collision_polygon.name }" )
-                    custom_collision_polygon.hideNeighbors()
-                    custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col,4 )
-                    custom_collision_polygon.showDebugNode()
-                    #custom_collision_polygon.lightDebugNode()
-                    custom_collision_polygon.setColorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
-                    self.__last_custom_collision_polygon = custom_collision_polygon
-                # Update the terrain __center to the clicked point
+    def on_map_click( self ):
+        entry = self.getNewEntry()
+        picked_obj = entry.getIntoNodePath()
+        point = entry.getSurfacePoint( self.__render )
+        print( f"Clicked node: { picked_obj }" )
+        custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
+        if custom_collision_polygon:
+            if self.__last_custom_collision_polygon:
+                self.__last_custom_collision_polygon.hideNeighbors()
+            print( f"CustomCollisionPolygon instance: { custom_collision_polygon }" )
+            print( f"Parent node: { custom_collision_polygon.name }" )
+            custom_collision_polygon.hideNeighbors()
+            custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col,4 )
+            custom_collision_polygon.showDebugNode()
+            custom_collision_polygon.setColorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
+            self.__last_custom_collision_polygon = custom_collision_polygon
 
-                self.__center = point
-                #self.__cameraRadius = self.CLOSE_PROXIMITY
-                #self.__updateCameraPosition()
-            else:
-                print( "No collisions detected." )  # Debugging
+    def on_map_hover( self ):
+        entry = self.getNewEntry()
+        if entry:
+            point = entry.getSurfacePoint( self.__render )
+            self.__center = point

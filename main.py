@@ -9,8 +9,7 @@ from direct.task import Task
 class MyApp( ShowBase ):
     def __init__( self ):
         ShowBase.__init__( self )
-        self.camera_moving = False
-        self.camera_previous_position = self.camera.getPos()
+        self.camera_centered = False
         terrainProvider = TerrainProvider( self.loader )
         self.terrainInfo = terrainProvider.create_terrain( "heightmap1" )
         self.terrain = self.terrainInfo.terrain
@@ -28,8 +27,8 @@ class MyApp( ShowBase ):
         self.terrainCollision = TerrainCollision( self.terrain )
         self.terrainCollision.createTerrainCollision()
         self.task_duration = 0.5
-        self.accept( 'mouse1', self.on_map_click )
-        #self.taskMgr.add( self.check_camera_movement, 'checkCameraMovement' )
+        #self.accept( 'mouse1', self.on_map_click )
+       # self.taskMgr.add( self.check_camera_movement, 'checkCameraMovement' )
         self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
         # Start a task to update the camera position
         self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
@@ -38,28 +37,17 @@ class MyApp( ShowBase ):
         self.terrainCamera.on_map_click()
 
     def updateMouseTask( self, task ):
-        if self.camera_moving:
-            task.delayTime = 10
-            return
+        if not self.terrainCamera.isCenterdOnPoly():
+            return task.again
         self.update_mouse_picker()
         task.delayTime = self.task_duration
         return task.again
 
     def update_mouse_picker( self ):
-        self.terrainCamera.on_map_click()
+        self.terrainCamera.on_map_hover()
 
     def check_camera_movement( self, task ):
-        # Get current camera position
-        current_position = self.camera.getPos()
-
-        # Compare current position with previous position
-        if ( current_position - self.camera_previous_position ).length() > 0:
-            print( f"Camera is moving from { self.camera_previous_position } to { current_position }" )
-            self.camera_moving = True
-            self.camera_previous_position = current_position
-        else:
-            self.camera_moving = False
-
+        return self.camera.getPos() == self.terrainCamera.center
         # Reschedule the task to check again
         return task.cont
 

@@ -3,7 +3,8 @@ from typing import Any
 
 from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, DirectionalLight, GeomVertexReader, LVector4, \
     NodePath, Vec3, \
-    GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4
+    GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3
+
 
 def getPolygonFromPool( row, column ) -> Any | None:
     try:
@@ -167,6 +168,10 @@ class CustomCollisionPolygon:
     @property
     def getNeighbor( self ) -> 'CustomCollisionPolygon':
         return getPolygonFromPool( self.__row + 1, self.__col )
+
+    @property
+    def surfacePosition( self ):
+        return Point3( self.__child.getPos()[ 0 ], self.__child.getPos()[ 1 ], 0 )
 
     def hideDebugNode( self ):
         self.__visible = False
