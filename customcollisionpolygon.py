@@ -3,7 +3,7 @@ from typing import Any
 
 from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, DirectionalLight, GeomVertexReader, LVector4, \
     NodePath, Vec3, \
-    GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3
+    GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3, GeomLines
 
 
 def getPolygonFromPool( row, column ) -> Any | None:
@@ -176,10 +176,12 @@ class CustomCollisionPolygon:
     def hideDebugNode( self ):
         self.__visible = False
         self.__debug_node_path.hide()
+        self.__wire_node_path.hide()
 
     def showDebugNode( self ):
         self.__visible = True
         self.__debug_node_path.show()
+        self.__wire_node_path.show()
 
     @property
     def getAngle( self ):
@@ -188,7 +190,7 @@ class CustomCollisionPolygon:
     def __str__( self ):
         return f'{ self.__name }, row: { self.__row }, column: { self.__col }, area: { self.__area }, angle: { self.__angle }'
 
-    def attachToTerrainChildNode( self, height_offset= 0.01 ):
+    def attachToTerrainChildNode( self, height_offset = 1 ):
         # Attach the collision node to the child node
         self.__collision_node_path = self.__child.attachNewNode( self.__collision_node )
         self.__collision_node_path.setRenderModeWireframe()
@@ -197,31 +199,67 @@ class CustomCollisionPolygon:
         self.__collision_node_path.hide()
         self.attachDebugNode()
 
-    def attachDebugNode( self, height_offset = 0.02, color = Vec4( 0, 1, 0, 0.5 ) ):
+    def attachDebugNode( self, height_offset = 0.2  ) :
         debug_geom_node = GeomNode( 'debug_geom' )
+
+        # Geometry for filled polygons
         vertex_format = GeomVertexFormat.getV3()
         vertex_data = GeomVertexData( 'vertices', vertex_format, Geom.UHDynamic )
         vertex_writer = GeomVertexWriter( vertex_data, 'vertex' )
         geom = Geom( vertex_data )
         tris = GeomTriangles( Geom.UHDynamic )
+
+        # Geometry for the wireframe
+        wire_vertex_data = GeomVertexData( 'wire_vertices', vertex_format, Geom.UHDynamic )
+        wire_vertex_writer = GeomVertexWriter( wire_vertex_data, 'vertex' )
+        lines = GeomLines( Geom.UHDynamic )
+
         vertex_count = 0
-        for i in range( self.__collision_node.getNumSolids() ):
+        wire_vertex_count = 0
+        for i in range( self.__collision_node.getNumSolids() ) :
             poly = self.__collision_node.getSolid( i )
-            if isinstance( poly, CollisionPolygon ):
-                for j in range( poly.getNumPoints() ):
+            if isinstance( poly, CollisionPolygon ) :
+                num_points = poly.getNumPoints()
+                poly_vertices = [ ]
+                for j in range( num_points ) :
                     point = poly.getPoint( j )
                     vertex_writer.addData3f( point )
                     tris.addVertex( vertex_count )
+                    poly_vertices.append( point )
                     vertex_count += 1
                 tris.closePrimitive()
 
+                # Create lines for the wireframe
+                for j in range( num_points - 1 ) :
+                    start_point = poly_vertices[ j ]
+                    end_point = poly_vertices[ ( j + 1 ) % num_points ]
+                    wire_vertex_writer.addData3f( start_point )
+                    wire_vertex_writer.addData3f( end_point )
+                    lines.addVertices( wire_vertex_count, wire_vertex_count + 1 )
+                    wire_vertex_count += 2
+
         geom.addPrimitive( tris )
         debug_geom_node.addGeom( geom )
+
+        # Add wireframe geometry
+        wire_geom = Geom( wire_vertex_data )
+        wire_geom.addPrimitive( lines )
+        self.wire_geom_node = GeomNode( 'wire_geom' )
+        self.wire_geom_node.addGeom( wire_geom )
+        self.__wire_node_path = self.__child.attachNewNode( self.wire_geom_node )
+        self.__wire_node_path.setRenderModeWireframe()
+        self.__wire_node_path.setColor( Vec4( 2, 2, 1, 1 ) )
+
         self.__debug_node_path = self.__child.attachNewNode( debug_geom_node )
         self.__debug_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
         self.__debug_node_path.hide()
-        #debug_node_path.hide()
-        print( f"Collision node { self.__name } created and attached to terrain" )  # Debugging
+
+        self.__wire_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
+        self.__wire_node_path.setColor( Vec4( 0, 1, 0, 0.5 ) )
+        self.__wire_node_path.hide()
+        #__wire_node_path.hide()
+
+        print( f"Collision node {self.__name} created and attached to terrain" )  # Debugging
 
     def colorDebugNode( self ):
         color = Vec4( 1, 0, 0, 0.5 )
