@@ -34,7 +34,7 @@ class TerrainSelector:
             if self.__last_custom_collision_polygon:
                 self.__last_custom_collision_polygon.hideNeighbors()
             custom_collision_polygon.hideNeighbors()
-            custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col, 4 )
+            custom_collision_polygon.showNeighbors( custom_collision_polygon, custom_collision_polygon.row, custom_collision_polygon.col, 4 )
             custom_collision_polygon.showDebugNode()
             custom_collision_polygon.setColorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
             self.__last_custom_collision_polygon = custom_collision_polygon
@@ -45,6 +45,6 @@ class TerrainSelector:
         if entry:
             print( 'update target' )
             point = entry.getSurfacePoint( self.__render )
-            print( f"point: { point }",  )
+            #rint( f"point: { point }",  )
             if ( point - self.__terrainCamera.center ).length() > 400:
                 self.__terrainCamera.setCenter( point )
