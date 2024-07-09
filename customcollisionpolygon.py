@@ -3,7 +3,8 @@ from typing import Any
 
 from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, DirectionalLight, GeomVertexReader, LVector4, \
     NodePath, Vec3, \
-    GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3, GeomLines
+    GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3, GeomLines, \
+    GeomPoints, LVecBase3f
 
 
 def getPolygonFromPool( row, column ) -> Any | None:
@@ -25,26 +26,26 @@ def acquireAllNeighbors():
         polygon.getNeighbors()
 
 
-def getVertices( geom: GeomNode ) -> list:
-    all_vertices = [ ]
-    tris = geom.getPrimitive( 0 )  # Assuming the first primitive is triangles
+def getVertices(geom: GeomNode) -> list:
+    all_vertices = []
+    tris = geom.getPrimitive(0)  # Assuming the first primitive is triangles
     tris = tris.decompose()
     vertex_data = geom.getVertexData()
-    vertex_reader = GeomVertexReader( vertex_data, 'vertex' )
+    vertex_reader = GeomVertexReader(vertex_data, 'vertex')
     primitives = tris.getNumPrimitives()
-    print(f" primitives: { primitives }")
-    for i in range( tris.getNumPrimitives() ):
-        primStart = tris.getPrimitiveStart( i )
-        primEnd = tris.getPrimitiveEnd( i )
-        assert primEnd - primStart == 3
+    print(f"Primitives: {primitives}")
+    for i in range(tris.getNumPrimitives()):
+        prim_start = tris.getPrimitiveStart(i)
+        prim_end = tris.getPrimitiveEnd(i)
+        assert prim_end - prim_start == 3
 
-        vertices = [ ]
-        for prIndex in range( primStart, primEnd ):
-            vi = tris.getVertex( prIndex )
-            vertex_reader.setRow( vi )
+        vertices = []
+        for pr_index in range(prim_start, prim_end):
+            vi = tris.getVertex(pr_index)
+            vertex_reader.setRow(vi)
             v = vertex_reader.getData3()
-            vertices.append( v )
-        all_vertices.append( vertices )
+            vertices.append(v)
+        all_vertices.append(vertices)
     return all_vertices
 
 
@@ -107,9 +108,14 @@ class CustomCollisionPolygon:
             self.__row, self.__col = getNodePosition( self.__name )
             print( f"{self.__name}: triangle: {triangleCount} {self.__angle}, row = {self.__row}, column = {self.__col} area = {self.__area}" )
             self.__collision_node.addSolid( self.__poly )
-            self.__collision_node.setPythonTag( 'custom_collision_polygon', self )
             triangleCount += 1
-            addPolygonToPool( self.__name, self )
+            for point in vertex:
+                #self.draw_point( point)
+                print(f'point: { point }')
+        self.__collision_node.setPythonTag( 'custom_collision_polygon', self )
+        addPolygonToPool( self.__name, self )
+
+
 
     @property
     def vertices( self ) -> list[ GeomVertexReader ]:
@@ -141,23 +147,38 @@ class CustomCollisionPolygon:
             "down": getPolygonFromPool( self.__row + 1, self.__col ),
             "left": getPolygonFromPool( self.__row, self.__col + 1 ),
             "right": getPolygonFromPool( self.__row, self.__col - 1 ),
-            "upright": getPolygonFromPool( self.__row + 1, self.__col + 1 ),
+            "downleft": getPolygonFromPool( self.__row + 1, self.__col + 1 ),
             "downright": getPolygonFromPool( self.__row - 1, self.__col + 1 ),
             "upleft": getPolygonFromPool( self.__row + 1, self.__col - 1 ),
-            "downleft": getPolygonFromPool( self.__row - 1, self.__col - 1 ),
+            "upright": getPolygonFromPool( self.__row - 1, self.__col - 1 ),
         }
         self.__neighborsDic = { pos: node for pos, node in neighborsDic.items() if node is not None }
 
-    def showNeighbors( self, startRow, startCol, level ):
+    def getNeighborByPosition( self, key: str ) -> 'CustomCollisionPolygon':
+        return self.__neighborsDic.get( key, None )
+
+    def showNeighbors( self, origin: 'CustomCollisionPolygon', startRow, startCol, level ):
         if self.__visible:
             return
+
+        if abs( self.row - startRow ) > level and abs( self.col - startCol ) > level:
+            if self == origin.getNeighborByPosition( 'upright' ):
+                origin.showFrame()
+                origin.drawPoint()
+            return
+
         if abs( self.row - startRow ) > level or abs( self.col - startCol ) > level:
             return
+
         self.showDebugNode()
         self.colorDebugNode()
         self.__visible = True
         for neighbor in self.__neighborsDic.values():
-            neighbor.showNeighbors( startRow, startCol, level )
+            neighbor.showNeighbors( self, startRow, startCol, level )
+
+    def showFrame( self ):
+        self.__wire_node_path.show()
+
 
     def hideNeighbors( self ):
         if self.__visible:
@@ -181,7 +202,44 @@ class CustomCollisionPolygon:
     def showDebugNode( self ):
         self.__visible = True
         self.__debug_node_path.show()
-        self.__wire_node_path.show()
+        #self.__wire_node_path.show()
+
+    def drawPoint( self ):
+        for vertex in self.__vertices:
+            for point in vertex:
+                self.draw_point( point )
+
+    def draw_point(self, point: LVecBase3f):
+        # Create a vertex format
+        vertex_format = GeomVertexFormat.get_v3()
+
+        # Create a vertex data object
+        vertex_data = GeomVertexData("vertices", vertex_format, Geom.UHStatic)
+
+        # Create a vertex writer to add vertices
+        vertex_writer = GeomVertexWriter(vertex_data, "vertex")
+
+        # Add the point to the vertex data
+        vertex_writer.add_data3(point)
+
+        # Create a GeomPoints object
+        points = GeomPoints(Geom.UHStatic)
+        points.add_next_vertices(1)
+
+        # Create a Geom object
+        geom = Geom(vertex_data)
+        geom.add_primitive(points)
+
+        # Create a GeomNode to hold the geometry
+        geom_node = GeomNode("point_node")
+        geom_node.add_geom(geom)
+
+
+        __point_node_path = self.__child.attachNewNode( geom_node )
+        __point_node_path.setZ( __point_node_path.getZ() + 2 )
+
+        # Optionally, set the point size (e.g., make it more visible)
+        __point_node_path.set_render_mode_thickness( 5 )
 
     @property
     def getAngle( self ):
@@ -190,7 +248,7 @@ class CustomCollisionPolygon:
     def __str__( self ):
         return f'{ self.__name }, row: { self.__row }, column: { self.__col }, area: { self.__area }, angle: { self.__angle }'
 
-    def attachToTerrainChildNode( self, height_offset = 1 ):
+    def attachToTerrainChildNode( self, height_offset = 0.1 ):
         # Attach the collision node to the child node
         self.__collision_node_path = self.__child.attachNewNode( self.__collision_node )
         self.__collision_node_path.setRenderModeWireframe()
@@ -199,7 +257,7 @@ class CustomCollisionPolygon:
         self.__collision_node_path.hide()
         self.attachDebugNode()
 
-    def attachDebugNode( self, height_offset = 0.2  ) :
+    def attachDebugNode( self, height_offset = 0.1  ) :
         debug_geom_node = GeomNode( 'debug_geom' )
 
         # Geometry for filled polygons
