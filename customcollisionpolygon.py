@@ -133,14 +133,6 @@ class CustomCollisionPolygon:
     def col( self ) -> int:
         return self.__col
 
-    @property
-    def collisionPolygon( self ) -> GeomNode:
-        return self.__poly
-
-    @property
-    def collisionNodePath( self ) -> NodePath:
-        return self.__collision_node_path
-
     def getNeighbors( self ):
         neighborsDic = {
             "up": getPolygonFromPool( self.__row - 1, self.__col ),
@@ -179,7 +171,6 @@ class CustomCollisionPolygon:
     def showFrame( self ):
         self.__wire_node_path.show()
 
-
     def hideNeighbors( self ):
         if self.__visible:
             self.hideDebugNode()
@@ -205,9 +196,7 @@ class CustomCollisionPolygon:
         #self.__wire_node_path.show()
 
     def drawPoint( self ):
-        for vertex in self.__vertices:
-            for point in vertex:
-                self.draw_point( point )
+            self.draw_point( self.__vertices[ 1 ][2] )
 
     def draw_point(self, point: LVecBase3f):
         # Create a vertex format
@@ -236,10 +225,11 @@ class CustomCollisionPolygon:
 
 
         __point_node_path = self.__child.attachNewNode( geom_node )
-        __point_node_path.setZ( __point_node_path.getZ() + 2 )
+        __point_node_path.setZ( __point_node_path.getZ() + 0.02 )
 
         # Optionally, set the point size (e.g., make it more visible)
         __point_node_path.set_render_mode_thickness( 5 )
+        __point_node_path.setColor( Vec4( 0, 1, 0, 0.5 ) )
 
     @property
     def getAngle( self ):
@@ -253,8 +243,10 @@ class CustomCollisionPolygon:
         self.__collision_node_path = self.__child.attachNewNode( self.__collision_node )
         self.__collision_node_path.setRenderModeWireframe()
         self.__collision_node_path.setRenderModeThickness( 2 )
+        self.__collision_node_path.setColor( Vec4( 1, 1, 0, 0.5 ) )
         self.__collision_node_path.setZ( self.__collision_node_path.getZ() + height_offset )
-        self.__collision_node_path.hide()
+        #self.__collision_node_path.hide()
+        self.__collision_node_path.show()
         self.attachDebugNode()
 
     def attachDebugNode( self, height_offset = 0.1  ) :
