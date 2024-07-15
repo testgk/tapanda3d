@@ -6,6 +6,8 @@ from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, Directional
     GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3, GeomLines, \
     GeomPoints
 
+from enums.colors import Color
+
 
 def getPolygonFromPool( row, column ) -> Any | None:
     try:
@@ -153,9 +155,6 @@ class CustomCollisionPolygon:
         }
         self.__neighborsDic = { pos: node for pos, node in neighborsDic.items() if node is not None }
 
-    def getNeighborByPosition( self, key: str ) -> 'CustomCollisionPolygon':
-        return self.__neighborsDic.get( key, None )
-
     def showNeighbors( self, startRow, startCol, level ) :
         row_diff = abs( self.row - startRow )
         col_diff = abs( self.col - startCol )
@@ -221,19 +220,19 @@ class CustomCollisionPolygon:
         for direction in args:
             point = Point3( self.__edges[ direction ] )
             print( f'point: {point}' )
-            self.__draw_point( point )
+            self.__draw_point( point, self.pointColor() )
 
     def removeAllEdges( self ):
         for edge in currentFrame:
             edge.remove_node()
         currentFrame.clear()
 
-    def __draw_point( self, point: Point3 ):
+    def __draw_point( self, point: Point3, color = Color.GREEN ):
         geom_node = getPointGeomNode( point )
         __point_node_path = self.__child.attachNewNode( geom_node )
         __point_node_path.setZ( __point_node_path.getZ() + 0.02 )
         __point_node_path.set_render_mode_thickness( 5 )
-        __point_node_path.setColor( Vec4( 0, 1, 0, 0.5 ) )
+        __point_node_path.setColor( color.value )
         currentFrame.append( __point_node_path )
 
     def __str__( self ):
@@ -250,7 +249,6 @@ class CustomCollisionPolygon:
 
     def attachDebugNode( self, height_offset = 0.1  ) :
         debug_geom_node = GeomNode( 'debug_geom' )
-
         # Geometry for filled polygons
         vertex_format = GeomVertexFormat.getV3()
         vertex_data = GeomVertexData( 'vertices', vertex_format, Geom.UHDynamic )
@@ -303,7 +301,7 @@ class CustomCollisionPolygon:
         self.__debug_node_path.hide()
 
         self.__wire_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
-        self.__wire_node_path.setColor( Vec4( 0, 1, 0, 0.5 ) )
+        self.__wire_node_path.setColor( Color.CYAN.value )
         self.__wire_node_path.hide()
         print( f"Collision node {self.__name} created and attached to terrain" )  # Debugging
 
@@ -320,3 +318,8 @@ class CustomCollisionPolygon:
     def acquireAllNeighbors( cls ):
         for name, polygon in polygons.items():
             polygon.getNeighbors()
+
+    def pointColor( self ) :
+        if self.__angle > 0.2:
+            return Color.RED
+        return Color.GREEN
