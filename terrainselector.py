@@ -1,6 +1,8 @@
 from panda3d.core import Vec4, Point3
 
 from camera import TerrainCamera
+from customcollisionpolygon import CustomCollisionPolygon
+import customcollisionpolygon
 
 
 class TerrainSelector:
@@ -30,20 +32,23 @@ class TerrainSelector:
         picked_obj = entry.getIntoNodePath()
         print( f"Clicked node: { picked_obj }" )
         custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
+        custom_collision_polygon.removeEdges()
         if custom_collision_polygon:
             if self.__last_custom_collision_polygon:
                 self.__last_custom_collision_polygon.hideNeighbors()
+            customcollisionpolygon.currentFrame.clear()
             custom_collision_polygon.hideNeighbors()
-            custom_collision_polygon.showNeighbors( custom_collision_polygon, custom_collision_polygon.row, custom_collision_polygon.col, 4 )
+            custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col, 4 )
             custom_collision_polygon.showDebugNode()
             custom_collision_polygon.setColorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
             self.__last_custom_collision_polygon = custom_collision_polygon
-            self.__center = custom_collision_polygon.surfacePosition
+            #self.__center = custom_collision_polygon.surfacePosition
+            #customcollisionpolygon.drawCurrentFrame( self.__render )
 
     def on_map_hover( self ):
         entry = self.getNewEntry()
         if entry:
-            print( 'update target' )
+            #print( 'update target' )
             point = entry.getSurfacePoint( self.__render )
             #rint( f"point: { point }",  )
             if ( point - self.__terrainCamera.center ).length() > 400:

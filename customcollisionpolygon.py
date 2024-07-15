@@ -50,6 +50,10 @@ def getVertices(geom: GeomNode) -> list:
 
 
 polygons = { }
+# Set up camera position to view the square
+# Move the camera back along Y-axis
+currentFrame = []
+
 
 
 def calculate_angle( vertex, reference_plane_normal = Vec3( 0, 0, 1 ) ):
@@ -80,6 +84,7 @@ def getNodePosition( name ):
 class CustomCollisionPolygon:
     def __init__( self, child: NodePath, *args, **kwargs ):
         super().__init__( *args, **kwargs )
+        self.__edges = {}
         self.__visible = None
         self.__neighborsDic = None
         self.__col = None
@@ -87,7 +92,6 @@ class CustomCollisionPolygon:
         self.__area = None
         self.__name = None
         self.__angle = None
-        self.__poly = None
         self.__debug_node_path = None
         self.__collision_node_path = None
         self.__collision_node = None
@@ -96,25 +100,28 @@ class CustomCollisionPolygon:
         self.__vertices = getVertices( self.__geom )
         self.__collision_node = CollisionNode( f'terrain_{ self.__child.getName() }' )
         self.__collision_node.setIntoCollideMask( BitMask32.bit( 1 ) )
-        self.constructCollitionNode( self.__vertices ) 
+        self.constructCollitionNode( self.__vertices )
+
 
     def constructCollitionNode( self, vertices ):
         triangleCount = 0
         for vertex in vertices:
-            self.__poly = CollisionPolygon( vertex[ 0 ], vertex[ 1 ], vertex[ 2 ] )
+            poly = CollisionPolygon( vertex[ 0 ], vertex[ 1 ], vertex[ 2 ] )
             self.__angle = calculate_angle( vertex )
             self.__name = self.__child.getName()
             self.__area = triangle_area( vertex[ 0 ], vertex[ 1 ], vertex[ 2 ] )
             self.__row, self.__col = getNodePosition( self.__name )
             print( f"{self.__name}: triangle: {triangleCount} {self.__angle}, row = {self.__row}, column = {self.__col} area = {self.__area}" )
-            self.__collision_node.addSolid( self.__poly )
+            self.__collision_node.addSolid( poly )
             triangleCount += 1
             for point in vertex:
-                #self.draw_point( point)
                 print(f'point: { point }')
         self.__collision_node.setPythonTag( 'custom_collision_polygon', self )
+        self.__edges[ 'upright' ] = vertices[ 0 ][ 0 ]
+        self.__edges[ 'upleft' ] = vertices[ 0 ][ 1 ]
+        self.__edges[ 'downright' ] = vertices[ 1 ][ 1 ]
+        self.__edges[ 'downleft' ] = vertices[ 1 ][ 0 ]
         addPolygonToPool( self.__name, self )
-
 
 
     @property
@@ -149,26 +156,56 @@ class CustomCollisionPolygon:
     def getNeighborByPosition( self, key: str ) -> 'CustomCollisionPolygon':
         return self.__neighborsDic.get( key, None )
 
-    def showNeighbors( self, origin: 'CustomCollisionPolygon', startRow, startCol, level ):
-        if self.__visible:
+    def showNeighbors( self, startRow, startCol, level ) :
+        # Check visibility and distance constraints
+        if self.__visible or abs( self.row - startRow ) > level or abs( self.col - startCol ) > level :
             return
 
-        if abs( self.row - startRow ) > level and abs( self.col - startCol ) > level:
-            if self == origin.getNeighborByPosition( 'upright' ):
-                origin.showFrame()
-                origin.drawPoint()
-            return
-
-        if abs( self.row - startRow ) > level or abs( self.col - startCol ) > level:
-            return
-
-        self.showDebugNode()
-        self.colorDebugNode()
         self.__visible = True
-        for neighbor in self.__neighborsDic.values():
-            neighbor.showNeighbors( self, startRow, startCol, level )
 
-    def showFrame( self ):
+        row_diff = abs( self.row - startRow )
+        col_diff = abs( self.col - startCol )
+
+        if row_diff == level and col_diff == level:
+            self.showFrame()
+            # Handle diagonal cases
+            if self.row > startRow and self.col < startCol:  # Down
+                edges = [ 'upleft', 'upright' ]
+                self.drawEdge( 'upleft' )
+                self.drawEdge( 'upright' )
+            elif self.row < startRow and self.col > startCol:  # Up left
+                edges = [ 'downright', 'downleft' ]
+                self.drawEdge( 'downright' )
+                self.drawEdge( 'downleft' )
+            elif self.row > startRow and self.col > startCol:  # Up right
+                self.drawEdge( 'upleft' )
+                self.drawEdge( 'downleft' )
+            else :  # Down left
+                self.drawEdge( 'upright' )
+                self.drawEdge( 'downright' )
+
+        elif row_diff == level and col_diff < level:
+            # Handle vertical edge cases
+            if self.row > startRow:
+                self.drawEdge( 'upleft' )
+            elif self.row < startRow:
+                self.drawEdge( 'downright' )
+
+        elif row_diff < level and col_diff == level:
+            # Handle horizontal edge cases
+            if self.col > startCol:
+                self.drawEdge( 'downleft' )
+            elif self.col < startCol:
+                self.drawEdge( 'upright' )
+
+        self.showNeighbors( startRow, startCol, level )
+
+
+
+
+
+    def showFrame( self, color = Vec4( 0, 1, 0, 0.5 )  ):
+        self.__wire_node_path.setColor( color )
         self.__wire_node_path.show()
 
     def hideNeighbors( self ):
@@ -176,10 +213,6 @@ class CustomCollisionPolygon:
             self.hideDebugNode()
             for neighbor in self.__neighborsDic.values():
                 neighbor.hideNeighbors()
-
-    @property
-    def getNeighbor( self ) -> 'CustomCollisionPolygon':
-        return getPolygonFromPool( self.__row + 1, self.__col )
 
     @property
     def surfacePosition( self ):
@@ -195,10 +228,23 @@ class CustomCollisionPolygon:
         self.__debug_node_path.show()
         #self.__wire_node_path.show()
 
-    def drawPoint( self ):
-            self.draw_point( self.__vertices[ 1 ][2] )
+    def drawEdges( self, *directions ):
+        for direction in directions:
+            self.drawEdge( direction )
 
-    def draw_point(self, point: LVecBase3f):
+    def drawEdge( self, direction ):
+            point = Point3( self.__edges[ direction ] )
+            print(f'point: { point }')
+            self.draw_point( point )
+
+    def removeEdges( self ):
+        for edge in currentFrame:
+            edge.remove_node()
+        currentFrame.clear()
+
+
+    def draw_point(self, point: Point3 ):
+        print(f' drawing point {point}')
         # Create a vertex format
         vertex_format = GeomVertexFormat.get_v3()
 
@@ -209,7 +255,7 @@ class CustomCollisionPolygon:
         vertex_writer = GeomVertexWriter(vertex_data, "vertex")
 
         # Add the point to the vertex data
-        vertex_writer.add_data3(point)
+        vertex_writer.add_data3( point )
 
         # Create a GeomPoints object
         points = GeomPoints(Geom.UHStatic)
@@ -230,6 +276,7 @@ class CustomCollisionPolygon:
         # Optionally, set the point size (e.g., make it more visible)
         __point_node_path.set_render_mode_thickness( 5 )
         __point_node_path.setColor( Vec4( 0, 1, 0, 0.5 ) )
+        currentFrame.append( __point_node_path )
 
     @property
     def getAngle( self ):
@@ -246,7 +293,7 @@ class CustomCollisionPolygon:
         self.__collision_node_path.setColor( Vec4( 1, 1, 0, 0.5 ) )
         self.__collision_node_path.setZ( self.__collision_node_path.getZ() + height_offset )
         #self.__collision_node_path.hide()
-        self.__collision_node_path.show()
+        #self.__collision_node_path.show()
         self.attachDebugNode()
 
     def attachDebugNode( self, height_offset = 0.1  ) :
@@ -298,7 +345,6 @@ class CustomCollisionPolygon:
         self.wire_geom_node.addGeom( wire_geom )
         self.__wire_node_path = self.__child.attachNewNode( self.wire_geom_node )
         self.__wire_node_path.setRenderModeWireframe()
-        self.__wire_node_path.setColor( Vec4( 2, 2, 1, 1 ) )
 
         self.__debug_node_path = self.__child.attachNewNode( debug_geom_node )
         self.__debug_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
@@ -307,8 +353,6 @@ class CustomCollisionPolygon:
         self.__wire_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
         self.__wire_node_path.setColor( Vec4( 0, 1, 0, 0.5 ) )
         self.__wire_node_path.hide()
-        #__wire_node_path.hide()
-
         print( f"Collision node {self.__name} created and attached to terrain" )  # Debugging
 
     def colorDebugNode( self ):

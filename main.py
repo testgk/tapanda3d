@@ -32,6 +32,7 @@ class MyApp( ShowBase ):
         self.terrainCollision.createTerrainCollision()
         self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
         self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
+        self.terrainCamera.hoverAbove()
 
     def on_map_click( self ):
         self.terrainSelector.on_map_click()
