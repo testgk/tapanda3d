@@ -4,7 +4,7 @@ from typing import Any
 from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, DirectionalLight, GeomVertexReader, LVector4, \
     NodePath, Vec3, \
     GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3, GeomLines, \
-    GeomPoints, LVecBase3f
+    GeomPoints
 
 
 def getPolygonFromPool( row, column ) -> Any | None:
@@ -19,11 +19,6 @@ def getPolygonByName( name: str ) -> 'CustomCollisionPolygon':
 
 def addPolygonToPool( name, polygon ):
     polygons[ name ] = polygon
-
-
-def acquireAllNeighbors():
-    for name, polygon in polygons.items():
-        polygon.getNeighbors()
 
 
 def getVertices(geom: GeomNode) -> list:
@@ -49,28 +44,37 @@ def getVertices(geom: GeomNode) -> list:
     return all_vertices
 
 
+def getPointGeomNode( point ) :
+     print( f' drawing point {point}' )
+     vertex_format = GeomVertexFormat.get_v3()
+     vertex_data = GeomVertexData( "vertices", vertex_format, Geom.UHStatic )
+     vertex_writer = GeomVertexWriter( vertex_data, "vertex" )
+     vertex_writer.add_data3( point )
+     points = GeomPoints( Geom.UHStatic )
+     points.add_next_vertices( 1 )
+     geom = Geom( vertex_data )
+     geom.add_primitive( points )
+     geom_node = GeomNode( "point_node" )
+     geom_node.add_geom( geom )
+     return geom_node
+
+
 polygons = { }
-# Set up camera position to view the square
-# Move the camera back along Y-axis
 currentFrame = []
 
 
 
 def calculate_angle( vertex, reference_plane_normal = Vec3( 0, 0, 1 ) ):
-    # Compute two edges of the polygon
     edge1 = vertex[ 1 ] - vertex[ 0 ]
     edge2 = vertex[ 2 ] - vertex[ 0 ]
     normal_vector = edge1.cross( edge2 ).normalized()
-    # Calculate the angle between the normal vector and the reference plane normal
     dot_product = normal_vector.dot( reference_plane_normal )
     magnitude_product = normal_vector.length() * reference_plane_normal.length()
     angle_radians = math.acos( dot_product / magnitude_product )
     angle_degrees = math.degrees( angle_radians )
     return angle_degrees
 
-
 def triangle_area( v0, v1, v2 ):
-    # Use the cross product to get the area of the triangle
     edge1 = v1 - v0
     edge2 = v2 - v0
     cross_product = edge1.cross( edge2 )
@@ -102,7 +106,6 @@ class CustomCollisionPolygon:
         self.__collision_node.setIntoCollideMask( BitMask32.bit( 1 ) )
         self.constructCollitionNode( self.__vertices )
 
-
     def constructCollitionNode( self, vertices ):
         triangleCount = 0
         for vertex in vertices:
@@ -114,15 +117,12 @@ class CustomCollisionPolygon:
             print( f"{self.__name}: triangle: {triangleCount} {self.__angle}, row = {self.__row}, column = {self.__col} area = {self.__area}" )
             self.__collision_node.addSolid( poly )
             triangleCount += 1
-            for point in vertex:
-                print(f'point: { point }')
         self.__collision_node.setPythonTag( 'custom_collision_polygon', self )
         self.__edges[ 'upright' ] = vertices[ 0 ][ 0 ]
         self.__edges[ 'upleft' ] = vertices[ 0 ][ 1 ]
         self.__edges[ 'downright' ] = vertices[ 1 ][ 1 ]
         self.__edges[ 'downleft' ] = vertices[ 1 ][ 0 ]
         addPolygonToPool( self.__name, self )
-
 
     @property
     def vertices( self ) -> list[ GeomVertexReader ]:
@@ -157,68 +157,58 @@ class CustomCollisionPolygon:
         return self.__neighborsDic.get( key, None )
 
     def showNeighbors( self, startRow, startCol, level ) :
-        # Check visibility and distance constraints
-        if self.__visible or abs( self.row - startRow ) > level or abs( self.col - startCol ) > level :
-            return
-
-        self.__visible = True
-
         row_diff = abs( self.row - startRow )
         col_diff = abs( self.col - startCol )
 
-        if row_diff == level and col_diff == level:
-            self.showFrame()
+        # Check visibility and distance constraints
+        if self.__visible or abs( row_diff) > level or abs( col_diff ) > level :
+            return
+
+        self.__displayEdges( level, col_diff, row_diff, startCol, startRow )
+        self.showDebugNode()
+        self.colorDebugNode()
+        self.__visible = True
+        for neighbor in self.__neighborsDic.values() :
+            neighbor.showNeighbors( startRow, startCol, level )
+
+    def __displayEdges( self, level, col_diff, row_diff, startCol, startRow ) :
+        if row_diff == level and col_diff == level :
+            self.__showFrame()
             # Handle diagonal cases
-            if self.row > startRow and self.col < startCol:  # Down
-                edges = [ 'upleft', 'upright' ]
-                self.drawEdge( 'upleft' )
-                self.drawEdge( 'upright' )
-            elif self.row < startRow and self.col > startCol:  # Up left
-                edges = [ 'downright', 'downleft' ]
-                self.drawEdge( 'downright' )
-                self.drawEdge( 'downleft' )
-            elif self.row > startRow and self.col > startCol:  # Up right
-                self.drawEdge( 'upleft' )
-                self.drawEdge( 'downleft' )
+            if self.row > startRow and self.col < startCol :  # Down
+                self.__drawEdges( 'upleft', 'upright' )
+            elif self.row < startRow and self.col > startCol :  # Up left
+                self.__drawEdges( 'downright', 'downleft' )
+            elif self.row > startRow and self.col > startCol :  # Up right
+                self.__drawEdges( 'upleft', 'downleft' )
             else :  # Down left
-                self.drawEdge( 'upright' )
-                self.drawEdge( 'downright' )
+                self.__drawEdges( 'upright', 'downright' )
 
-        elif row_diff == level and col_diff < level:
+        elif row_diff == level and col_diff < level :
             # Handle vertical edge cases
-            if self.row > startRow:
-                self.drawEdge( 'upleft' )
-            elif self.row < startRow:
-                self.drawEdge( 'downright' )
+            if self.row > startRow :
+                self.__drawEdges( 'upleft' )
+            elif self.row < startRow :
+                self.__drawEdges( 'downright' )
 
-        elif row_diff < level and col_diff == level:
+        elif row_diff < level and col_diff == level :
             # Handle horizontal edge cases
-            if self.col > startCol:
-                self.drawEdge( 'downleft' )
-            elif self.col < startCol:
-                self.drawEdge( 'upright' )
+            if self.col > startCol :
+                self.__drawEdges( 'downleft' )
+            elif self.col < startCol :
+                self.__drawEdges( 'upright' )
 
-        self.showNeighbors( startRow, startCol, level )
-
-
-
-
-
-    def showFrame( self, color = Vec4( 0, 1, 0, 0.5 )  ):
+    def __showFrame( self, color = Vec4( 0, 1, 0, 0.5 ) ):
         self.__wire_node_path.setColor( color )
         self.__wire_node_path.show()
 
     def hideNeighbors( self ):
         if self.__visible:
-            self.hideDebugNode()
+            self.__hideDebugNode()
             for neighbor in self.__neighborsDic.values():
                 neighbor.hideNeighbors()
 
-    @property
-    def surfacePosition( self ):
-        return Point3( self.__child.getPos()[ 0 ], self.__child.getPos()[ 1 ], 0 )
-
-    def hideDebugNode( self ):
+    def __hideDebugNode( self ):
         self.__visible = False
         self.__debug_node_path.hide()
         self.__wire_node_path.hide()
@@ -226,74 +216,36 @@ class CustomCollisionPolygon:
     def showDebugNode( self ):
         self.__visible = True
         self.__debug_node_path.show()
-        #self.__wire_node_path.show()
 
-    def drawEdges( self, *directions ):
-        for direction in directions:
-            self.drawEdge( direction )
-
-    def drawEdge( self, direction ):
+    def __drawEdges( self, *args ):
+        for direction in args:
             point = Point3( self.__edges[ direction ] )
-            print(f'point: { point }')
-            self.draw_point( point )
+            print( f'point: {point}' )
+            self.__draw_point( point )
 
-    def removeEdges( self ):
+    def removeAllEdges( self ):
         for edge in currentFrame:
             edge.remove_node()
         currentFrame.clear()
 
-
-    def draw_point(self, point: Point3 ):
-        print(f' drawing point {point}')
-        # Create a vertex format
-        vertex_format = GeomVertexFormat.get_v3()
-
-        # Create a vertex data object
-        vertex_data = GeomVertexData("vertices", vertex_format, Geom.UHStatic)
-
-        # Create a vertex writer to add vertices
-        vertex_writer = GeomVertexWriter(vertex_data, "vertex")
-
-        # Add the point to the vertex data
-        vertex_writer.add_data3( point )
-
-        # Create a GeomPoints object
-        points = GeomPoints(Geom.UHStatic)
-        points.add_next_vertices(1)
-
-        # Create a Geom object
-        geom = Geom(vertex_data)
-        geom.add_primitive(points)
-
-        # Create a GeomNode to hold the geometry
-        geom_node = GeomNode("point_node")
-        geom_node.add_geom(geom)
-
-
+    def __draw_point( self, point: Point3 ):
+        geom_node = getPointGeomNode( point )
         __point_node_path = self.__child.attachNewNode( geom_node )
         __point_node_path.setZ( __point_node_path.getZ() + 0.02 )
-
-        # Optionally, set the point size (e.g., make it more visible)
         __point_node_path.set_render_mode_thickness( 5 )
         __point_node_path.setColor( Vec4( 0, 1, 0, 0.5 ) )
         currentFrame.append( __point_node_path )
 
-    @property
-    def getAngle( self ):
-        return self.__angle
-
     def __str__( self ):
-        return f'{ self.__name }, row: { self.__row }, column: { self.__col }, area: { self.__area }, angle: { self.__angle }'
+        return (f'{ self.__name }, row: { self.__row }, column: { self.__col }, '
+                f'area: { self.__area }, angle: { self.__angle }')
 
     def attachToTerrainChildNode( self, height_offset = 0.1 ):
-        # Attach the collision node to the child node
         self.__collision_node_path = self.__child.attachNewNode( self.__collision_node )
         self.__collision_node_path.setRenderModeWireframe()
         self.__collision_node_path.setRenderModeThickness( 2 )
         self.__collision_node_path.setColor( Vec4( 1, 1, 0, 0.5 ) )
         self.__collision_node_path.setZ( self.__collision_node_path.getZ() + height_offset )
-        #self.__collision_node_path.hide()
-        #self.__collision_node_path.show()
         self.attachDebugNode()
 
     def attachDebugNode( self, height_offset = 0.1  ) :
