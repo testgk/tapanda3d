@@ -32,7 +32,7 @@ class TerrainSelector:
         picked_obj = entry.getIntoNodePath()
         print( f"Clicked node: { picked_obj }" )
         custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
-        custom_collision_polygon.removeEdges()
+        custom_collision_polygon.removeAllEdges()
         if custom_collision_polygon:
             if self.__last_custom_collision_polygon:
                 self.__last_custom_collision_polygon.hideNeighbors()
