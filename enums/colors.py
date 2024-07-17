@@ -11,3 +11,4 @@ class Color(Enum):
     YELLOW = LVecBase4f( 1, 1, 0, 1 )
     CYAN = LVecBase4f( 0, 1, 1, 1 )
     MAGENTA = LVecBase4f( 1, 0, 1, 1 )
+    RED_TRANSPARENT = LVecBase4f( 1, 0, 0, 0.5 )

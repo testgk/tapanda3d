@@ -7,6 +7,7 @@ from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, Directional
     GeomPoints
 
 from enums.colors import Color
+from enums.directions import Direction, mapDirections
 
 
 def getPolygonFromPool( row, column ) -> Any | None:
@@ -45,7 +46,6 @@ def getVertices(geom: GeomNode) -> list:
         all_vertices.append(vertices)
     return all_vertices
 
-
 def getPointGeomNode( point ) :
      print( f' drawing point {point}' )
      vertex_format = GeomVertexFormat.get_v3()
@@ -59,6 +59,61 @@ def getPointGeomNode( point ) :
      geom_node = GeomNode( "point_node" )
      geom_node.add_geom( geom )
      return geom_node
+
+def createDebugNode( collision_node ):
+    debug_geom_node = GeomNode('debug_geom')
+    vertex_format = GeomVertexFormat.getV3()
+    vertex_data = GeomVertexData('vertices', vertex_format, Geom.UHDynamic)
+    vertex_writer = GeomVertexWriter(vertex_data, 'vertex')
+    geom = Geom(vertex_data)
+    tris = GeomTriangles(Geom.UHDynamic)
+
+    vertex_count = 0
+    for i in range( collision_node.getNumSolids()):
+        poly = collision_node.getSolid( i )
+        if isinstance(poly, CollisionPolygon):
+            num_points = poly.getNumPoints()
+            for j in range(num_points):
+                point = poly.getPoint(j)
+                vertex_writer.addData3f(point)
+                tris.addVertex(vertex_count)
+                vertex_count += 1
+            tris.closePrimitive()
+
+    geom.addPrimitive(tris)
+    debug_geom_node.addGeom(geom)
+    return debug_geom_node
+
+def createWireNode( collision_node ):
+    vertex_format = GeomVertexFormat.getV3()
+    wire_vertex_data = GeomVertexData('wire_vertices', vertex_format, Geom.UHDynamic)
+    wire_vertex_writer = GeomVertexWriter(wire_vertex_data, 'vertex')
+    lines = GeomLines(Geom.UHDynamic)
+
+    wire_vertex_count = 0
+    for i in range( collision_node.getNumSolids()):
+        poly = collision_node.getSolid(i)
+        if isinstance(poly, CollisionPolygon):
+            num_points = poly.getNumPoints()
+            poly_vertices = []
+            for j in range( num_points ):
+                point = poly.getPoint(j)
+                poly_vertices.append(point)
+
+            # Create lines for the wireframe
+            for j in range(num_points):
+                start_point = poly_vertices[j]
+                end_point = poly_vertices[(j + 1) % num_points]
+                wire_vertex_writer.addData3f( start_point )
+                wire_vertex_writer.addData3f(end_point)
+                lines.addVertices(wire_vertex_count, wire_vertex_count + 1)
+                wire_vertex_count += 2
+
+    wire_geom = Geom( wire_vertex_data )
+    wire_geom.addPrimitive( lines )
+    wire_geom_node = GeomNode('wire_geom')
+    wire_geom_node.addGeom( wire_geom )
+    return wire_geom_node
 
 
 polygons = { }
@@ -90,6 +145,7 @@ def getNodePosition( name ):
 class CustomCollisionPolygon:
     def __init__( self, child: NodePath, *args, **kwargs ):
         super().__init__( *args, **kwargs )
+        self.__wire_node_path = None
         self.__edges = {}
         self.__visible = None
         self.__neighborsDic = None
@@ -106,9 +162,9 @@ class CustomCollisionPolygon:
         self.__vertices = getVertices( self.__geom )
         self.__collision_node = CollisionNode( f'terrain_{ self.__child.getName() }' )
         self.__collision_node.setIntoCollideMask( BitMask32.bit( 1 ) )
-        self.constructCollitionNode( self.__vertices )
+        self.createCollisionNode( self.__vertices )
 
-    def constructCollitionNode( self, vertices ):
+    def createCollisionNode( self, vertices ):
         triangleCount = 0
         for vertex in vertices:
             poly = CollisionPolygon( vertex[ 0 ], vertex[ 1 ], vertex[ 2 ] )
@@ -120,19 +176,15 @@ class CustomCollisionPolygon:
             self.__collision_node.addSolid( poly )
             triangleCount += 1
         self.__collision_node.setPythonTag( 'custom_collision_polygon', self )
-        self.__edges[ 'upright' ] = vertices[ 0 ][ 0 ]
-        self.__edges[ 'upleft' ] = vertices[ 0 ][ 1 ]
-        self.__edges[ 'downright' ] = vertices[ 1 ][ 1 ]
-        self.__edges[ 'downleft' ] = vertices[ 1 ][ 0 ]
+        self.__edges[ Direction.UP_RIGHT ] = vertices[ 0 ][ 0 ]
+        self.__edges[ Direction.UP_LEFT ] = vertices[ 0 ][ 1 ]
+        self.__edges[ Direction.DOWN_RIGHT ] = vertices[ 1 ][ 1 ]
+        self.__edges[ Direction.DOWN_LEFT ] = vertices[ 1 ][ 0 ]
         addPolygonToPool( self.__name, self )
 
     @property
     def vertices( self ) -> list[ GeomVertexReader ]:
         return self.__vertices
-
-    @property
-    def name( self ) -> str:
-        return self.__name
 
     @property
     def row( self ) -> int:
@@ -143,59 +195,52 @@ class CustomCollisionPolygon:
         return self.__col
 
     def getNeighbors( self ):
-        neighborsDic = {
-            "up": getPolygonFromPool( self.__row - 1, self.__col ),
-            "down": getPolygonFromPool( self.__row + 1, self.__col ),
-            "left": getPolygonFromPool( self.__row, self.__col + 1 ),
-            "right": getPolygonFromPool( self.__row, self.__col - 1 ),
-            "downleft": getPolygonFromPool( self.__row + 1, self.__col + 1 ),
-            "downright": getPolygonFromPool( self.__row - 1, self.__col + 1 ),
-            "upleft": getPolygonFromPool( self.__row + 1, self.__col - 1 ),
-            "upright": getPolygonFromPool( self.__row - 1, self.__col - 1 ),
-        }
+        neighborsDic = {}
+        for direction, val in mapDirections.items():
+            neighborsDic[ direction ] = getPolygonFromPool(  self.__row + val[ 0 ], self.__col + val[ 1 ] )
         self.__neighborsDic = { pos: node for pos, node in neighborsDic.items() if node is not None }
 
-    def showNeighbors( self, startRow, startCol, level ) :
-        row_diff = abs( self.row - startRow )
-        col_diff = abs( self.col - startCol )
+    def showNeighbors( self, startRow: int, startCol: int, level: int ) :
+        row_diff = abs( self.__row - startRow )
+        col_diff = abs( self.__col - startCol )
 
         # Check visibility and distance constraints
         if self.__visible or abs( row_diff) > level or abs( col_diff ) > level :
             return
 
-        self.__displayEdges( level, col_diff, row_diff, startCol, startRow )
+        self.__displayFrameAndEdges( level, col_diff, row_diff, startCol, startRow )
         self.showDebugNode()
         self.colorDebugNode()
         self.__visible = True
         for neighbor in self.__neighborsDic.values() :
             neighbor.showNeighbors( startRow, startCol, level )
 
-    def __displayEdges( self, level, col_diff, row_diff, startCol, startRow ) :
+    def __displayFrameAndEdges( self, level: int, col_diff: int, row_diff: int, startCol: int, startRow: int ) :
         if row_diff == level and col_diff == level :
             self.__showFrame()
             # Handle diagonal cases
             if self.row > startRow and self.col < startCol :  # Down
-                self.__drawEdges( 'upleft', 'upright' )
+                self.__drawEdges( Direction.UP_LEFT, Direction.UP_RIGHT )
             elif self.row < startRow and self.col > startCol :  # Up left
-                self.__drawEdges( 'downright', 'downleft' )
+                self.__drawEdges( Direction.DOWN_RIGHT, Direction.DOWN_LEFT )
             elif self.row > startRow and self.col > startCol :  # Up right
-                self.__drawEdges( 'upleft', 'downleft' )
+                self.__drawEdges( Direction.UP_LEFT, Direction.DOWN_LEFT )
             else :  # Down left
-                self.__drawEdges( 'upright', 'downright' )
+                self.__drawEdges( Direction.UP_RIGHT, Direction.DOWN_RIGHT )
 
         elif row_diff == level and col_diff < level :
             # Handle vertical edge cases
             if self.row > startRow :
-                self.__drawEdges( 'upleft' )
+                self.__drawEdges( Direction.UP_LEFT )
             elif self.row < startRow :
-                self.__drawEdges( 'downright' )
+                self.__drawEdges( Direction.DOWN_RIGHT )
 
         elif row_diff < level and col_diff == level :
             # Handle horizontal edge cases
             if self.col > startCol :
-                self.__drawEdges( 'downleft' )
+                self.__drawEdges( Direction.DOWN_LEFT )
             elif self.col < startCol :
-                self.__drawEdges( 'upright' )
+                self.__drawEdges( Direction.UP_RIGHT )
 
     def __showFrame( self, color = Vec4( 0, 1, 0, 0.5 ) ):
         self.__wire_node_path.setColor( color )
@@ -239,78 +284,33 @@ class CustomCollisionPolygon:
         return (f'{ self.__name }, row: { self.__row }, column: { self.__col }, '
                 f'area: { self.__area }, angle: { self.__angle }')
 
-    def attachToTerrainChildNode( self, height_offset = 0.1 ):
+    def attachCollisionNodeToTerrain( self, height_offset = 0.1 ):
         self.__collision_node_path = self.__child.attachNewNode( self.__collision_node )
         self.__collision_node_path.setRenderModeWireframe()
         self.__collision_node_path.setRenderModeThickness( 2 )
-        self.__collision_node_path.setColor( Vec4( 1, 1, 0, 0.5 ) )
+        self.__collision_node_path.setColor( Color.BLUE.value)
         self.__collision_node_path.setZ( self.__collision_node_path.getZ() + height_offset )
-        self.attachDebugNode()
+        self.__attachDebugNode( self.__collision_node )
 
-    def attachDebugNode( self, height_offset = 0.1  ) :
-        debug_geom_node = GeomNode( 'debug_geom' )
-        # Geometry for filled polygons
-        vertex_format = GeomVertexFormat.getV3()
-        vertex_data = GeomVertexData( 'vertices', vertex_format, Geom.UHDynamic )
-        vertex_writer = GeomVertexWriter( vertex_data, 'vertex' )
-        geom = Geom( vertex_data )
-        tris = GeomTriangles( Geom.UHDynamic )
+    def __attachDebugNode( self, collisionNode, height_offset = 0.1 ) :
+        self.__generateDebugNodePath( collisionNode, height_offset )
+        #self.__generateWireNodePath( collisionNode, height_offset )
 
-        # Geometry for the wireframe
-        wire_vertex_data = GeomVertexData( 'wire_vertices', vertex_format, Geom.UHDynamic )
-        wire_vertex_writer = GeomVertexWriter( wire_vertex_data, 'vertex' )
-        lines = GeomLines( Geom.UHDynamic )
-
-        vertex_count = 0
-        wire_vertex_count = 0
-        for i in range( self.__collision_node.getNumSolids() ) :
-            poly = self.__collision_node.getSolid( i )
-            if isinstance( poly, CollisionPolygon ) :
-                num_points = poly.getNumPoints()
-                poly_vertices = [ ]
-                for j in range( num_points ) :
-                    point = poly.getPoint( j )
-                    vertex_writer.addData3f( point )
-                    tris.addVertex( vertex_count )
-                    poly_vertices.append( point )
-                    vertex_count += 1
-                tris.closePrimitive()
-
-                # Create lines for the wireframe
-                for j in range( num_points - 1 ) :
-                    start_point = poly_vertices[ j ]
-                    end_point = poly_vertices[ ( j + 1 ) % num_points ]
-                    wire_vertex_writer.addData3f( start_point )
-                    wire_vertex_writer.addData3f( end_point )
-                    lines.addVertices( wire_vertex_count, wire_vertex_count + 1 )
-                    wire_vertex_count += 2
-
-        geom.addPrimitive( tris )
-        debug_geom_node.addGeom( geom )
-
-        # Add wireframe geometry
-        wire_geom = Geom( wire_vertex_data )
-        wire_geom.addPrimitive( lines )
-        self.wire_geom_node = GeomNode( 'wire_geom' )
-        self.wire_geom_node.addGeom( wire_geom )
-        self.__wire_node_path = self.__child.attachNewNode( self.wire_geom_node )
+    def __generateWireNodePath( self, collisionNode, height_offset ):
+        wire_geom_node = createWireNode( collisionNode )
+        self.__wire_node_path = self.__child.attachNewNode( wire_geom_node )
+        self.__wire_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
+        self.__wire_node_path.setColor( Color.CYAN.value )
         self.__wire_node_path.setRenderModeWireframe()
+        #self.__wire_node_path.hide()
 
+    def __generateDebugNodePath( self, collisionNode, height_offset ):
+        debug_geom_node = createDebugNode( collisionNode )
         self.__debug_node_path = self.__child.attachNewNode( debug_geom_node )
         self.__debug_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
         self.__debug_node_path.hide()
 
-        self.__wire_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
-        self.__wire_node_path.setColor( Color.CYAN.value )
-        self.__wire_node_path.hide()
-        print( f"Collision node {self.__name} created and attached to terrain" )  # Debugging
-
-    def colorDebugNode( self ):
-        color = Vec4( 1, 0, 0, 0.5 )
-        self.__debug_node_path.setColor( color )  # Set the color to red
-        self.__debug_node_path.setTransparency( True )
-
-    def setColorDebugNode( self, color ):
+    def colorDebugNode( self, color = Color.RED_TRANSPARENT.value ):
         self.__debug_node_path.setColor( color )  # Set the color to red
         self.__debug_node_path.setTransparency( True )
 
@@ -322,4 +322,4 @@ class CustomCollisionPolygon:
     def pointColor( self ) :
         if self.__angle > 0.2:
             return Color.RED
-        return Color.GREEN
+        return Color.WHITE

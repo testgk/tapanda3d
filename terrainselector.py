@@ -40,7 +40,7 @@ class TerrainSelector:
             custom_collision_polygon.hideNeighbors()
             custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col, 4 )
             custom_collision_polygon.showDebugNode()
-            custom_collision_polygon.setColorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
+            custom_collision_polygon.colorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
             self.__last_custom_collision_polygon = custom_collision_polygon
             #self.__center = custom_collision_polygon.surfacePosition
             #customcollisionpolygon.drawCurrentFrame( self.__render )
