@@ -1,6 +1,7 @@
 from lights import Lights
 from camera import TerrainCamera
 from camerabuttons import CameraButtons
+from objects.cube import create_cube
 from picker import Picker
 from terrainselector import TerrainSelector
 from terraincolision import TerrainCollision
@@ -33,6 +34,7 @@ class MyApp( ShowBase ):
         self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
         self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
         self.terrainCamera.hoverAbove()
+
 
     def on_map_click( self ):
         self.terrainSelector.on_map_click()

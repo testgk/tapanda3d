@@ -280,6 +280,10 @@ class CustomCollisionPolygon:
         __point_node_path.setColor( color.value )
         currentFrame.append( __point_node_path )
 
+    def attachCube( self, cube ):
+        __cube_node_path = self.__child.attachNewNode( cube )
+        __cube_node_path.show()
+
     def __str__( self ):
         return (f'{ self.__name }, row: { self.__row }, column: { self.__col }, '
                 f'area: { self.__area }, angle: { self.__angle }')
@@ -294,7 +298,7 @@ class CustomCollisionPolygon:
 
     def __attachDebugNode( self, collisionNode, height_offset = 0.1 ) :
         self.__generateDebugNodePath( collisionNode, height_offset )
-        #self.__generateWireNodePath( collisionNode, height_offset )
+        self.__generateWireNodePath( collisionNode, height_offset )
 
     def __generateWireNodePath( self, collisionNode, height_offset ):
         wire_geom_node = createWireNode( collisionNode )
@@ -302,7 +306,7 @@ class CustomCollisionPolygon:
         self.__wire_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
         self.__wire_node_path.setColor( Color.CYAN.value )
         self.__wire_node_path.setRenderModeWireframe()
-        #self.__wire_node_path.hide()
+        self.__wire_node_path.hide()
 
     def __generateDebugNodePath( self, collisionNode, height_offset ):
         debug_geom_node = createDebugNode( collisionNode )

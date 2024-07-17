@@ -3,6 +3,7 @@ from panda3d.core import Vec4, Point3
 from camera import TerrainCamera
 from customcollisionpolygon import CustomCollisionPolygon
 import customcollisionpolygon
+from objects.cube import create_cube
 
 
 class TerrainSelector:
@@ -41,9 +42,10 @@ class TerrainSelector:
             custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col, 4 )
             custom_collision_polygon.showDebugNode()
             custom_collision_polygon.colorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
+            cube = create_cube( scale = (5, 5, 5) )  # Example scale (2x)
+            # Attach the cube to the render node
+            custom_collision_polygon.attachCube( cube )
             self.__last_custom_collision_polygon = custom_collision_polygon
-            #self.__center = custom_collision_polygon.surfacePosition
-            #customcollisionpolygon.drawCurrentFrame( self.__render )
 
     def on_map_hover( self ):
         entry = self.getNewEntry()
