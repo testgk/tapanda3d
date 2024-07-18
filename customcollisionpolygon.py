@@ -143,9 +143,8 @@ def getNodePosition( name ):
     return int( pos[ 0 ] ), int( pos[ 1 ] )
 
 class CustomCollisionPolygon:
-    def __init__( self, child: NodePath, *args, **kwargs ):
+    def __init__( self, child: NodePath, height, *args, **kwargs ):
         super().__init__( *args, **kwargs )
-        self.__wire_node_path = None
         self.__edges = {}
         self.__visible = None
         self.__neighborsDic = None
@@ -157,7 +156,11 @@ class CustomCollisionPolygon:
         self.__debug_node_path = None
         self.__collision_node_path = None
         self.__collision_node = None
+        self.__wire_node_path = None
         self.__child = child
+        self.__terrainPosition = self.__child.get_pos()
+        self.__terrainPosition[ 2 ] = height
+        self.__height = height
         self.__geom = self.__child.node().getGeom( 0 )  # Assuming each GeomNode has one Geom
         self.__vertices = getVertices( self.__geom )
         self.__collision_node = CollisionNode( f'terrain_{ self.__child.getName() }' )
@@ -183,16 +186,24 @@ class CustomCollisionPolygon:
         addPolygonToPool( self.__name, self )
 
     @property
-    def vertices( self ) -> list[ GeomVertexReader ]:
-        return self.__vertices
-
-    @property
     def row( self ) -> int:
         return self.__row
 
     @property
     def col( self ) -> int:
         return self.__col
+
+    @property
+    def terrainPosition( self ):
+        return self.__terrainPosition
+
+    @property
+    def getHeight( self ):
+        return self.__height
+
+    @property
+    def getPath( self ):
+        return self.__debug_node_path
 
     def getNeighbors( self ):
         neighborsDic = {}
@@ -247,9 +258,11 @@ class CustomCollisionPolygon:
         self.__wire_node_path.show()
 
     def hideNeighbors( self ):
-        if self.__visible:
-            self.__hideDebugNode()
-            for neighbor in self.__neighborsDic.values():
+        if not self.__visible:
+            return
+
+        self.__hideDebugNode()
+        for neighbor in self.__neighborsDic.values():
                 neighbor.hideNeighbors()
 
     def __hideDebugNode( self ):
@@ -272,6 +285,10 @@ class CustomCollisionPolygon:
             edge.remove_node()
         currentFrame.clear()
 
+    def attachModel( self, model ):
+        __model_node_path = self.__child.attachNewNode( model.node() )
+        __model_node_path.setZ( __model_node_path.getZ() + 0.2 )
+
     def __draw_point( self, point: Point3, color = Color.GREEN ):
         geom_node = getPointGeomNode( point )
         __point_node_path = self.__child.attachNewNode( geom_node )
@@ -288,12 +305,12 @@ class CustomCollisionPolygon:
         return (f'{ self.__name }, row: { self.__row }, column: { self.__col }, '
                 f'area: { self.__area }, angle: { self.__angle }')
 
-    def attachCollisionNodeToTerrain( self, height_offset = 0.1 ):
+    def attachCollisionNodeToTerrain( self ):
         self.__collision_node_path = self.__child.attachNewNode( self.__collision_node )
-        self.__collision_node_path.setRenderModeWireframe()
-        self.__collision_node_path.setRenderModeThickness( 2 )
-        self.__collision_node_path.setColor( Color.BLUE.value)
-        self.__collision_node_path.setZ( self.__collision_node_path.getZ() + height_offset )
+        #self.__collision_node_path.setRenderModeWireframe()
+        #self.__collision_node_path.setRenderModeThickness( 2 )
+        #self.__collision_node_path.setColor( Color.BLUE.value)
+        #self.__collision_node_path.setZ( self.__collision_node_path.getZ() + height_offset )
         self.__attachDebugNode( self.__collision_node )
 
     def __attachDebugNode( self, collisionNode, height_offset = 0.1 ) :
@@ -327,3 +344,6 @@ class CustomCollisionPolygon:
         if self.__angle > 0.2:
             return Color.RED
         return Color.WHITE
+
+    def updateTerrainPosition( self  ):
+        print( f'terrain position: {self.__terrainPosition}')

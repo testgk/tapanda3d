@@ -1,13 +1,14 @@
-from panda3d.core import Vec4, Point3
+
+
+from panda3d.core import Vec4
 
 from camera import TerrainCamera
-from customcollisionpolygon import CustomCollisionPolygon
 import customcollisionpolygon
-from objects.cube import create_cube
-
+from direct.showbase.ShowBase import ShowBase
 
 class TerrainSelector:
-    def __init__( self, terrainPicker, mouseWatcherNode, camNode, terrainCamera: TerrainCamera, render ):
+    def __init__( self, terrain, terrainPicker, mouseWatcherNode, camNode, terrainCamera: TerrainCamera, render ):
+        self.__terrain = terrain
         self.__last_custom_collision_polygon = None
         self.__camNode = camNode
         self.__render = render
@@ -42,10 +43,22 @@ class TerrainSelector:
             custom_collision_polygon.showNeighbors( custom_collision_polygon.row, custom_collision_polygon.col, 4 )
             custom_collision_polygon.showDebugNode()
             custom_collision_polygon.colorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
-            cube = create_cube( scale = (5, 5, 5) )  # Example scale (2x)
-            # Attach the cube to the render node
-            custom_collision_polygon.attachCube( cube )
+            print( f' height {custom_collision_polygon.terrainPosition[2] }')
             self.__last_custom_collision_polygon = custom_collision_polygon
+
+    def on_map_loader_click( self, model ):
+        entry = self.getNewEntry()
+        if entry is None:
+            return
+        picked_obj = entry.getIntoNodePath()
+        print( f"Clicked node: { picked_obj }" )
+        custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
+        if custom_collision_polygon:
+            #custom_collision_polygon.showDebugNode()
+            model.setScale( 5 )
+            model.reparentTo( self.__render )
+            model.set_pos( custom_collision_polygon.terrainPosition )
+            model.setZ( model.getZ() + 5 )
 
     def on_map_hover( self ):
         entry = self.getNewEntry()

@@ -1,68 +1,68 @@
-from direct.showbase.ShowBase import ShowBase
-from panda3d.core import GeomVertexFormat, GeomVertexData, Geom, GeomTriangles, GeomVertexWriter, GeomNode
+from panda3d.core import GeomVertexFormat, GeomVertexData, Geom, GeomVertexWriter, GeomTriangles, GeomNode
 
-def create_cube( scale=(1, 1, 1)):
-        # Define the format of the vertex data
-        format = GeomVertexFormat.get_v3n3()
 
-        # Create the vertex data structure
-        vertex_data = GeomVertexData("vertices", format, Geom.UH_static)
+def create_cube() :
+    # Define the format of the vertex data
+    format = GeomVertexFormat.get_v3n3()
 
-        # Add vertices
-        vertex_writer = GeomVertexWriter(vertex_data, "vertex")
-        normal_writer = GeomVertexWriter(vertex_data, "normal")
+    # Create the vertex data structure
+    vertex_data = GeomVertexData( "vertices", format, Geom.UH_static )
 
-        # Define vertices and normals for a cube
-        vertices = [
-            (-1, -1, -1),
-            (1, -1, -1),
-            (1, 1, -1),
-            (-1, 1, -1),
-            (-1, -1, 1),
-            (1, -1, 1),
-            (1, 1, 1),
-            (-1, 1, 1)
-        ]
+    # Add vertices
+    vertex_writer = GeomVertexWriter( vertex_data, "vertex" )
+    normal_writer = GeomVertexWriter( vertex_data, "normal" )
 
-        normals = [
-            (0, 0, -1),
-            (0, 0, 1),
-            (0, -1, 0),
-            (0, 1, 0),
-            (-1, 0, 0),
-            (1, 0, 0)
-        ]
+    # Define vertices and normals for a cube
+    vertices = [
+        (-1, -1, -1),
+        (1, -1, -1),
+        (1, 1, -1),
+        (-1, 1, -1),
+        (-1, -1, 1),
+        (1, -1, 1),
+        (1, 1, 1),
+        (-1, 1, 1)
+    ]
 
-        # Write vertices and normals with scaling
-        for v in vertices:
-            vertex_writer.add_data3(v[0] * scale[0], v[1] * scale[1], v[2] )
+    normals = [
+        (0, 0, -1),
+        (0, 0, 1),
+        (0, -1, 0),
+        (0, 1, 0),
+        (-1, 0, 0),
+        (1, 0, 0)
+    ]
 
-        for n in normals:
-            normal_writer.add_data3(n[0], n[1], n[2])
+    # Write vertices and normals
+    for v in vertices :
+        vertex_writer.add_data3( v[ 0 ], v[ 1 ], v[ 2 ] )
 
-        # Create the primitive (triangles)
-        primitive = GeomTriangles(Geom.UH_static)
+    for n in normals :
+        normal_writer.add_data3( n[ 0 ], n[ 1 ], n[ 2 ] )
 
-        # Define triangles
-        triangles = [
-            (0, 1, 2), (2, 3, 0),  # Bottom
-            (4, 5, 6), (6, 7, 4),  # Top
-            (0, 1, 5), (5, 4, 0),  # Front
-            (2, 3, 7), (7, 6, 2),  # Back
-            (0, 3, 7), (7, 4, 0),  # Left
-            (1, 2, 6), (6, 5, 1)   # Right
-        ]
+    # Create the primitive (triangles)
+    primitive = GeomTriangles( Geom.UH_static )
 
-        # Add triangles to the primitive
-        for tri in triangles:
-            primitive.add_vertices(tri[0], tri[1], tri[2])
+    # Define triangles
+    triangles = [
+        (0, 1, 2), (2, 3, 0),  # Bottom
+        (4, 5, 6), (6, 7, 4),  # Top
+        (0, 1, 5), (5, 4, 0),  # Front
+        (2, 3, 7), (7, 6, 2),  # Back
+        (0, 3, 7), (7, 4, 0),  # Left
+        (1, 2, 6), (6, 5, 1)  # Right
+    ]
 
-        # Create a geometry object
-        geom = Geom(vertex_data)
-        geom.add_primitive(primitive)
+    # Add triangles to the primitive
+    for tri in triangles :
+        primitive.add_vertices( tri[ 0 ], tri[ 1 ], tri[ 2 ] )
 
-        # Create a geometry node
-        geom_node = GeomNode("cube")
-        geom_node.add_geom(geom)
+    # Create a geometry object
+    geom = Geom( vertex_data )
+    geom.add_primitive( primitive )
 
-        return geom_node
+    # Create a geometry node
+    geom_node = GeomNode( "cube" )
+    geom_node.add_geom( geom )
+
+    return geom_node
