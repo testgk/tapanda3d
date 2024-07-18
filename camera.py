@@ -37,6 +37,10 @@ class TerrainCamera:
     def zoomCamera( self, value ):
         self.__cameraHeight += value
 
+    def zoomCenter( self, value ):
+        self.__cameraRadius += ( value * 10 )
+        self.__cameraHeight += value
+
     @property
     def center( self ):
         return self.__center
