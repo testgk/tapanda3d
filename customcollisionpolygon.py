@@ -198,10 +198,6 @@ class CustomCollisionPolygon:
         return self.__terrainPosition
 
     @property
-    def getHeight( self ):
-        return self.__height
-
-    @property
     def getPath( self ):
         return self.__debug_node_path
 

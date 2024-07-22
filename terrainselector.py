@@ -6,6 +6,9 @@ from camera import TerrainCamera
 import customcollisionpolygon
 from direct.showbase.ShowBase import ShowBase
 
+from enums.colors import Color
+
+
 class TerrainSelector:
     def __init__( self, terrain, terrainPicker, mouseWatcherNode, camNode, terrainCamera: TerrainCamera, render ):
         self.__terrain = terrain
@@ -55,10 +58,11 @@ class TerrainSelector:
         custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
         if custom_collision_polygon:
             #custom_collision_polygon.showDebugNode()
-            model.setScale( 5 )
+            model.setScale( 0.5 )
             model.reparentTo( self.__render )
             model.set_pos( custom_collision_polygon.terrainPosition )
             model.setZ( model.getZ() + 5 )
+            #model.setColor( Color.GREEN.value )
 
     def on_map_hover( self ):
         entry = self.getNewEntry()

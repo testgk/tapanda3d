@@ -40,7 +40,7 @@ class MyApp( ShowBase ):
         self.terrainSelector.on_map_click()
 
     def on_map_loader_click( self ):
-        model = self.loader.loadModel('objects/tree.egg')
+        model = self.loader.loadModel('objects/tank/tank1.egg')
         self.terrainSelector.on_map_loader_click( model )
 
 
