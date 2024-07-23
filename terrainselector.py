@@ -58,7 +58,7 @@ class TerrainSelector:
         custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
         if custom_collision_polygon:
             #custom_collision_polygon.showDebugNode()
-            model.setScale( 0.5 )
+            model.setScale( 0.2 )
             model.reparentTo( self.__render )
             model.set_pos( custom_collision_polygon.terrainPosition )
             model.setZ( model.getZ() + 5 )
