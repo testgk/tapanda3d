@@ -1,7 +1,9 @@
+from entities.entity import Entity
 
 
-class Mover:
+class Mover( Entity ):
     def __init__(self):
+        super().__init__()
         self._currentPosition = None
         self._topSpeed = 0
         self._bottomSpeed = 0
