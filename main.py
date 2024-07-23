@@ -1,6 +1,7 @@
 from lights import Lights
 from camera import TerrainCamera
 from camerabuttons import CameraButtons
+from objects.stltoeggconverter import convert_stl_to_egg
 from picker import Picker
 from terrainselector import TerrainSelector
 from terraincolision import TerrainCollision
@@ -40,7 +41,8 @@ class MyApp( ShowBase ):
         self.terrainSelector.on_map_click()
 
     def on_map_loader_click( self ):
-        model = self.loader.loadModel('objects/tank/tank1.egg')
+        convert_stl_to_egg("objects/tank/body.stl","objects/tank/body.egg")
+        model = self.loader.loadModel('objects/tank/body.egg')
         self.terrainSelector.on_map_loader_click( model )
 
 
