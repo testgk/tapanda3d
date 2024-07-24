@@ -30,7 +30,7 @@ class MyApp( ShowBase ):
             terrainCamera = self.terrainCamera,
             render = self.render )
         self.task_duration = 0.2
-        self.accept( 'mouse1', self.on_map_loader_click )
+        self.accept( 'mouse1', self.on_map_click )
         self.terrainCollision.createTerrainCollision()
         self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
         self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
