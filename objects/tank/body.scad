@@ -21,6 +21,20 @@ module hull() {
         cube( [ tank_length, tank_width, tank_height ], true);
 }
 
+module track(track_length,track_width,track_height){
+     cube( [ track_length, track_width, track_height ], true);
+     translate([ track_length/2, track_width / 2, 0 ] )
+        wheel(track_width,track_height);
+     translate([ -track_length/2, track_width / 2, 0 ] )
+        wheel(track_width,track_height);
+}
+
+module wheel( track_width,track_height){
+         rotate([90, 0, 0]){
+         cylinder( h = track_width, r = track_height/2 );
+    } 
+}
+
 // Tracks
 module tracks() {
     track_width = 10;
@@ -28,15 +42,15 @@ module tracks() {
     track_length = tank_length * 0.9;
 
     translate( [ 0, -tank_width / 2, 0 ] )
-        cube( [ track_length, track_width, track_height ], true);
+        track( track_length,track_width,track_height);
 
-    translate( [ 0, tank_width / 2, 0] )
-        cube([track_length, track_width, track_height], true);
+   // translate( [ 0, tank_width / 2, 0] )
+   //     track(track_length,track_width,track_height);
 }
 
 // Assemble the tank
 module tank() {
-    tank_body();
+    tracks();
 }
 
 tank();
