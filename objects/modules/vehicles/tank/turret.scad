@@ -2,7 +2,6 @@
 
 // Tank dimensions
 tank_length = 100;
-tank_width = 60;
 tank_height = 30;
 turret_diameter = 40;
 turret_height = 20;
@@ -25,9 +24,9 @@ module barrel() {
 }
 
 // Assemble the tank
-module tank() {
+module full_turret() {
     turret();
     barrel();
 }
 
-tank();
+full_turret();
