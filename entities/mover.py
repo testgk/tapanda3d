@@ -2,14 +2,13 @@ from entities.entity import Entity
 
 
 class Mover( Entity ):
-    def __init__(self):
+    def __init__( self, engine, chassis ):
         super().__init__()
         self._currentPosition = None
-        self._topSpeed = 0
-        self._bottomSpeed = 0
-        pass
+        self._engine = engine
+        self._chassis = chassis
 
-    def move(self, destination):
+    def move(self, destination ):
         pass
 
     def stop(self):
@@ -17,4 +16,3 @@ class Mover( Entity ):
 
     def turn( self, degrees ):
         pass
-

@@ -31,6 +31,7 @@ class MyApp( ShowBase ):
             render = self.render )
         self.task_duration = 0.2
         self.accept( 'mouse1', self.on_map_click )
+        self.accept( 'mouse3', self.on_map_loader_click )
         self.terrainCollision.createTerrainCollision()
         self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
         self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
@@ -41,7 +42,7 @@ class MyApp( ShowBase ):
         self.terrainSelector.on_map_click()
 
     def on_map_loader_click( self ):
-        convert_stl_to_egg("objects/tank/body.stl","objects/tank/body.egg")
+        convert_stl_to_egg( "objects/modules/vehicles/tank/body.stl", "objects/modules/vehicles/tank/body.egg" )
         model = self.loader.loadModel('objects/tank/body.egg')
         self.terrainSelector.on_map_loader_click( model )
 
