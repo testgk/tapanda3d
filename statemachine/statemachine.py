@@ -1,8 +1,9 @@
-from statemachine.state import State
+from entities.entity import Entity
+from statemachine.states.processcommandstate import ProcessCommandState
 
 
 class StateMachine:
-    def __init__( self, entity ):
+    def __init__( self, entity: Entity ):
         self.__entity = entity
         self.__currentState = None
 
@@ -10,7 +11,12 @@ class StateMachine:
     def currentState( self ):
         return self.__currentState
 
-    def nextState(self):
+    @property
+    def nextState( self ):
+        if self.__currentState.nextState is None:
+            if self.__entity.pendingCommand():
+                self.__currentState.nextStat = ProcessCommandState( self.__entity )
+            self.__currentState.nextState = self.__currentState.decideNextState()
         return self.__currentState.nextState
 
     def executeState( self ):
@@ -19,7 +25,7 @@ class StateMachine:
     def previousState(self):
         return self.__currentState.previousState
 
-    def changeState(self, newState: State ):
+    def changeState( self ):
         self.__currentState.exit()
-        self.__currentState = newState
+        self.__currentState = self.nextState
         self.__currentState.enter()
