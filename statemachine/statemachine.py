@@ -23,3 +23,10 @@ class StateMachine:
         self.__currentState.exit()
         self.__currentState = newState
         self.__currentState.enter()
+
+
+    def generateState( self, type ):
+        pass
+
+
+
