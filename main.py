@@ -1,3 +1,7 @@
+from entities.movers.tank import Tank
+from entities.parts.chassis import BasicWheelsChassis
+from entities.parts.engine import BasicEngine
+from entities.parts.turret import CannonTurret
 from lights import Lights
 from camera import TerrainCamera
 from camerabuttons import CameraButtons
@@ -29,6 +33,13 @@ class MyApp( ShowBase ):
             camNode =  self.camNode,
             terrainCamera = self.terrainCamera,
             render = self.render )
+
+        engine = BasicEngine()
+        turret = CannonTurret()
+        chassis = BasicWheelsChassis()
+        tank = Tank( engine = engine, turret = turret, chassis = chassis )
+        tank.buildAndRender()
+
         self.task_duration = 0.2
         self.accept( 'mouse1', self.on_map_click )
         self.accept( 'mouse3', self.on_map_loader_click )
@@ -37,15 +48,19 @@ class MyApp( ShowBase ):
         self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
         self.terrainCamera.hoverAbove()
 
-
     def on_map_click( self ):
         self.terrainSelector.on_map_click()
 
     def on_map_loader_click( self ):
+        engine = BasicEngine()
+        turret = CannonTurret()
+        chassis = BasicWheelsChassis()
+        tank = Tank( engine = engine, turret = turret, chassis = chassis )
+        tank.buildAndRender()
+        
         convert_stl_to_egg( "objects/modules/vehicles/tank/body.stl", "objects/modules/vehicles/tank/body.egg" )
         model = self.loader.loadModel('objects/tank/body.egg')
         self.terrainSelector.on_map_loader_click( model )
-
 
     def updateMouseTask( self, task ):
         self.update_mouse_hover()

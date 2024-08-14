@@ -1,42 +1,40 @@
-from statemachine.state import State
+from entities.partfactory import PartFactory
+from entities.commandmanager import CommandManager
+from statemachine.commands.command import Command
 from statemachine.statemachine import StateMachine
 
 
-class PartBuilder:
-    def addPart( self, part ):
-        pass
+def entitypart( func ):
+    func._is_entitypart = True  # Mark the function or property with an attribute
+    return func
 
-    def addParts( self, _parts ):
-        pass
-
-    def renderAllParts( self ):
-        pass
-
+def entityplatform( func ):
+    func._is_entitypart = True  # Mark the function or property with an attribute
+    return func
 
 class Entity:
     def __init__( self ):
         self.__pendingCommand = None
-        self.commands = None
+        self._commands = []
         self.name = None
         self._id = None
         self._stationary = None
         self._producer = None
-        self._parts = None
-        self._partBuilder = PartBuilder()
+        self._partBuilder = PartFactory( self )
         self._stateMachine = StateMachine( self )
+        self._commandManager = CommandManager()
 
-    def build( self ):
-        self._setParts()
+    def buildAndRender( self ):
         self._createParts()
-
-    def _setParts( self ):
-        raise NotImplementedError
+        self._renderParts()
 
     def _createParts( self ):
-        self._partBuilder.addParts( self._parts )
+        self._partBuilder.addParts()
+
+    def _renderParts( self ):
         self._partBuilder.renderAllParts()
 
-    def decide( self ) -> State:
+    def decide( self ):
         currentState = self._stateMachine.currentState
         stateOptions = currentState.possibleNextStates
         return self._decideState( currentState, stateOptions )
@@ -44,6 +42,8 @@ class Entity:
     def _decideState( self, currentState, stateOptions ):
         raise NotImplementedError
 
-    def pendingCommand( self ) -> str:
-        self.__pendingCommand = self.commands.pop()
-        return self.__pendingCommand
+    def receiveCommand( self, command: Command, serial: bool ):
+        self._commandManager.receiveCommand( command )
+
+    def pendingCommand( self ) -> Command | None:
+       return self._commandManager.pendingCommand()
