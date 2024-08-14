@@ -1,9 +1,8 @@
-from entities.entity import Entity
 from statemachine.eventmetaclass import EventMetaclass
 
 
 class State( metaclass = EventMetaclass ):
-    def __init__( self, entity: Entity ):
+    def __init__( self, entity ):
         self.possibleNextStates = None
         self._nextState = None
         self._entity = entity

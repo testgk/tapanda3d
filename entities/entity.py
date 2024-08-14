@@ -1,42 +1,47 @@
-from statemachine.state import State
+from sys import modules
+
+from entities.partfactory import PartFactory
+from entities.commandmanager import CommandManager
+from statemachine.commands.command import Command
 from statemachine.statemachine import StateMachine
 
 
-class PartBuilder:
-    def addPart( self, part ):
-        pass
+def entitypart( func ):
+    func._is_entitypart = True  # Mark the function or property with an attribute
+    return func
 
-    def addParts( self, _parts ):
-        pass
+def entitymodule( func ):
+    func._is_entitymodule = True  # Mark the function or property with an attribute
+    return func
 
-    def renderAllParts( self ):
-        pass
-
+def nonrenderedpart( func ):
+    func._is_nonrenderd = True  # Mark the function or property with an attribute
+    return func
 
 class Entity:
     def __init__( self ):
         self.__pendingCommand = None
-        self.commands = None
+        self._commands = []
         self.name = None
         self._id = None
         self._stationary = None
         self._producer = None
-        self._parts = None
-        self._partBuilder = PartBuilder()
+        self.__models = []
+        self._partBuilder = PartFactory( self )
         self._stateMachine = StateMachine( self )
+        self._commandManager = CommandManager()
 
-    def build( self ):
-        self._setParts()
+    def buildAndRender( self, loader ):
         self._createParts()
-
-    def _setParts( self ):
-        raise NotImplementedError
+        self._renderParts( loader )
 
     def _createParts( self ):
-        self._partBuilder.addParts( self._parts )
-        self._partBuilder.renderAllParts()
+        self._partBuilder.addParts()
 
-    def decide( self ) -> State:
+    def _renderParts( self, loader ):
+        self.__models = self._partBuilder.renderAllParts( loader )
+
+    def decide( self ):
         currentState = self._stateMachine.currentState
         stateOptions = currentState.possibleNextStates
         return self._decideState( currentState, stateOptions )
@@ -44,6 +49,8 @@ class Entity:
     def _decideState( self, currentState, stateOptions ):
         raise NotImplementedError
 
-    def pendingCommand( self ) -> str:
-        self.__pendingCommand = self.commands.pop()
-        return self.__pendingCommand
+    def receiveCommand( self, command: Command, serial: bool ):
+        self._commandManager.receiveCommand( command )
+
+    def pendingCommand( self ) -> Command | None:
+       return self._commandManager.pendingCommand()
