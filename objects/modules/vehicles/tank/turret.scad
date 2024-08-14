@@ -15,7 +15,7 @@ module turret() {
         cylinder(h = turret_height, r = turret_diameter / 2, center = true);
 }
 
-// Barrel
+// Cannon
 module barrel() {
     translate([0, 0, tank_height + turret_height])
         rotate([0, 90, 0])
