@@ -1,4 +1,5 @@
-from entities.entity import Entity
+from entities.parts.engine import Engine
+from entities.entity import Entity, entitypart
 
 
 class Mover( Entity ):
@@ -16,3 +17,13 @@ class Mover( Entity ):
 
     def turn( self, degrees ):
         pass
+
+    @property
+    @entitypart
+    def chassis( self ):
+        return self._chassis
+
+    @property
+    @entitypart
+    def engine( self ) -> Engine:
+        return self._engine

@@ -1,3 +1,7 @@
+from entities.movers.tank import Tank
+from entities.parts.chassis import Chassis, BasicWheelsChassis
+from entities.parts.engine import Engine, BasicEngine
+from entities.parts.turret import Turret
 from lights import Lights
 from camera import TerrainCamera
 from camerabuttons import CameraButtons
@@ -42,10 +46,15 @@ class MyApp( ShowBase ):
         self.terrainSelector.on_map_click()
 
     def on_map_loader_click( self ):
+        engine = BasicEngine()
+        turret = Turret()
+        chassis = BasicWheelsChassis()
+        tank = Tank( engine = engine, turret = turret, chassis = chassis )
+        tank.buildAndRender()
+        
         convert_stl_to_egg( "objects/modules/vehicles/tank/body.stl", "objects/modules/vehicles/tank/body.egg" )
         model = self.loader.loadModel('objects/tank/body.egg')
         self.terrainSelector.on_map_loader_click( model )
-
 
     def updateMouseTask( self, task ):
         self.update_mouse_hover()
