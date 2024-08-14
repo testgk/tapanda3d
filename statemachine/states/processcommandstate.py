@@ -1,10 +1,13 @@
-from entities.entity import Entity
 from statemachine.state import State
 
 
 class ProcessCommandState( State ):
-    def __init__( self, entity: Entity ):
+    def __init__( self, entity ):
         super().__init__( entity )
+        self.__command = None
 
     def execute( self ):
-        command = self._entity.pendingCommand()
+        self.__command = self._entity.pendingCommand()
+
+    def decideNextState( self ) -> 'State':
+        return self.__command.matchingState

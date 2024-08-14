@@ -12,5 +12,5 @@ class Tank( Mover ):
         return self._chassis
 
     @property
-    def turret( self ):
+    def turret( self ) -> Turret:
         return self.__turret

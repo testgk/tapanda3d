@@ -1,5 +1,7 @@
+from statemachine.commands.command import Command
 from statemachine.state import State
 from statemachine.statemachine import StateMachine
+from statemachine.states.processcommandstate import ProcessCommandState
 
 
 class PartBuilder:
@@ -16,7 +18,7 @@ class PartBuilder:
 class Entity:
     def __init__( self ):
         self.__pendingCommand = None
-        self.commands = None
+        self._commands = []
         self.name = None
         self._id = None
         self._stationary = None
@@ -44,6 +46,15 @@ class Entity:
     def _decideState( self, currentState, stateOptions ):
         raise NotImplementedError
 
-    def pendingCommand( self ) -> str:
-        self.__pendingCommand = self.commands.pop()
-        return self.__pendingCommand
+    def receiveCommand( self, command: Command, serial: bool ):
+        if serial:
+            self._commands.insert( 0, command )
+        else:
+            self._commands = [ command ]
+            self._stateMachine.changeState( ProcessCommandState( self ) )
+
+    def pendingCommand( self ) -> Command | None:
+        if self.__pendingCommand is None:
+            self.__pendingCommand = self._commands.pop()
+        if self.__pendingCommand.progress == 0:
+            return self.__pendingCommand
