@@ -18,12 +18,10 @@ class Mover( Entity ):
     def turn( self, degrees ):
         pass
 
-    @property
     @entitypart
     def chassis( self ):
         return self._chassis
 
-    @property
     @entitypart
     def engine( self ) -> Engine:
         return self._engine

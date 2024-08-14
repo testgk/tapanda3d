@@ -13,8 +13,6 @@ class StateMachine:
     @property
     def nextState( self ) -> State:
         if self.__currentState.nextState is None:
-       #     if self.__entity.pendingCommand():
-       #         self.__currentState.nextStat = ProcessCommandState( self.__entity )
             self.__currentState.nextState = self.__currentState.decideNextState()
         return self.__currentState.nextState
 
