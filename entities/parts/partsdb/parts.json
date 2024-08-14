@@ -1,0 +1,20 @@
+{
+  "chassis": {
+    "basic_tracks": {
+      "metal": 100,
+      "energy": 100,
+      "protection": 100,
+      "damage": 100
+    }
+  },
+  "engines": {
+    "basic_engine":
+    {
+
+
+    }
+  }
+
+
+
+}
