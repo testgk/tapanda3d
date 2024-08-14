@@ -1,4 +1,6 @@
-from entities.mover import Mover
+from entities.mover import Mover, entitypart
+from entities.parts.engine import Engine
+from entities.parts.turret import Turret
 
 
 class Tank( Mover ):
@@ -8,9 +10,6 @@ class Tank( Mover ):
         self.parts = [ 'body', 'turret' ]
 
     @property
-    def chassis( self ):
-        return self._chassis
-
-    @property
-    def turret( self ):
+    @entitypart
+    def turret( self ) -> Turret:
         return self.__turret
