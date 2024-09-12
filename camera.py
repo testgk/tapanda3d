@@ -8,7 +8,7 @@ from cameracontroller import CameraController
 class TerrainCamera:
     CLOSE_PROXIMITY = 400
 
-    def __init__(self, camera, terrainCenter: Point3 ):
+    def __init__(self, camera, terrainCenter: Point3, terrainSize ):
         self.target = None
         self.__last_custom_collision_polygon = None
         self.__camera = camera
@@ -19,6 +19,7 @@ class TerrainCamera:
         self.__cameraAngle = None
         self.__camera.lookAt( self.__center )
         self.setCamera()
+        self.__terrainSize = terrainSize
         self.camera_controller = CameraController( self.__camera,
                                                    self.__center,
                                                    cameraRadius = self.__cameraRadius,
@@ -38,28 +39,30 @@ class TerrainCamera:
         self.__cameraHeight += value
 
     def zoomCenter( self, value ):
-        self.__cameraRadius += ( value * 10 )
+        if ( self.__cameraHeight + value ) < 100 or ( self.__cameraHeight + value ) > 400:
+            return
         self.__cameraHeight += value
+        self.__cameraRadius += ( value * 10 )
 
     @property
     def center( self ):
         return self.__center
 
     def hoverAbove( self ):
-        self.__cameraAngle = 0  # Initial __camera angle
-        self.__cameraRadius = 500  # Distance from the __center of the terrain
-        self.__cameraHeight = 1200  # Height of the __camera
+        self.__cameraAngle = 0
+        self.__cameraRadius = 500
+        self.__cameraHeight = 1200
         self.__updateCameraPositionAndCenter()
 
     def hoverDistance( self ):
-        self.__cameraAngle = 0  # Initial __camera angle
-        self.__cameraRadius = 1200  # Distance from the __center of the terrain
-        self.__cameraHeight = 400  # Height of the __camera
+        self.__cameraAngle = 0
+        self.__cameraRadius = 1200
+        self.__cameraHeight = 400
         self.__updateCameraPosition()
 
     def __updateCameraPositionAndCenter( self ):
         self.__center = self.__terrainCenter
-        print( f" center: { self.__terrainCenter }")
+        print( f" center: { self.__terrainCenter }" )
 
     def __updateCameraPosition( self ):
         self.camera_controller.updateParameters(
@@ -73,9 +76,7 @@ class TerrainCamera:
         self.__updateCameraPosition()
         return Task.cont  # Continue the task
 
-    @property
-    def surfaceCenter( self ):
-        return Point3( self.__center[ 0 ], self.__center[ 1 ], 0 )
-
     def setCenter( self, point ) :
+        if ( point - self.__terrainCenter  ).length() > self.__terrainSize / 3 :
+            return
         self.__center = point

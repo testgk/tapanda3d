@@ -14,9 +14,6 @@ class CameraController:
         self.__cameraAngle = cameraAngle
         self.__transitionTime = transitionTime
 
-    @property
-    def  reachedPosition( self ):
-        return self.__reachedPosition
     def updateCameraPosition( self ):
         # Calculate new __camera position on a circular path around the terrain __center
         x = self.__center.getX() + ( self.__cameraRadius ) * math.sin( self.__cameraAngle )
@@ -34,7 +31,7 @@ class CameraController:
         self.targetHpr = self.camera.getHpr()
 
         # Reset the __camera to its original orientation (optional, depending on if you want to interpolate from current position)
-        self.camera.setHpr(self.targetHpr)
+        self.camera.setHpr( self.targetHpr )
 
         # Create interpolation intervals
         posInterval = LerpPosInterval( self.camera, self.__transitionTime, self.targetPos  )

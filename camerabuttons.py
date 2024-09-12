@@ -45,7 +45,7 @@ class CameraButtons:
 
     def create_zoom_center( self ):
         zoom_in_button = DirectButton(
-            text = "Zoom In",
+            text = "Zoom Center",
             command = self.camera.zoomCenter,
             pos = ( -0.7, -0.7, 0 ),
             text_scale = 0.5,

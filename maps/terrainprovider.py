@@ -5,9 +5,16 @@ class TerrainInfo:
     def __init__( self, terrain: GeoMipTerrain, heightMap: PNMImage ):
         self.terrain = terrain
         self.heightMap = heightMap
-        terrain_size = heightMap.getXSize()
-        self.terrainCenter = Point3( terrain_size / 2, terrain_size / 2, 0 )
-        self.terrainSize = heightMap.getXSize()
+        self.__terrainSize = heightMap.getXSize()
+        self.__terrainCenter = Point3( self.__terrainSize / 2, self.__terrainSize / 2, 0 )
+
+    @property
+    def terrainSize( self ):
+        return self.__terrainSize
+
+    @property
+    def terrainCenter( self ) -> Point3:
+        return self.__terrainCenter
 
 
 class TerrainProvider:
@@ -23,7 +30,6 @@ class TerrainProvider:
         terrain.setNear( 40 )
         terrain.setFar( 200 )
         terrain.getRoot().setSz( 100 )
-        # Calculate the __center of the terrain
         terrain.generate()
         texture = self._loader.loadTexture( "maps/terrain_texture.png" )
         terrain.getRoot().setTexture( texture )
