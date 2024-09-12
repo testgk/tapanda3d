@@ -32,6 +32,13 @@ class TerrainSelector:
 
     def on_map_click( self ):
         entry = self.getNewEntry()
+        if entry:
+            #print( 'update target' )
+            point = entry.getSurfacePoint( self.__render )
+            self.__terrainCamera.setCenter( point )
+
+    def markArea( self ):
+        entry = self.getNewEntry()
         if entry is None:
             return
         picked_obj = entry.getIntoNodePath()
@@ -48,6 +55,7 @@ class TerrainSelector:
             custom_collision_polygon.colorDebugNode( Vec4( 0, 0, 0, 0.5 ) )
             print( f' height {custom_collision_polygon.terrainPosition[2] }')
             self.__last_custom_collision_polygon = custom_collision_polygon
+
 
     def on_map_loader_click( self, model ):
         entry = self.getNewEntry()
@@ -69,6 +77,10 @@ class TerrainSelector:
         if entry:
             #print( 'update target' )
             point = entry.getSurfacePoint( self.__render )
-            #rint( f"point: { point }",  )
-            if ( point - self.__terrainCamera.center ).length() > 400:
-                self.__terrainCamera.setCenter( point )
+            distance =  ( self.__terrainCamera.center - point ).length()
+            if distance < 400:
+                return
+            print( f'length: {distance}' )
+            center = ( point + self.__terrainCamera.center ) / 2
+            self.__terrainCamera.setCenter( center )
+

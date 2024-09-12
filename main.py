@@ -1,3 +1,5 @@
+from direct.task import Task
+
 from entities.movers.tank import Tank
 from entities.parts.chassis import BasicWheelsChassis
 from entities.parts.engine import BasicEngine
@@ -22,7 +24,7 @@ class MyApp( ShowBase ):
         self.terrain.getRoot().reparentTo( self.render )
         self.terrain.setFocalPoint( self.camera )
         self.disableMouse()
-        self.terrainCamera = TerrainCamera( self.camera, self.terrainInfo.terrainCenter )
+        self.terrainCamera = TerrainCamera( self.camera, self.terrainInfo.terrainCenter, self.terrainInfo.terrainSize )
         self.cameraButtons = CameraButtons( self.terrainCamera )
         self.lights = Lights( self.render )
         self.terrainCollision = TerrainCollision( self.terrain )
@@ -52,19 +54,15 @@ class MyApp( ShowBase ):
         self.terrainSelector.on_map_click()
 
     def on_map_loader_click( self ):
-        engine = BasicEngine()
-        turret = CannonTurret()
-        chassis = BasicWheelsChassis()
-        tank = Tank( engine = engine, turret = turret, chassis = chassis )
-        tank.buildAndRender()
-        
         convert_stl_to_egg( "objects/modules/vehicles/tank/body.stl", "objects/modules/vehicles/tank/body.egg" )
         model = self.loader.loadModel('objects/tank/body.egg')
         self.terrainSelector.on_map_loader_click( model )
 
     def updateMouseTask( self, task ):
         self.update_mouse_hover()
-        return task.again
+        task.delayTime = self.task_duration
+        # Return task.again to schedule the task with the new delay
+        return Task.again
 
     def update_mouse_hover( self ):
         self.terrainSelector.on_map_hover()
