@@ -1,5 +1,5 @@
 from entities.parts.part import Part
-from entities.parts.partsdb import parts
+from entities.parts.database import parts
 
 
 class Cannon( Part ) :
