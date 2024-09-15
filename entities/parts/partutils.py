@@ -1,5 +1,5 @@
 from entities.parts.part import Part
-from entities.parts.module import Module
+from entities.modules.module import Module
 
 
 def find_entity_parts( cls ) -> tuple[ list[ 'Part' ], list[ 'Module' ] ]:
