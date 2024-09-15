@@ -1,3 +1,7 @@
+from sys import modules
+
+from panda3d.core import NodePath
+
 from entities.partfactory import PartFactory
 from entities.commandmanager import CommandManager
 from statemachine.commands.command import Command
@@ -8,8 +12,12 @@ def entitypart( func ):
     func._is_entitypart = True  # Mark the function or property with an attribute
     return func
 
-def entityplatform( func ):
-    func._is_entitypart = True  # Mark the function or property with an attribute
+def entitymodule( func ):
+    func._is_entitymodule = True  # Mark the function or property with an attribute
+    return func
+
+def nonrenderedpart( func ):
+    func._is_nonrenderd = True  # Mark the function or property with an attribute
     return func
 
 class Entity:
@@ -20,19 +28,24 @@ class Entity:
         self._id = None
         self._stationary = None
         self._producer = None
+        self.__models = []
         self._partBuilder = PartFactory( self )
         self._stateMachine = StateMachine( self )
         self._commandManager = CommandManager()
 
-    def buildAndRender( self ):
+    @property
+    def models( self ) -> list[ NodePath ]:
+        return self.__models
+
+    def buildModels( self, loader ):
         self._createParts()
-        self._renderParts()
+        self._buildParts( loader )
 
     def _createParts( self ):
         self._partBuilder.addParts()
 
-    def _renderParts( self ):
-        self._partBuilder.renderAllParts()
+    def _buildParts( self, loader ):
+        self.__models = self._partBuilder.buildAllParts( loader )
 
     def decide( self ):
         currentState = self._stateMachine.currentState

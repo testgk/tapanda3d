@@ -1,10 +1,10 @@
 from entities.parts.part import Part
-from entities.parts.partsdb import parts
+from entities.parts.database import parts
 
 
 class Engine( Part ):
 	def __init__( self, partId ):
-		super().__init__( parts.ENGINES, partId )
+		super().__init__( parts.ENGINES, partId, isRendered = False )
 
 	@property
 	def objectPath( self ):

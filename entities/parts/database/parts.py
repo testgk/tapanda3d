@@ -1,20 +1,20 @@
 
 
-CHASSIS = {
+MOBILITY = {
 
 	"basic_tracks": {
 		"metal" : 100,
 		"energy" : 100,
 		"protection" : 100,
 		"damage" : 100,
-		"mobility" : 100,
+		"mobile_ability" : 100,
 	},
 	"basic_wheels": {
 		"metal" : 80,
 		"energy" : 80,
 		"protection" : 50,
 		"damage" : 50,
-		"mobility" : 60
+		"mobile_ability" : 60
 	},
 }
 
