@@ -1,6 +1,5 @@
 from panda3d.bullet import BulletHeightfieldShape, BulletRigidBodyNode
-from panda3d.core import Filename, GeoMipTerrain, PNMImage, Point3
-
+from panda3d.core import Filename ,GeoMipTerrain ,PNMImage ,Point3 ,BitMask32
 
 
 class TerrainInfo:
@@ -51,7 +50,6 @@ class TerrainProvider:
     def __terrainRigidBodyNode( self, heightMap ) -> BulletRigidBodyNode:
         max_height = 100.0  # Scale of the terrain's height
         up_axis = 2  # '2' represents Z-axis up
-        # Create the BulletHeightfieldShape from the PNMImage
         heightfield_shape = BulletHeightfieldShape( heightMap, max_height, up_axis )
         terrain_node = BulletRigidBodyNode( 'Terrain' )
         terrain_node.addShape( heightfield_shape )
