@@ -1,11 +1,14 @@
+from panda3d.bullet import BulletHeightfieldShape, BulletRigidBodyNode
 from panda3d.core import Filename, GeoMipTerrain, PNMImage, Point3
 
 
+
 class TerrainInfo:
-    def __init__( self, terrain: GeoMipTerrain, heightMap: PNMImage ):
+    def __init__( self, terrain: GeoMipTerrain, heightMap: PNMImage, rigidBodyNode: BulletRigidBodyNode ):
         self.terrain = terrain
-        self.heightMap = heightMap
+        self.__heightMap = heightMap
         self.__terrainSize = heightMap.getXSize()
+        self.__rigidBodyNode = rigidBodyNode
         self.__terrainCenter = Point3( self.__terrainSize / 2, self.__terrainSize / 2, 0 )
 
     @property
@@ -15,6 +18,15 @@ class TerrainInfo:
     @property
     def terrainCenter( self ) -> Point3:
         return self.__terrainCenter
+
+    @property
+    def heightMap( self ) -> PNMImage:
+        return self.__heightMap
+
+    @property
+    def rigidBodyNode( self ) -> BulletRigidBodyNode:
+        return self.__rigidBodyNode
+
 
 
 class TerrainProvider:
@@ -33,4 +45,20 @@ class TerrainProvider:
         terrain.generate()
         texture = self._loader.loadTexture( "maps/terrain_texture.png" )
         terrain.getRoot().setTexture( texture )
-        return TerrainInfo( terrain, heightmap )
+        rigidBodyNode = self.__terrainRigidBodyNode( heightmap )
+        return TerrainInfo( terrain, heightmap, rigidBodyNode )
+
+    def __terrainRigidBodyNode( self, heightMap ) -> BulletRigidBodyNode:
+        max_height = 100.0  # Scale of the terrain's height
+        up_axis = 2  # '2' represents Z-axis up
+        # Create the BulletHeightfieldShape from the PNMImage
+        heightfield_shape = BulletHeightfieldShape( heightMap, max_height, up_axis )
+        terrain_node = BulletRigidBodyNode( 'Terrain' )
+        terrain_node.addShape( heightfield_shape )
+        terrain_node.setMass( 0 )  # Static body (non-movable)
+        return terrain_node
+        #terrain_np = self.render.attachNewNode(terrain_node)
+        #terrain_np.setPos(0, 0, 0)
+        #self.physics_world = BulletWorld()
+        #self.physics_world.attachRigidBody( terrain_node )
+
