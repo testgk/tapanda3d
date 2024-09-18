@@ -1,17 +1,21 @@
 from direct.task import Task
+from panda3d.core import Vec3
 
 from entities.full.movers.tank import Tank
 from entities.parts.engine import BasicEngine
-from entities.parts.mobility import BasicTracks
-from entities.modules.turret import CannonTurret
+
 from lights import Lights
-from camera import TerrainCamera
-from camerabuttons import CameraButtons
 from picker import Picker
+from camera import TerrainCamera
+from panda3d.bullet import BulletWorld
+from camerabuttons import CameraButtons
 from terrainselector import TerrainSelector
 from terraincolision import TerrainCollision
 from direct.showbase.ShowBase import ShowBase
+from entities.parts.mobility import BasicTracks
+from entities.modules.turret import CannonTurret
 from maps.terrainprovider import TerrainProvider
+
 
 class MyApp( ShowBase ):
     def __init__( self ):
@@ -27,12 +31,22 @@ class MyApp( ShowBase ):
         self.cameraButtons = CameraButtons( self.terrainCamera )
         self.lights = Lights( self.render )
         self.terrainCollision = TerrainCollision( self.terrain )
+
+        # Set up Bullet physics world
+        self.physics_world = BulletWorld()
+        self.physics_world.setGravity(Vec3(0, 0, -9.81))
+        terrain_np = self.render.attachNewNode( self.terrainInfo.rigidBodyNode )
+        terrain_np.setPos(0, 0, 0)
+        self.physics_world.attachRigidBody( self.terrainInfo.rigidBodyNode )
+
         self.terrainSelector = TerrainSelector(
             terrain = self.terrain,
             terrainPicker = Picker( self.camera ),
             mouseWatcherNode = self.mouseWatcherNode,
             camNode =  self.camNode,
             terrainCamera = self.terrainCamera,
+            physicsWorld = self.physics_world,
+            taskMgr = self.taskMgr,
             render = self.render )
 
         engine = BasicEngine()
@@ -40,6 +54,7 @@ class MyApp( ShowBase ):
         mobility = BasicTracks()
         self.tank = Tank( engine = engine, turret = turret, mobility = mobility )
         self.tank.buildModels( self.loader )
+
 
         self.task_duration = 0.2
         self.accept( 'mouse1', self.on_map_click )

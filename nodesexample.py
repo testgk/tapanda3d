@@ -66,12 +66,5 @@ def createTerrainCollision( terrain: GeoMipTerrain ):
             for i, vertices in enumerate(all_triangles):
                 display_polygon(child, vertices, f"polygon_{ child.getName()}_{ i }" )
 
-# Example usage
-terrain = GeoMipTerrain("terrain")
-terrain.setHeightfield("heightmap.png")
-terrain.setBlockSize(32)  # Example block size in meters
-terrain.generate()
-terrain.getRoot().reparentTo(render)
 
-# Create the collision for the terrain
-createTerrainCollision(terrain)
+# Create the collision for the te
