@@ -1,5 +1,4 @@
-
-
+from panda3d.bullet import BulletHelper, BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
 from panda3d.core import Vec4
 
 from camera import TerrainCamera
@@ -7,17 +6,20 @@ import customcollisionpolygon
 from direct.showbase.ShowBase import ShowBase
 
 from enums.colors import Color
+from phyisics import globalClock
 
 
 class TerrainSelector:
-    def __init__( self, terrain, terrainPicker, mouseWatcherNode, camNode, terrainCamera: TerrainCamera, render ):
+    def __init__( self, terrain, terrainPicker, mouseWatcherNode, camNode, terrainCamera: TerrainCamera, physicsWorld, taskMgr, render ):
         self.__terrain = terrain
+        self.taskMgr = taskMgr
         self.__last_custom_collision_polygon = None
         self.__camNode = camNode
         self.__render = render
         self.__terrainPicker = terrainPicker
         self.__mouseWatcherNode = mouseWatcherNode
         self.__terrainCamera = terrainCamera
+        self.physicsWorld = physicsWorld
 
     def getNewEntry( self ):
         if self.__mouseWatcherNode.hasMouse():
@@ -67,10 +69,35 @@ class TerrainSelector:
         if custom_collision_polygon:
             #custom_collision_polygon.showDebugNode()
             model.setScale( 0.2 )
-            model.reparentTo( self.__render )
+            #model.reparentTo( self.__render )
             model.set_pos( custom_collision_polygon.terrainPosition )
-            model.setZ( model.getZ() + 5 )
+            model.setZ( model.getZ() + 1 )
+
+            # Create a BulletTriangleMesh
+            mesh = BulletTriangleMesh()
+            # Add the geometry of the model to the triangle mesh
+            self.add_model_to_bullet_mesh( mesh, model )
+
+            # Create a BulletTriangleMeshShape from the mesh
+            model_shape = BulletTriangleMeshShape( mesh, dynamic = True )  # dynamic=True for movable objects
+
+            # Create a BulletRigidBodyNode for the model and attach the shape
+            model_node = BulletRigidBodyNode( 'Model' )
+            model_node.addShape( model_shape )
+            model_node.setMass( 1.0 )  # Dynamic body (affected by gravity)
+            model_np = self.__render.attachNewNode( model_node )
+            model_np.setPos( model.getPos() )  # Sync the physics node with the model position
+            model.reparentTo( model_np )
+
+            self.physicsWorld.attachRigidBody( model_node )
+            self.taskMgr.add( self.update_physics, "update_physics" )
+
             #model.setColor( Color.GREEN.value )
+    def update_physics(self, task):
+        """Update the physics world."""
+        dt = globalClock.getDt()
+        self.physicsWorld.doPhysics(dt)
+        return task.cont
 
     def on_map_hover( self ):
         entry = self.getNewEntry()
@@ -83,4 +110,21 @@ class TerrainSelector:
             print( f'length: {distance}' )
             center = ( point + self.__terrainCamera.center ) / 2
             self.__terrainCamera.setCenter( center )
+
+
+    def create_model_physics( self, model ) :
+        mesh = BulletTriangleMesh()
+        BulletHelper.fromCollisionSolids( mesh, model.node() )
+        shape = BulletTriangleMeshShape( mesh, dynamic = True )  # Set dynamic=True for non-static
+        return shape
+
+
+    def add_model_to_bullet_mesh(self, mesh, model_np):
+        """Adds the geometry of the model to a BulletTriangleMesh."""
+        geom_node = model_np.find("**/+GeomNode").node()
+
+        for i in range(geom_node.getNumGeoms()):
+            geom = geom_node.getGeom(i)
+            mesh.addGeom(geom)
+
 
