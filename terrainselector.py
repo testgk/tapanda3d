@@ -1,5 +1,5 @@
 from panda3d.bullet import BulletHelper, BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
-from panda3d.core import Vec4
+from panda3d.core import Vec4 ,BitMask32
 
 from camera import TerrainCamera
 import customcollisionpolygon
@@ -37,6 +37,7 @@ class TerrainSelector:
         if entry:
             #print( 'update target' )
             point = entry.getSurfacePoint( self.__render )
+            print( f"point: { point }")
             self.__terrainCamera.setCenter( point )
 
     def markArea( self ):
@@ -67,11 +68,11 @@ class TerrainSelector:
         print( f"Clicked node: { picked_obj }" )
         custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
         if custom_collision_polygon:
-            #custom_collision_polygon.showDebugNode()
-            model.setScale( 0.2 )
+            custom_collision_polygon.showDebugNode()
+            #model.setScale( 0.2 )
             #model.reparentTo( self.__render )
-            model.set_pos( custom_collision_polygon.terrainPosition )
-            model.setZ( model.getZ() + 1 )
+            #model.set_pos( entry.getSurfacePoint( self.__render ) )
+            #model.setZ( model.getZ() + 1 )
 
             # Create a BulletTriangleMesh
             mesh = BulletTriangleMesh()
@@ -86,9 +87,8 @@ class TerrainSelector:
             model_node.addShape( model_shape )
             model_node.setMass( 1.0 )  # Dynamic body (affected by gravity)
             model_np = self.__render.attachNewNode( model_node )
-            model_np.setPos( model.getPos() )  # Sync the physics node with the model position
+            model_np.set_pos( entry.getSurfacePoint( self.__render ) )
             model.reparentTo( model_np )
-
             self.physicsWorld.attachRigidBody( model_node )
             self.taskMgr.add( self.update_physics, "update_physics" )
 

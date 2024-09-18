@@ -35,8 +35,8 @@ class MyApp( ShowBase ):
         # Set up Bullet physics world
         self.physics_world = BulletWorld()
         self.physics_world.setGravity(Vec3(0, 0, -9.81))
-        terrain_np = self.render.attachNewNode( self.terrainInfo.rigidBodyNode )
-        terrain_np.setPos(0, 0, 0)
+        terrain_np = self.render.attachNewNode( self.terrainInfo.rigidBodyNode  )
+        terrain_np.setPos( self.terrain.getRoot().getPos() )
         self.physics_world.attachRigidBody( self.terrainInfo.rigidBodyNode )
 
         self.terrainSelector = TerrainSelector(
