@@ -32,20 +32,29 @@ class Entity:
         self._partBuilder = PartFactory( self )
         self._stateMachine = StateMachine( self )
         self._commandManager = CommandManager()
+        self.__collisionSystems = []
 
     @property
     def models( self ) -> list[ NodePath ]:
         return self.__models
 
+    @property
+    def collisionSystems( self ):
+        return self.__collisionSystems
+
     def buildModels( self, loader ):
         self._createParts()
         self._buildParts( loader )
+        self._getCollisionSystems()
 
     def _createParts( self ):
         self._partBuilder.addParts()
 
     def _buildParts( self, loader ):
         self.__models = self._partBuilder.buildAllParts( loader )
+
+    def _getCollisionSystems( self ):
+        self.__collisionSystems = self._partBuilder.getCollisionSystem( self.__models )
 
     def decide( self ):
         currentState = self._stateMachine.currentState

@@ -11,3 +11,4 @@ class Tank( Mover ):
     @entitymodule
     def turret( self ) -> Turret:
         return self.__turret
+
