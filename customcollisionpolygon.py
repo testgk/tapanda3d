@@ -152,6 +152,7 @@ class CustomCollisionPolygon:
         self.__row = None
         self.__area = None
         self.__name = None
+        self.__name = None
         self.__angle = None
         self.__debug_node_path = None
         self.__collision_node_path = None
@@ -164,7 +165,7 @@ class CustomCollisionPolygon:
         self.__geom = self.__child.node().getGeom( 0 )  # Assuming each GeomNode has one Geom
         self.__vertices = getVertices( self.__geom )
         self.__collision_node = CollisionNode( f'terrain_{ self.__child.getName() }' )
-        self.__collision_node.setIntoCollideMask( BitMask32.bit( 1 ) )
+        self.__collision_node.setCollideMask( BitMask32.bit( 1 ) )
         self.createCollisionNode( self.__vertices )
 
     def createCollisionNode( self, vertices ):
@@ -303,10 +304,10 @@ class CustomCollisionPolygon:
 
     def attachCollisionNodeToTerrain( self ):
         self.__collision_node_path = self.__child.attachNewNode( self.__collision_node )
-        #self.__collision_node_path.setRenderModeWireframe()
-        #self.__collision_node_path.setRenderModeThickness( 2 )
-        #self.__collision_node_path.setColor( Color.BLUE.value)
-        #self.__collision_node_path.setZ( self.__collision_node_path.getZ() + height_offset )
+        self.__collision_node_path.setRenderModeWireframe()
+        self.__collision_node_path.setRenderModeThickness( 2 )
+        self.__collision_node_path.setColor( Color.BLUE.value)
+        self.__collision_node_path.setZ( self.__collision_node_path.getZ() )
         self.__attachDebugNode( self.__collision_node )
 
     def __attachDebugNode( self, collisionNode, height_offset = 0.1 ) :
@@ -319,7 +320,7 @@ class CustomCollisionPolygon:
         self.__wire_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
         self.__wire_node_path.setColor( Color.CYAN.value )
         self.__wire_node_path.setRenderModeWireframe()
-        self.__wire_node_path.hide()
+        #self.__wire_node_path.hide()
 
     def __generateDebugNodePath( self, collisionNode, height_offset ):
         debug_geom_node = createDebugNode( collisionNode )

@@ -41,20 +41,21 @@ class TerrainProvider:
         terrain.setNear( 40 )
         terrain.setFar( 200 )
         terrain.getRoot().setSz( 100 )
+        terrain.getRoot().setCollideMask( BitMask32.bit( 1 ) )
         terrain.generate()
-        texture = self._loader.loadTexture( "maps/terrain_texture.png" )
-        terrain.getRoot().setTexture( texture )
+        #texture = self._loader.loadTexture( "maps/terrain_texture.png" )
+        #terrain.getRoot().setTexture( texture )
         rigidBodyNode = self.__terrainRigidBodyNode( heightmap )
         return TerrainInfo( terrain, heightmap, rigidBodyNode )
 
     def __terrainRigidBodyNode( self, heightMap ) -> BulletRigidBodyNode:
-        max_height = 100.0  # Scale of the terrain's height
+        max_height = 10  # Scale of the terrain's height
         up_axis = 2  # '2' represents Z-axis up
         heightfield_shape = BulletHeightfieldShape( heightMap, max_height, up_axis )
-        terrain_node = BulletRigidBodyNode( 'Terrain' )
-        terrain_node.addShape( heightfield_shape )
-        terrain_node.setMass( 0 )  # Static body (non-movable)
-        return terrain_node
+        rigid_node = BulletRigidBodyNode( 'Terrain' )
+        rigid_node.addShape( heightfield_shape )
+        rigid_node.setMass( 0 )  # Static body (non-movable)
+        return rigid_node
         #terrain_np = self.render.attachNewNode(terrain_node)
         #terrain_np.setPos(0, 0, 0)
         #self.physics_world = BulletWorld()
