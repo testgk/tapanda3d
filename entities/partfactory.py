@@ -2,7 +2,8 @@ import os
 
 from typing import TYPE_CHECKING ,Callable
 
-from panda3d.core import NodePath
+from panda3d.core import BitMask32, CollisionBox, CollisionHandlerPusher, CollisionNode, CollisionTraverser, NodePath, \
+    Vec3
 
 if TYPE_CHECKING:
     from entities.entity import Entity
@@ -49,10 +50,26 @@ class PartFactory:
                 continue
             try :
                 eggPath = self.__getPartEggPath( part )
-                models.append(  loader.loadModel( eggPath ) )
-            except:
+                models.append( self.__loadModel( eggPath, loader ) )
+            except Exception as e :
                 pass
         return models
+
+    def __loadModel( self, eggPath, loader ) :
+        model = loader.loadModel( eggPath )
+        return model
+
+    def getCollisionSystem( self, models ):
+        collision_nps = []
+        for model in models:
+            if model is None:
+                return
+            collision_box_node = create_collision_box( model )
+            if collision_box_node :
+                collision_np = model.attachNewNode( collision_box_node )
+                collision_np.show()
+                collision_nps.append( collision_np )
+        return collision_nps
 
     def __getPartEggPath( self, part: 'Part' ):
         fullPath = os.path.join( "objects/parts/" ,part.objectPath, part.partId )
@@ -64,3 +81,83 @@ class PartFactory:
             if os.path.exists( stlPath ):
                 convert_stl_to_egg( stlPath ,eggPath )
                 return eggPath
+
+
+
+from panda3d.core import Vec3, CollisionBox, CollisionNode
+
+
+def get_model_dimensions( model_np ) :
+    """Gets the approximate dimensions of a model."""
+    geom_node = model_np.find( "**/+GeomNode" ).node()
+    if not geom_node :
+        return None
+
+    # Initialize min and max bounds with large values to ensure they are updated
+    min_bounds = Vec3( float( 'inf' ), float( 'inf' ), float( 'inf' ) )
+    max_bounds = Vec3( float( '-inf' ), float( '-inf' ), float( '-inf' ) )
+
+    # Loop over all geometries in the node to compute the bounds
+    for i in range( geom_node.getNumGeoms() ) :
+        geom = geom_node.getGeom( i )
+        bounds = geom.getBounds()
+
+        # Update min_bounds
+        min_bounds.setX( min( min_bounds.x, bounds.getMin().x ) )
+        min_bounds.setY( min( min_bounds.y, bounds.getMin().y ) )
+        min_bounds.setZ( min( min_bounds.z, bounds.getMin().z ) )
+
+        # Update max_bounds
+        max_bounds.setX( max( max_bounds.x, bounds.getMax().x ) )
+        max_bounds.setY( max( max_bounds.y, bounds.getMax().y ) )
+        max_bounds.setZ( max( max_bounds.z, bounds.getMax().z ) )
+
+    return min_bounds, max_bounds
+
+
+def create_collision_box( model_np ) :
+    """Creates a CollisionBox that roughly matches the model's dimensions."""
+    dimensions = get_model_dimensions( model_np )
+    if dimensions is None :
+        return None
+
+    min_bounds, max_bounds = dimensions
+
+    # Calculate width, height, and depth
+    width = max_bounds.x - min_bounds.x
+    height = max_bounds.y - min_bounds.y
+    depth = max_bounds.z - min_bounds.z
+
+    # Calculate the center of the box
+    center_x = (min_bounds.x + max_bounds.x) / 2
+    center_y = (min_bounds.y + max_bounds.y) / 2
+    center_z = (min_bounds.z + max_bounds.z) / 2
+
+    # Create a CollisionBox with the center and half extents (width / 2, height / 2, depth / 2)
+    collision_box = CollisionBox(
+            Vec3( center_x, center_y, center_z ),  # Center of the box
+            width / 2, height / 2, depth / 2  # Half extents (dimensions divided by 2)
+    )
+
+    # Create a collision node to attach the collision box to
+    collision_node = CollisionNode( 'model_collision' )
+    collision_node.addSolid( collision_box )
+    return collision_node
+
+
+
+from panda3d.bullet import BulletWorld
+
+class MyCollisionHandler( CollisionHandlerPusher):
+    def __init__(self):
+        CollisionHandlerPusher.__init__(self)
+
+    def handleCollision(self, entry):
+        # Get the colliding nodes
+        into_node = entry.getIntoNodePath()
+        from_node = entry.getFromNodePath()
+
+        # Check if the collision involves your model and the terrain
+        if "your_model" in from_node.getName() and "terrain" in into_node.getName():
+            # Handle the collision (e.g., stop a moving object)
+            print("Collision between model and terrain!")
