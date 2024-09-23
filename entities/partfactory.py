@@ -2,6 +2,7 @@ import os
 
 from typing import TYPE_CHECKING ,Callable
 
+from panda3d.bullet import BulletRigidBodyNode ,BulletTriangleMesh ,BulletTriangleMeshShape
 from panda3d.core import BitMask32, CollisionBox, CollisionHandlerPusher, CollisionNode, CollisionTraverser, NodePath, \
     Vec3
 
@@ -82,6 +83,19 @@ class PartFactory:
                 convert_stl_to_egg( stlPath ,eggPath )
                 return eggPath
 
+    def createRigidBodies( self ,models ):
+        body_node = BulletRigidBodyNode('multi_shape_body')
+        for model in models:
+            if model is None:
+                pass
+
+            mesh = BulletTriangleMesh()
+            add_model_to_bullet_mesh( mesh, model )
+            model_shape = BulletTriangleMeshShape( mesh, dynamic = True )  # dynamic=True for movable objects
+            body_node.addShape( model_shape )
+            body_node.applyCentralImpulse( Vec3( 0 ,0 ,100 ) )
+            body_node.setMass( 0.1 )
+        return body_node
 
 
 from panda3d.core import Vec3, CollisionBox, CollisionNode
@@ -145,19 +159,9 @@ def create_collision_box( model_np ) :
     return collision_node
 
 
-
-from panda3d.bullet import BulletWorld
-
-class MyCollisionHandler( CollisionHandlerPusher):
-    def __init__(self):
-        CollisionHandlerPusher.__init__(self)
-
-    def handleCollision(self, entry):
-        # Get the colliding nodes
-        into_node = entry.getIntoNodePath()
-        from_node = entry.getFromNodePath()
-
-        # Check if the collision involves your model and the terrain
-        if "your_model" in from_node.getName() and "terrain" in into_node.getName():
-            # Handle the collision (e.g., stop a moving object)
-            print("Collision between model and terrain!")
+def add_model_to_bullet_mesh( mesh, model_np ):
+        """Adds the geometry of the model to a BulletTriangleMesh."""
+        geom_node = model_np.find("**/+GeomNode").node()
+        for i in range(geom_node.getNumGeoms()):
+            geom = geom_node.getGeom(i)
+            mesh.addGeom(geom)
