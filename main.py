@@ -3,6 +3,7 @@ from panda3d.core import CollisionHandlerPusher, CollisionHandlerQueue, Collisio
 
 from entities.full.movers.tank import Tank
 from entities.parts.engine import BasicEngine
+from enums.colors import Color
 
 from lights import Lights
 from phyisics import globalClock
@@ -31,16 +32,17 @@ class MyApp( ShowBase ):
         self.terrainCamera = TerrainCamera( self.camera, self.terrainInfo.terrainCenter, self.terrainInfo.terrainSize )
         self.cameraButtons = CameraButtons( self.terrainCamera )
         self.lights = Lights( self.render )
-        self.terrainCollision = TerrainCollision( self.terrain )
 
         # Set up Bullet physics world
         self.physics_world = BulletWorld()
         self.physics_world.setGravity(Vec3(0, 0, -9.81))
         self.enable_debug_visualization()
-        terrain_np = self.render.attachNewNode( self.terrainInfo.rigidBodyNode  )
-        terrain_np.setPos( self.terrain.getRoot().getPos() )
-        self.physics_world.attachRigidBody( self.terrainInfo.rigidBodyNode )
-        terrain_np.show()
+        self.terrainCollision = TerrainCollision( self.terrain, self.physics_world, self.render )
+
+        #terrain_np = self.render.attachNewNode( self.terrainInfo.rigidBodyNode  )
+        #terrain_np.setPos( self.terrain.getRoot().getPos() )
+        #self.physics_world.attachRigidBody( self.terrainInfo.rigidBodyNode )
+        #terrain_np.show()
 
         self.terrainSelector = TerrainSelector(
             terrain = self.terrain,
@@ -68,7 +70,7 @@ class MyApp( ShowBase ):
         self.terrainCollision.createTerrainCollision()
         self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
         self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
-        #self.taskMgr.add(self.traverse_collisions, "traverse_collisions")
+        self.taskMgr.add(self.traverse_collisions, "traverse_collisions")
         self.taskMgr.add( self.check_collisions, "check_collisions" )
         self.taskMgr.add( self.update_physics, "update_physics" )
         self.terrainCamera.hoverAbove()
@@ -99,6 +101,8 @@ class MyApp( ShowBase ):
         debug_node.showBoundingBoxes( True )
         # Attach the debug node to render
         debug_np = self.render.attachNewNode( debug_node )
+        debug_np.setColor( Color.RED.value )
+        debug_np.show()
         # Attach the debug node to the Bullet world
         self.physics_world.setDebugNode( debug_np.node() )
 

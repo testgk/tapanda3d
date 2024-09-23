@@ -82,6 +82,10 @@ class PartFactory:
                 convert_stl_to_egg( stlPath ,eggPath )
                 return eggPath
 
+    def createRigidBodies( self ,models ):
+        for model in models:
+            if model is None:
+                pass
 
 
 from panda3d.core import Vec3, CollisionBox, CollisionNode
@@ -146,7 +150,8 @@ def create_collision_box( model_np ) :
 
 
 
-from panda3d.bullet import BulletWorld
+from panda3d.bullet import BulletWorld ,BulletRigidBodyNode
+
 
 class MyCollisionHandler( CollisionHandlerPusher):
     def __init__(self):

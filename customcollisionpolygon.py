@@ -1,6 +1,7 @@
 import math
 from typing import Any
 
+from panda3d.bullet import BulletConvexHullShape ,BulletRigidBodyNode
 from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, DirectionalLight, GeomVertexReader, LVector4, \
     NodePath, Vec3, \
     GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3, GeomLines, \
@@ -145,6 +146,8 @@ def getNodePosition( name ):
 class CustomCollisionPolygon:
     def __init__( self, child: NodePath, height, *args, **kwargs ):
         super().__init__( *args, **kwargs )
+        self.__rigid_body_node_path = None
+        self.__rigid_body_node = None
         self.__edges = {}
         self.__visible = None
         self.__neighborsDic = None
@@ -167,6 +170,7 @@ class CustomCollisionPolygon:
         self.__collision_node = CollisionNode( f'terrain_{ self.__child.getName() }' )
         self.__collision_node.setCollideMask( BitMask32.bit( 1 ) )
         self.createCollisionNode( self.__vertices )
+
 
     def createCollisionNode( self, vertices ):
         triangleCount = 0
@@ -201,6 +205,10 @@ class CustomCollisionPolygon:
     @property
     def getPath( self ):
         return self.__debug_node_path
+
+    @property
+    def rigidBodyNode( self ) -> BulletRigidBodyNode:
+        return self.__rigid_body_node
 
     def getNeighbors( self ):
         neighborsDic = {}
@@ -304,11 +312,12 @@ class CustomCollisionPolygon:
 
     def attachCollisionNodeToTerrain( self ):
         self.__collision_node_path = self.__child.attachNewNode( self.__collision_node )
-        self.__collision_node_path.setRenderModeWireframe()
-        self.__collision_node_path.setRenderModeThickness( 2 )
-        self.__collision_node_path.setColor( Color.BLUE.value)
-        self.__collision_node_path.setZ( self.__collision_node_path.getZ() )
         self.__attachDebugNode( self.__collision_node )
+
+    def attachRigidBodyNodeToTerrain( self, render ):
+        self.__rigid_body_node = create_convex_hull_rigid_body( self.__vertices )
+        self.__rigid_body_node.setMass( 0 )
+        self.__rigid_body_node_path = self.__child.attachNewNode( self.__rigid_body_node )
 
     def __attachDebugNode( self, collisionNode, height_offset = 0.1 ) :
         self.__generateDebugNodePath( collisionNode, height_offset )
@@ -326,7 +335,7 @@ class CustomCollisionPolygon:
         debug_geom_node = createDebugNode( collisionNode )
         self.__debug_node_path = self.__child.attachNewNode( debug_geom_node )
         self.__debug_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
-        self.__debug_node_path.hide()
+        #self.__debug_node_path.hide()
 
     def colorDebugNode( self, color = Color.RED_TRANSPARENT.value ):
         self.__debug_node_path.setColor( color )  # Set the color to red
@@ -343,4 +352,19 @@ class CustomCollisionPolygon:
         return Color.WHITE
 
     def updateTerrainPosition( self  ):
-        print( f'terrain position: {self.__terrainPosition}')
+        print( f'terrain position: { self.__terrainPosition }' )
+
+def create_convex_hull_rigid_body( vertices_list: list ) -> BulletRigidBodyNode:
+    # Create a BulletConvexHullShape
+    shape = BulletConvexHullShape()
+
+    # Add vertices to the convex hull
+    for triangle in vertices_list:
+        for vertex in triangle:
+            shape.addPoint(vertex)
+
+    # Create a BulletRigidBodyNode
+    rigid_body_node = BulletRigidBodyNode('ConvexHullRigidBody')
+    rigid_body_node.addShape(shape)
+    rigid_body_node.setMass(1.0)  # Set a non-zero mass for dynamic objects
+    return rigid_body_node

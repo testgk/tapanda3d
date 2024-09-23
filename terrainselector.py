@@ -75,7 +75,7 @@ class TerrainSelector:
             model_node = BulletRigidBodyNode( 'Model' )
             model_node.addShape( model_shape )
             model_node.applyCentralImpulse( Vec3( 0, 0, 100 ) )
-            model_node.setMass( 1.0 )  # Dynamic body (affected by gravity)
+            model_node.setMass( 0.1 )  # Dynamic body (affected by gravity)
             model_np = self.__render.attachNewNode( model_node )
             model_np.set_pos( entry.getSurfacePoint( self.__render ) )
             model_np.setZ( model_np.getZ() + 100 )
