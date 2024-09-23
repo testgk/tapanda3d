@@ -33,6 +33,7 @@ class Entity:
         self._stateMachine = StateMachine( self )
         self._commandManager = CommandManager()
         self.__collisionSystems = []
+        self.__rigidBodyNode = None
 
     @property
     def models( self ) -> list[ NodePath ]:
@@ -42,10 +43,16 @@ class Entity:
     def collisionSystems( self ):
         return self.__collisionSystems
 
+    @property
+    def rigidBodyNode( self ):
+        return  self.__rigidBodyNode
+
+
     def buildModels( self, loader ):
         self._createParts()
         self._buildParts( loader )
-        self._getCollisionSystems()
+        self._createCollisionSystems()
+        self._createRigidBodies()
 
     def _createParts( self ):
         self._partBuilder.addParts()
@@ -53,7 +60,7 @@ class Entity:
     def _buildParts( self, loader ):
         self.__models = self._partBuilder.buildAllParts( loader )
 
-    def _getCollisionSystems( self ):
+    def _createCollisionSystems( self ):
         self.__collisionSystems = self._partBuilder.getCollisionSystem( self.__models )
 
     def decide( self ):
@@ -69,3 +76,6 @@ class Entity:
 
     def pendingCommand( self ) -> Command | None:
        return self._commandManager.pendingCommand()
+
+    def _createRigidBodies( self ):
+        self.__rigidBodyNode = self._partBuilder.createRigidBodies( self.__models  )

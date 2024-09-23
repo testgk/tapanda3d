@@ -1,5 +1,7 @@
 import os.path
 
+from panda3d.core import LColor
+
 
 class Part:
     def __init__( self, partData, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
@@ -20,6 +22,10 @@ class Part:
         return self.__isRendered
 
     @property
+    def color( self ):
+        return self.__color
+
+    @property
     def partId( self ) -> str:
         return self.__partId
 
@@ -29,3 +35,4 @@ class Part:
         if self._external:
             self.__protection = part_data[ "protection" ]
             self.__damage = part_data[ "damage" ]
+            self.__color = LColor
