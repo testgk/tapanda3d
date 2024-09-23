@@ -5,6 +5,7 @@ from camera import TerrainCamera
 import customcollisionpolygon
 from direct.showbase.ShowBase import ShowBase
 
+from entities.entity import Entity
 from enums.colors import Color
 from phyisics import globalClock
 
@@ -60,7 +61,7 @@ class TerrainSelector:
             self.__last_custom_collision_polygon = custom_collision_polygon
 
 
-    def on_map_loader_click( self, model ):
+    def on_map_loader_click( self, entity: Entity ):
         entry = self.getNewEntry()
         if entry is None:
             return
@@ -69,21 +70,19 @@ class TerrainSelector:
         custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
         if custom_collision_polygon:
             custom_collision_polygon.showDebugNode()
-            mesh = BulletTriangleMesh()
-            self.add_model_to_bullet_mesh( mesh, model )
-            model_shape = BulletTriangleMeshShape( mesh, dynamic = True )  # dynamic=True for movable objects
-            model_node = BulletRigidBodyNode( 'Model' )
-            model_node.addShape( model_shape )
-            model_node.applyCentralImpulse( Vec3( 0, 0, 100 ) )
-            model_node.setMass( 1.0 )  # Dynamic body (affected by gravity)
-            model_np = self.__render.attachNewNode( model_node )
+            #mesh = BulletTriangleMesh()
+            #self.add_model_to_bullet_mesh( mesh, model )
+            #model_shape = BulletTriangleMeshShape( mesh, dynamic = True )  # dynamic=True for movable objects
+            #model_node = BulletRigidBodyNode( 'Model' )
+            #model_node.addShape( model_shape )
+            #model_node.applyCentralImpulse( Vec3( 0, 0, 100 ) )
+            #model_node.setMass( 0.1 )  # Dynamic body (affected by gravity)
+            model_np = self.__render.attachNewNode( entity.rigidBodyNode )
             model_np.set_pos( entry.getSurfacePoint( self.__render ) )
             model_np.setZ( model_np.getZ() + 100 )
-            model.reparentTo( model_np )
-            self.physicsWorld.attachRigidBody( model_node )
-            self.taskMgr.add( self.update_physics, "update_physics" )
+            #model.reparentTo( model_np )
+            self.physicsWorld.attachRigidBody( entity.rigidBodyNode )
 
-            #model.setColor( Color.GREEN.value )
     def update_physics(self, task):
         """Update the physics world."""
         dt = globalClock.getDt()

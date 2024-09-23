@@ -1,8 +1,10 @@
 from direct.task import Task
 from panda3d.core import CollisionHandlerPusher, CollisionHandlerQueue, CollisionTraverser, LColor, Vec3
 
+from entities.entity import Entity
 from entities.full.movers.tank import Tank
 from entities.parts.engine import BasicEngine
+from enums.colors import Color
 
 from lights import Lights
 from phyisics import globalClock
@@ -31,16 +33,13 @@ class MyApp( ShowBase ):
         self.terrainCamera = TerrainCamera( self.camera, self.terrainInfo.terrainCenter, self.terrainInfo.terrainSize )
         self.cameraButtons = CameraButtons( self.terrainCamera )
         self.lights = Lights( self.render )
-        self.terrainCollision = TerrainCollision( self.terrain )
 
         # Set up Bullet physics world
         self.physics_world = BulletWorld()
         self.physics_world.setGravity(Vec3(0, 0, -9.81))
-        self.enable_debug_visualization()
-        terrain_np = self.render.attachNewNode( self.terrainInfo.rigidBodyNode  )
-        terrain_np.setPos( self.terrain.getRoot().getPos() )
-        self.physics_world.attachRigidBody( self.terrainInfo.rigidBodyNode )
-        terrain_np.show()
+        #self.enable_debug_visualization()
+        self.terrainCollision = TerrainCollision( self.terrain, self.physics_world, self.render )
+
 
         self.terrainSelector = TerrainSelector(
             terrain = self.terrain,
@@ -57,10 +56,7 @@ class MyApp( ShowBase ):
         mobility = BasicTracks()
         self.tank = Tank( engine = engine, turret = turret, mobility = mobility )
         self.tank.buildModels( self.loader )
-        self.collision_handler = CollisionHandlerQueue()
-        self.cTrav = CollisionTraverser()
-        for col in self.tank.collisionSystems:
-            self.cTrav.addCollider( col, self.collision_handler )
+        #self.__createCollisionForEntity( tank )
 
         self.task_duration = 0.2
         self.accept( 'mouse1', self.on_map_click )
@@ -68,17 +64,25 @@ class MyApp( ShowBase ):
         self.terrainCollision.createTerrainCollision()
         self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
         self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
-        #self.taskMgr.add(self.traverse_collisions, "traverse_collisions")
-        self.taskMgr.add( self.check_collisions, "check_collisions" )
+        #self.taskMgr.add( self.check_collisions, "check_collisions" )
         self.taskMgr.add( self.update_physics, "update_physics" )
+        #self.taskMgr.doMethodLater( 0.02 ,self.check_collisions ,'check_collisions' )
+        self.taskMgr.doMethodLater( 0.02 ,self.update_physics ,'update_physics' )
+
+
         self.terrainCamera.hoverAbove()
+
+    def __createCollisionForEntity( self, entity: Entity ):
+        self.collision_handler = CollisionHandlerQueue()
+        self.cTrav = CollisionTraverser()
+        for col in entity.collisionSystems:
+            self.cTrav.addCollider( col, self.collision_handler )
 
     def on_map_click( self ):
         self.terrainSelector.on_map_click()
 
     def on_map_loader_click( self ):
-        for model in self.tank.models:
-            self.terrainSelector.on_map_loader_click( model )
+        self.terrainSelector.on_map_loader_click( self.tank )
 
     def updateMouseTask( self, task ):
         self.update_mouse_hover()
@@ -99,24 +103,14 @@ class MyApp( ShowBase ):
         debug_node.showBoundingBoxes( True )
         # Attach the debug node to render
         debug_np = self.render.attachNewNode( debug_node )
+        debug_np.setColor( Color.RED.value )
+        debug_np.show()
         # Attach the debug node to the Bullet world
         self.physics_world.setDebugNode( debug_np.node() )
-
-    def traverse_collisions( self, task ) :
-        """Traverse the scene and detect collisions."""
-        self.cTrav.traverse( self.render )
-        return task.cont
 
     def check_collisions(self, task):
         """Check for collisions and print results."""
         self.cTrav.traverse(self.render)
-
-        # Go through the collision handler to see if any collisions were detected
-        if self.collision_handler.getNumEntries() > 0:
-            self.collision_handler.sortEntries()  # Sort by distance
-            for entry in self.collision_handler.getEntries():
-                print("Collision detected between:", entry.getFromNodePath(), "and", entry.getIntoNodePath())
-
         return task.cont
 
     def update_physics(self, task):
