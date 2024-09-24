@@ -51,7 +51,7 @@ class Entity:
     def buildModels( self, loader ):
         self._createParts()
         self._buildParts( loader )
-        self._createCollisionSystems()
+        #self._createCollisionSystems()
         self._createRigidBodies()
 
     def _createParts( self ):
