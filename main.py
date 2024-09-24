@@ -12,6 +12,7 @@ from picker import Picker
 from camera import TerrainCamera
 from panda3d.bullet import BulletDebugNode, BulletWorld
 from camerabuttons import CameraButtons
+from terrainrigidbody import TerrainRigidBody
 from terrainselector import TerrainSelector
 from terraincolision import TerrainCollision
 from direct.showbase.ShowBase import ShowBase
@@ -38,14 +39,14 @@ class MyApp( ShowBase ):
         self.physics_world = BulletWorld()
         self.physics_world.setGravity(Vec3(0, 0, -9.81))
         #self.enable_debug_visualization()
-        self.terrainCollision = TerrainCollision( self.terrain, self.physics_world, self.render )
-
+        self.createCollisionLayer( terrain = self.terrain )
+        self.terrainPhysicsLayer = self.createPhysicsLayer( blockSize = 64 )
 
         self.terrainSelector = TerrainSelector(
             terrain = self.terrain,
             terrainPicker = Picker( self.camera ),
             mouseWatcherNode = self.mouseWatcherNode,
-            camNode =  self.camNode,
+            camNode = self.camNode,
             terrainCamera = self.terrainCamera,
             physicsWorld = self.physics_world,
             taskMgr = self.taskMgr,
@@ -61,7 +62,6 @@ class MyApp( ShowBase ):
         self.task_duration = 0.2
         self.accept( 'mouse1', self.on_map_click )
         self.accept( 'mouse3', self.on_map_loader_click )
-        self.terrainCollision.createTerrainCollision()
         self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
         self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
         #self.taskMgr.add( self.check_collisions, "check_collisions" )
@@ -118,6 +118,16 @@ class MyApp( ShowBase ):
         dt = globalClock.getDt()
         self.physics_world.doPhysics(dt)
         return task.cont
+
+    def createPhysicsLayer( self, blockSize ):
+        terrainProvider = TerrainProvider( self.loader )
+        terrainInfo = terrainProvider.create_terrain( "heightmap1", blockSize = 16 )
+        self.terrainPhysicsLayer = TerrainRigidBody( terrainInfo.terrain, self.physics_world, self.render )
+        pass
+
+    def createCollisionLayer( self, terrain ):
+        self.terrainCollisionLayer = TerrainCollision( terrain, self.physics_world, self.render )
+        self.terrainCollisionLayer.createTerrainCollision()
 
 
 app = MyApp()

@@ -80,7 +80,7 @@ class TerrainSelector:
             model_np = self.__render.attachNewNode( entity.rigidBodyNode )
             model_np.set_pos( entry.getSurfacePoint( self.__render ) )
             model_np.setZ( model_np.getZ() + 100 )
-            #model.reparentTo( model_np )
+            entity.models[ 0 ].reparentTo( model_np )
             self.physicsWorld.attachRigidBody( entity.rigidBodyNode )
 
     def update_physics(self, task):
