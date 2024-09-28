@@ -67,17 +67,19 @@ class TerrainSelector:
 		if entry is None:
 			return
 		picked_obj = entry.getIntoNodePath()
-		print( f"Clicked node: {picked_obj}" )
+		print( f"Clicked node: { picked_obj }" )
 		custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
 		if custom_collision_polygon:
 			custom_collision_polygon.showDebugNode()
 			model_np = self.__render.attachNewNode( entity.rigidBodyNode )
-			model_np.set_pos( entry.getSurfacePoint( self.__render ) )
-			model_np.setZ( model_np.getZ() + 100 )
-			entity.models[ 0 ].reparentTo( model_np )
-			force = Vec3( 500, 0, 0 )  # Example force vector
 			self.physicsWorld.attachRigidBody( entity.rigidBodyNode )
-			entity.rigidBodyNode.applyForce( force, Vec3(0, 0, 0) )
+			model_np.set_pos( entry.getSurfacePoint( self.__render ) )
+			model_np.setZ( model_np.getZ() + 50 )
+			for models in entity.models:
+				models.reparentTo( model_np )
+			force = Vec3( 250, 0, 0 )
+
+			#entity.rigidBodyNode.applyForce( force, Vec3(0, 0, 0) )
 
 	def on_map_hover( self ):
 		entry = self.getNewEntry()
