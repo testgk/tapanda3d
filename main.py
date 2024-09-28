@@ -38,8 +38,8 @@ class MyApp( ShowBase ):
 
 		# Set up Bullet physics world
 		self.physics_world = BulletWorld()
-		self.physics_world.setGravity( Vec3( 0, 0, -9.81 * 2 ) )
-		self.enable_debug_visualization()
+		self.physics_world.setGravity( Vec3( 0, 0, -9.81 ) )
+		#self.enable_debug_visualization()
 		self.createCollisionLayer( terrain = self.terrain )
 		self.terrainPhysicsLayer = self.createPhysicsLayer( blockSize = 128 )
 
