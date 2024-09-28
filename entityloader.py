@@ -1,25 +1,17 @@
-import os.path
-
+from panda3d.core import Vec3
 from entities.entity import Entity
-from objects.stltoeggconverter import convert_stl_to_egg
 
 
 class EntityLoader:
-    def __init__( self, loader, entity: Entity ):
-        self.__loader = loader
-        self.__entity = entity
-        self.__partEggFiles = {}
-        self.__generateParts()
+	def __init__( self, render, physicsWorld ):
+		self.__render = render
+		self.physicsWorld = physicsWorld
 
-    def __generateParts( self  ):
-        basePath = f"objects/{ self.__entity.name}/"
-        for part in self.__entity.parts:
-            stlPath = os.path.join( basePath, part, ".stl" )
-            eggPath = stlPath.replace( ".stl", ".egg" )
-            convert_stl_to_egg( stlPath, eggPath )
-            self.__partEggFiles[ part ] = { "path": eggPath }
-
-    def loadParts( self ):
-        for part in self.__entity.parts:
-            model = self.__loader.loadModel( self.__partEggFiles[ part ] )
-            self.__partEggFiles[ part ][ "model" ] = model
+	def loadEntity( self, entity: Entity, entry ):
+		model_np = self.__render.attachNewNode( entity.rigidBodyNode )
+		model_np.set_pos( entry.getSurfacePoint( self.__render ) )
+		model_np.setZ( model_np.getZ() + 100 )
+		entity.models[ 0 ].reparentTo( model_np )
+		force = Vec3( 500, 0, 0 )  # Example force vector
+		self.physicsWorld.attachRigidBody( entity.rigidBodyNode )
+		entity.rigidBodyNode.applyForce( force, Vec3( 0, 0, 0 ) )

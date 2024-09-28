@@ -31,6 +31,14 @@ ENGINES = {
 	}
 }
 
+HULLS = {
+		"basic_hull": {
+				"metal": 20,
+				"energy": 20,
+				"armor": 100,
+		},
+}
+
 TURRETS = {
 	"turret": { },
 }
