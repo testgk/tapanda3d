@@ -1,5 +1,5 @@
 from direct.task import Task
-from panda3d.core import CollisionHandlerPusher, CollisionHandlerQueue, CollisionTraverser, LColor, Vec3
+from panda3d.core import CollisionHandlerQueue, CollisionTraverser,Vec3
 
 from entities.entity import Entity
 from entities.full.movers.tank import Tank
@@ -11,9 +11,9 @@ from phyisics import globalClock
 from picker import Picker
 from camera import TerrainCamera
 from panda3d.bullet import BulletDebugNode, BulletWorld
-from camerabuttons import CameraButtons
+from buttons.camerabuttons import CameraButtons
 from terrainrigidbody import TerrainRigidBody
-from terrainselector import TerrainSelector
+from selector.terrainselector import TerrainSelector
 from terraincolision import TerrainCollision
 from direct.showbase.ShowBase import ShowBase
 from entities.parts.mobility import BasicTracks

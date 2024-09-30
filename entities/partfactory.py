@@ -61,7 +61,7 @@ class PartFactory:
 		model.setColor( color )
 		return model
 
-	def getCollisionSystem( self, models ):
+	def createCollisionSystem( self, models ):
 		collision_nps = [ ]
 		for model in models:
 			if model is None:
@@ -94,7 +94,6 @@ class PartFactory:
 			add_model_to_bullet_mesh( mesh, model )
 			model_shape = BulletTriangleMeshShape( mesh, dynamic = True )  # dynamic=True for movable objects
 			body_node.addShape( model_shape )
-			#body_node.applyCentralImpulse( Vec3( 0, 0, 100 ) )
 			body_node.setMass( 0.1 )
 		return body_node
 

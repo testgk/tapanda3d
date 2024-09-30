@@ -29,8 +29,6 @@ class Entity:
 		self._commands = [ ]
 		self.name = None
 		self._id = None
-		self._stationary = None
-		self._producer = None
 		self.__models = [ ]
 		self._partBuilder = PartFactory( self )
 		self._stateMachine = StateMachine( self )
@@ -63,7 +61,9 @@ class Entity:
 		self.__models = self._partBuilder.buildAllParts( loader )
 
 	def _createCollisionSystems( self ):
-		self.__collisionSystems = self._partBuilder.getCollisionSystem( self.__models )
+		self.__collisionSystems = self._partBuilder.createCollisionSystem( self.__models )
+		for collisionNode in self.__collisionSystems:
+			collisionNode.setPythonTag( 'collision_target', self )
 
 	def decide( self ):
 		currentState = self._stateMachine.currentState

@@ -187,7 +187,7 @@ class CustomCollisionPolygon:
 					f"{self.__name}: triangle: {triangleCount} {self.__angle}, row = {self.__row}, column = {self.__col} area = {self.__area}" )
 			self.__collision_node.addSolid( poly )
 			triangleCount += 1
-		self.__collision_node.setPythonTag( 'custom_collision_polygon', self )
+		self.__collision_node.setPythonTag( 'collision_target', self )
 		self.__edges[ Direction.UP_RIGHT ] = vertices[ 0 ][ 0 ]
 		self.__edges[ Direction.UP_LEFT ] = vertices[ 0 ][ 1 ]
 		self.__edges[ Direction.DOWN_RIGHT ] = vertices[ 1 ][ 1 ]
