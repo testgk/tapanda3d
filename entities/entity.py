@@ -1,65 +1,70 @@
-from functools import wraps
+from sys import modules
 
+from panda3d.core import NodePath
+
+from entities.partfactory import PartFactory
+from entities.commandmanager import CommandManager
+from enums.colors import Color
 from statemachine.commands.command import Command
 from statemachine.statemachine import StateMachine
-from statemachine.states.processcommandstate import ProcessCommandState
 
 
-def entitypart( tag = None ):
-	def decorator( func ):
-		@wraps( func )
-		def wrapper( * args, ** kwargs ):
-			return func( * args, ** kwargs )
-		wrapper._is_entity_part = True
-		wrapper._tag = tag
-		return wrapper
-	return decorator
+def entitypart( func ):
+	func._is_entitypart = True  # Mark the function or property with an attribute
+	return func
 
 
-def get_selected_properties( entity, tag = "something" ) :
-	selected = { }
-	for attr_name in dir( entity ) :
-		attr = getattr( entity, attr_name )
-		if callable( attr ) and hasattr( attr, "_is_entity_part" ) and attr._is_entity_part :
-			if tag is None or attr._tag == tag :
-				selected[ attr_name ] = attr()
-	return selected
+def entitymodule( func ):
+	func._is_entitymodule = True  # Mark the function or property with an attribute
+	return func
 
 
-class PartFactory:
-	def __init__( self, entity ):
-		self.__entity = entity
-
-	def addParts( self, entity ):
-		self._parts = get_selected_properties( self.__entity )
-
-	def buildParts( self ):
-		pass
-
-	def renderAllParts( self ):
-		pass
+def nonrenderedpart( func ):
+	func._is_nonrenderd = True  # Mark the function or property with an attribute
+	return func
 
 
 class Entity:
 	def __init__( self ):
 		self.__pendingCommand = None
-		self._commands = []
+		self._commands = [ ]
 		self.name = None
 		self._id = None
-		self._stationary = None
-		self._producer = None
+		self.__models = [ ]
 		self._partBuilder = PartFactory( self )
 		self._stateMachine = StateMachine( self )
+		self._commandManager = CommandManager()
+		self.__collisionSystems = [ ]
+		self.__rigidBodyNode = None
 
-	def buildAndRender( self ):
+	@property
+	def models( self ) -> list[ NodePath ]:
+		return self.__models
+
+	@property
+	def collisionSystems( self ):
+		return self.__collisionSystems
+
+	@property
+	def rigidBodyNode( self ):
+		return self.__rigidBodyNode
+
+	def buildModels( self, loader ):
 		self._createParts()
-		self._renderParts()
+		self._buildParts( loader )
+		self._createCollisionSystems()
+		self._createRigidBodies()
 
 	def _createParts( self ):
 		self._partBuilder.addParts()
 
-	def _renderParts( self ):
-		self._partBuilder.renderAllParts()
+	def _buildParts( self, loader ):
+		self.__models = self._partBuilder.buildAllParts( loader )
+
+	def _createCollisionSystems( self ):
+		self.__collisionSystems = self._partBuilder.createCollisionSystem( self.__models )
+		for collisionNode in self.__collisionSystems:
+			collisionNode.setPythonTag( 'collision_target', self )
 
 	def decide( self ):
 		currentState = self._stateMachine.currentState
@@ -70,14 +75,22 @@ class Entity:
 		raise NotImplementedError
 
 	def receiveCommand( self, command: Command, serial: bool ):
-		if serial:
-			self._commands.insert( 0, command )
-		else:
-			self._commands = [ command ]
-			self._stateMachine.changeState( ProcessCommandState( self ) )
+		self._commandManager.receiveCommand( command )
 
 	def pendingCommand( self ) -> Command | None:
-		if self.__pendingCommand is None:
-			self.__pendingCommand = self._commands.pop()
-		if self.__pendingCommand.progress == 0:
-			return self.__pendingCommand
+		return self._commandManager.pendingCommand()
+
+	def _createRigidBodies( self ):
+		self.__rigidBodyNode = self._partBuilder.createRigidBodies( self.__models )
+
+	def handleSelection( self, mode ):
+		if mode == "mouse1":
+			for model in self.__models:
+				model.setColor( Color.RED.value )
+		self.collisionSystems[ 0 ].show()
+
+	def clearSelection( self ):
+		for model in self.__models:
+			part = model.node().getPythonTag( 'model_part' )
+			model.setColor( part.color )
+		self.collisionSystems[ 0 ].hide()

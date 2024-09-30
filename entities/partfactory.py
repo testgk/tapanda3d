@@ -51,17 +51,18 @@ class PartFactory:
 				continue
 			try:
 				eggPath = self.__getPartEggPath( part )
-				models.append( self.__loadModel( eggPath, loader, part.color ) )
+				models.append( self.__loadModel( eggPath, loader, part ) )
 			except Exception as e:
 				pass
 		return models
 
-	def __loadModel( self, eggPath, loader, color ):
+	def __loadModel( self, eggPath, loader, part ):
 		model = loader.loadModel( eggPath )
-		model.setColor( color )
+		model.setColor( part.color )
+		model.setPythonTag( 'model_part', part )
 		return model
 
-	def getCollisionSystem( self, models ):
+	def createCollisionSystem( self, models ):
 		collision_nps = [ ]
 		for model in models:
 			if model is None:
@@ -69,7 +70,7 @@ class PartFactory:
 			collision_box_node = create_collision_box( model )
 			if collision_box_node:
 				collision_np = model.attachNewNode( collision_box_node )
-				collision_np.show()
+				#collision_np.show()
 				collision_nps.append( collision_np )
 		return collision_nps
 
@@ -94,7 +95,6 @@ class PartFactory:
 			add_model_to_bullet_mesh( mesh, model )
 			model_shape = BulletTriangleMeshShape( mesh, dynamic = True )  # dynamic=True for movable objects
 			body_node.addShape( model_shape )
-			#body_node.applyCentralImpulse( Vec3( 0, 0, 100 ) )
 			body_node.setMass( 0.1 )
 		return body_node
 
