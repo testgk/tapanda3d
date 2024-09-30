@@ -1,5 +1,5 @@
 from direct.task import Task
-from panda3d.core import CollisionHandlerPusher, CollisionHandlerQueue, CollisionTraverser, LColor, Vec3
+from panda3d.core import CollisionHandlerQueue, CollisionTraverser,Vec3
 
 from entities.entity import Entity
 from entities.full.movers.tank import Tank
@@ -11,9 +11,10 @@ from phyisics import globalClock
 from picker import Picker
 from camera import TerrainCamera
 from panda3d.bullet import BulletDebugNode, BulletWorld
-from camerabuttons import CameraButtons
+from buttons.camerabuttons import CameraButtons
+from selector.selector import Selector
 from terrainrigidbody import TerrainRigidBody
-from terrainselector import TerrainSelector
+from selector.terrainselector import TerrainSelector
 from terraincolision import TerrainCollision
 from direct.showbase.ShowBase import ShowBase
 from entities.parts.mobility import BasicTracks
@@ -43,14 +44,13 @@ class MyApp( ShowBase ):
 		self.createCollisionLayer( terrain = self.terrain )
 		self.terrainPhysicsLayer = self.createPhysicsLayer( blockSize = 128 )
 
-		self.terrainSelector = TerrainSelector(
+		self.__selector = Selector(
 				terrain = self.terrain,
-				terrainPicker = Picker( self.camera ),
+				picker = Picker( self.camera ),
 				mouseWatcherNode = self.mouseWatcherNode,
 				camNode = self.camNode,
 				terrainCamera = self.terrainCamera,
 				physicsWorld = self.physics_world,
-				taskMgr = self.taskMgr,
 				render = self.render )
 
 		engine = BasicEngine()
@@ -58,12 +58,11 @@ class MyApp( ShowBase ):
 		mobility = BasicTracks()
 		self.tank = Tank( engine = engine, turret = turret, mobility = mobility )
 		self.tank.buildModels( self.loader )
-		#self.__createCollisionForEntity( tank )
 
 		self.task_duration = 0.2
 		self.accept( 'mouse1', self.on_map_click )
 		self.accept( 'mouse3', self.on_map_loader_click )
-		self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
+		#self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
 		self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
 		#self.taskMgr.add( self.check_collisions, "check_collisions" )
 		self.taskMgr.add( self.update_physics, "update_physics" )
@@ -79,10 +78,10 @@ class MyApp( ShowBase ):
 			self.cTrav.addCollider( col, self.collision_handler )
 
 	def on_map_click( self ):
-		self.terrainSelector.on_map_click()
+		self.__selector.on_map_click()
 
 	def on_map_loader_click( self ):
-		self.terrainSelector.on_map_loader_click( self.tank )
+		self.__selector.on_map_loader_click( self.tank )
 
 	def updateMouseTask( self, task ):
 		self.update_mouse_hover()
@@ -91,21 +90,15 @@ class MyApp( ShowBase ):
 		return Task.again
 
 	def update_mouse_hover( self ):
-		self.terrainSelector.on_map_hover()
+		self.__selector.on_map_hover()
 
 	def enable_debug_visualization( self ):
-		"""Enables Bullet debug visualization."""
-		# Create a BulletDebugNode for visualization
 		debug_node = BulletDebugNode( 'Debug' )
-		# Show wireframe for collision shapes
 		debug_node.showWireframe( True )
-		# Optionally show bounding boxes
 		debug_node.showBoundingBoxes( True )
-		# Attach the debug node to render
 		debug_np = self.render.attachNewNode( debug_node )
 		debug_np.setColor( Color.RED.value )
 		debug_np.show()
-		# Attach the debug node to the Bullet world
 		self.physics_world.setDebugNode( debug_np.node() )
 
 	def check_collisions( self, task ):

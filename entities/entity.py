@@ -4,6 +4,7 @@ from panda3d.core import NodePath
 
 from entities.partfactory import PartFactory
 from entities.commandmanager import CommandManager
+from enums.colors import Color
 from statemachine.commands.command import Command
 from statemachine.statemachine import StateMachine
 
@@ -29,8 +30,6 @@ class Entity:
 		self._commands = [ ]
 		self.name = None
 		self._id = None
-		self._stationary = None
-		self._producer = None
 		self.__models = [ ]
 		self._partBuilder = PartFactory( self )
 		self._stateMachine = StateMachine( self )
@@ -53,7 +52,7 @@ class Entity:
 	def buildModels( self, loader ):
 		self._createParts()
 		self._buildParts( loader )
-		#self._createCollisionSystems()
+		self._createCollisionSystems()
 		self._createRigidBodies()
 
 	def _createParts( self ):
@@ -63,7 +62,9 @@ class Entity:
 		self.__models = self._partBuilder.buildAllParts( loader )
 
 	def _createCollisionSystems( self ):
-		self.__collisionSystems = self._partBuilder.getCollisionSystem( self.__models )
+		self.__collisionSystems = self._partBuilder.createCollisionSystem( self.__models )
+		for collisionNode in self.__collisionSystems:
+			collisionNode.setPythonTag( 'collision_target', self )
 
 	def decide( self ):
 		currentState = self._stateMachine.currentState
@@ -81,3 +82,15 @@ class Entity:
 
 	def _createRigidBodies( self ):
 		self.__rigidBodyNode = self._partBuilder.createRigidBodies( self.__models )
+
+	def handleSelection( self, mode ):
+		if mode == "mouse1":
+			for model in self.__models:
+				model.setColor( Color.RED.value )
+		self.collisionSystems[ 0 ].show()
+
+	def clearSelection( self ):
+		for model in self.__models:
+			part = model.node().getPythonTag( 'model_part' )
+			model.setColor( part.color )
+		self.collisionSystems[ 0 ].hide()

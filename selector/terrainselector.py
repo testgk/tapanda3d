@@ -12,10 +12,8 @@ from phyisics import globalClock
 
 class TerrainSelector:
 
-	def __init__( self, terrain, terrainPicker, mouseWatcherNode, camNode, terrainCamera: TerrainCamera, physicsWorld,
-	              taskMgr, render ):
+	def __init__( self, terrain, terrainPicker, mouseWatcherNode, camNode, terrainCamera: TerrainCamera, physicsWorld, render ):
 		self.__terrain = terrain
-		self.taskMgr = taskMgr
 		self.__last_custom_collision_polygon = None
 		self.__camNode = camNode
 		self.__render = render
@@ -49,7 +47,7 @@ class TerrainSelector:
 			return
 		picked_obj = entry.getIntoNodePath()
 		print( f"Clicked node: {picked_obj}" )
-		custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
+		custom_collision_polygon = picked_obj.node().getPythonTag( 'collision_target' )
 		custom_collision_polygon.removeAllEdges()
 		if custom_collision_polygon:
 			if self.__last_custom_collision_polygon:
@@ -68,7 +66,7 @@ class TerrainSelector:
 			return
 		picked_obj = entry.getIntoNodePath()
 		print( f"Clicked node: { picked_obj }" )
-		custom_collision_polygon = picked_obj.node().getPythonTag( 'custom_collision_polygon' )
+		custom_collision_polygon = picked_obj.node().getPythonTag( 'collision_target' )
 		if custom_collision_polygon:
 			custom_collision_polygon.showDebugNode()
 			model_np = self.__render.attachNewNode( entity.rigidBodyNode )
@@ -77,9 +75,8 @@ class TerrainSelector:
 			model_np.setZ( model_np.getZ() + 50 )
 			for models in entity.models:
 				models.reparentTo( model_np )
-			force = Vec3( 250, 0, 0 )
-
-			#entity.rigidBodyNode.applyForce( force, Vec3(0, 0, 0) )
+			force = Vec3( 500, 0, 0 )
+			entity.rigidBodyNode.applyForce( force, Vec3(0, 0, 0) )
 
 	def on_map_hover( self ):
 		entry = self.getNewEntry()

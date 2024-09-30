@@ -187,7 +187,7 @@ class CustomCollisionPolygon:
 					f"{self.__name}: triangle: {triangleCount} {self.__angle}, row = {self.__row}, column = {self.__col} area = {self.__area}" )
 			self.__collision_node.addSolid( poly )
 			triangleCount += 1
-		self.__collision_node.setPythonTag( 'custom_collision_polygon', self )
+		self.__collision_node.setPythonTag( 'collision_target', self )
 		self.__edges[ Direction.UP_RIGHT ] = vertices[ 0 ][ 0 ]
 		self.__edges[ Direction.UP_LEFT ] = vertices[ 0 ][ 1 ]
 		self.__edges[ Direction.DOWN_RIGHT ] = vertices[ 1 ][ 1 ]
@@ -324,6 +324,7 @@ class CustomCollisionPolygon:
 		self.__wire_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
 		self.__wire_node_path.setColor( Color.CYAN.value )
 		self.__wire_node_path.setRenderModeWireframe()
+		self.__wire_node_path.hide()
 
 	def __generateDebugNodePath( self, collisionNode, height_offset ):
 		debug_geom_node = createDebugNode( collisionNode )
@@ -344,3 +345,18 @@ class CustomCollisionPolygon:
 		if self.__angle > 0.2:
 			return Color.RED
 		return Color.WHITE
+
+	def handleSelection( self, mode ):
+		if mode == "mouse1":
+			self.__markArea()
+
+	def clearSelection( self ):
+		self.hideNeighbors()
+
+	def __markArea( self ):
+		self.removeAllEdges()
+		currentFrame.clear()
+		self.hideNeighbors()
+		self.showNeighbors( self.row, self.col, 2 )
+		self.showDebugNode()
+		self.colorDebugNode()
