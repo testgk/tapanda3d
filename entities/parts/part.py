@@ -1,40 +1,22 @@
-import os.path
-
-from panda3d.core import LColor
-
-from enums.colors import Color
+from entities.entity import PartFactory
 
 
 class Part:
-    def __init__( self, partData, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
-        self._rigidBodyMask = 0
-        self.__device = device
+    def __init__( self, partData, partId, external: bool = False, **kwargs ) :
         self._external = external
-        self.__partId = partId
-        self.__isRendered = isRendered
-        self._color = Color.WHITE.value
-        if partId is not None:
-            part_data = partData.get( partId )
-            self._readPartData( part_data )
+        self.__partFactory = None
+        part_data = partData.get( partId )
+        self._readPartData( part_data )
+        if self.hasParts :
+            self.__partFactory = PartFactory( self )
 
     @property
-    def objectPath( self ) -> str:
-        return ''
+    def hasParts( self ) -> bool :
+        return False
 
     @property
-    def isRendered( self ) -> bool:
-        return self.__isRendered
-
-    def rigidBodyMask( self ) -> int:
-        return self._rigidBodyMask
-
-    @property
-    def color( self ):
-        return self._color
-
-    @property
-    def partId( self ) -> str:
-        return self.__partId
+    def partFactory( self ):
+        return self.__partFactory
 
     def _readPartData( self, part_data ) :
         self.__metal = part_data[ "metal" ]
@@ -42,3 +24,4 @@ class Part:
         if self._external:
             self.__protection = part_data[ "protection" ]
             self.__damage = part_data[ "damage" ]
+            self._renderId = None

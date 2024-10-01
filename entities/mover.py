@@ -3,30 +3,27 @@ from entities.entity import Entity, entitypart
 
 
 class Mover( Entity ):
-    def __init__( self, engine, mobility, hull ):
+    def __init__( self, engine, chassis ):
         super().__init__()
         self._currentPosition = None
         self._engine = engine
-        self._mobility = mobility
-        self._hull = hull
+        self._chassis = chassis
 
-    def move( self, destination ):
+    def move(self, destination ):
         pass
 
-    def stop( self ):
+    def stop(self):
         pass
 
     def turn( self, degrees ):
         pass
 
+    @property
     @entitypart
-    def hull( self ):
-        return self._hull
+    def chassis( self ):
+        return self._chassis
 
-    @entitypart
-    def mobility( self ):
-        return self._mobility
-
+    @property
     @entitypart
     def engine( self ) -> Engine:
         return self._engine
