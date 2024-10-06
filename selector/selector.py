@@ -6,6 +6,10 @@ from entities.entity import Entity
 class Selector:
 	last_picked_entity = None
 
+	@property
+	def selectedEntity( self ) -> Entity:
+		return self.last_picked_entity
+
 	def __init__( self, terrain, picker, mouseWatcherNode, camNode, terrainCamera: TerrainCamera, physicsWorld, render ):
 		self.__terrain = terrain
 		self.__last_custom_collision_polygon = None

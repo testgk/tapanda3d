@@ -1,6 +1,7 @@
 from direct.task import Task
 from panda3d.core import CollisionHandlerQueue, CollisionTraverser,Vec3
 
+from buttons.entitybuttons import EntityButtons
 from entities.entity import Entity
 from entities.full.movers.tank import Tank
 from entities.parts.engine import BasicEngine
@@ -52,7 +53,7 @@ class MyApp( ShowBase ):
 				terrainCamera = self.terrainCamera,
 				physicsWorld = self.physics_world,
 				render = self.render )
-
+		self.entityButtons = EntityButtons( selector = self.__selector )
 		engine = BasicEngine()
 		turret = CannonTurret()
 		mobility = BasicTracks()

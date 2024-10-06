@@ -1,5 +1,6 @@
 from sys import modules
 
+from panda3d.bullet import BulletRigidBodyNode
 from panda3d.core import NodePath
 
 from entities.partfactory import PartFactory
@@ -46,7 +47,7 @@ class Entity:
 		return self.__collisionSystems
 
 	@property
-	def rigidBodyNode( self ):
+	def rigidBodyNode( self ) -> BulletRigidBodyNode:
 		return self.__rigidBodyNode
 
 	def buildModels( self, loader ):
