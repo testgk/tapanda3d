@@ -85,7 +85,7 @@ class PartFactory:
 				convert_stl_to_egg( stlPath, eggPath )
 				return eggPath
 
-	def createRigidBodies( self, models ):
+	def createRigidBodies( self, models ) -> BulletRigidBodyNode:
 		body_node = BulletRigidBodyNode( 'multi_shape_body' )
 		for model in models:
 			if model is None:
