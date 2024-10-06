@@ -6,14 +6,14 @@ from enums.colors import Color
 
 
 class Part:
-    def __init__( self, partData, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
+    def __init__( self, partData = None, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
         self._rigidBodyMask = 0
         self.__device = device
         self._external = external
         self.__partId = partId
         self.__isRendered = isRendered
         self._color = Color.WHITE.value
-        if partId is not None:
+        if partId and partData:
             part_data = partData.get( partId )
             self._readPartData( part_data )
 
