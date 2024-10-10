@@ -7,6 +7,7 @@ from enums.colors import Color
 
 class Part:
     def __init__( self, partData = None, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
+        self._rigidGroup = partId
         self._rigidBodyMask = 1
         self.__device = device
         self._external = external
@@ -28,6 +29,10 @@ class Part:
     @property
     def rigidBodyMask( self ) -> int:
         return self._rigidBodyMask
+
+    @property
+    def rigidGroup( self ):
+        return self._rigidGroup
 
     @property
     def color( self ):
