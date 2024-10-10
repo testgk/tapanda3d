@@ -1,5 +1,5 @@
 import os
-
+from collections import defaultdict
 from typing import TYPE_CHECKING, Callable
 
 from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
@@ -55,6 +55,7 @@ class PartFactory:
 				eggPath = self.__getPartEggPath( part )
 				model = self.__loadModel( eggPath, loader, part )
 				self.partModels[ part ] = model
+				models.append( model )
 			except Exception as e:
 				pass
 		return models
@@ -91,19 +92,28 @@ class PartFactory:
 
 	def createRigidBodies( self ) -> [ BulletRigidBodyNode ]:
 		body_nodes = []
+		groupedPartModels = defaultdict( list )
 		for part, model in self.partModels.items():
-			if model is None:
-				pass
+			groupedPartModels[ part.rigidGroup ].append( model )
 
-			mesh = BulletTriangleMesh()
+		for rg, models in groupedPartModels.items():
+			body_node = self.__createRigidBody( models )
+			body_nodes.append( body_node )
+
+		return body_nodes
+
+
+	def __createRigidBody( self, models: list ):
+		mesh = BulletTriangleMesh()
+		for model in models:
 			add_model_to_bullet_mesh( mesh, model )
-			model_shape = BulletTriangleMeshShape( mesh, dynamic = True )  # dynamic=True for movable objects
+			model_shape = BulletTriangleMeshShape( mesh, dynamic = True )
 			body_node = BulletRigidBodyNode( 'multi_shape_body' )
 			body_node.addShape( model_shape )
 			body_node.setMass( 0.01 )
 			body_node.setPythonTag( 'body_node', model )
-			body_nodes.append( body_node )
-		return body_nodes
+			return body_node
+
 
 
 from panda3d.core import Vec3, CollisionBox, CollisionNode
