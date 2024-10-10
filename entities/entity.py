@@ -11,17 +11,17 @@ from statemachine.statemachine import StateMachine
 
 
 def entitypart( func ):
-	func._is_entitypart = True  # Mark the function or property with an attribute
+	func._is_entitypart = True
 	return func
 
 
 def entitymodule( func ):
-	func._is_entitymodule = True  # Mark the function or property with an attribute
+	func._is_entitymodule = True
 	return func
 
 
 def nonrenderedpart( func ):
-	func._is_nonrenderd = True  # Mark the function or property with an attribute
+	func._is_nonrenderd = True
 	return func
 
 
@@ -36,7 +36,7 @@ class Entity:
 		self._stateMachine = StateMachine( self )
 		self._commandManager = CommandManager()
 		self.__collisionSystems = [ ]
-		self.__rigidBodyNode = None
+		self.__rigidBodyNodes = None
 
 	@property
 	def models( self ) -> list[ NodePath ]:
@@ -48,24 +48,15 @@ class Entity:
 
 	@property
 	def rigidBodyNode( self ) -> [ BulletRigidBodyNode ]:
-		return self.__rigidBodyNode
+		return self.__rigidBodyNodes
 
 	def buildModels( self, loader ):
-		self._createParts()
-		self._buildParts( loader )
-		self._createCollisionSystems()
-		self._createRigidBodies()
-
-	def _createParts( self ):
 		self._partBuilder.addParts()
-
-	def _buildParts( self, loader ):
 		self.__models = self._partBuilder.buildAllParts( loader )
-
-	def _createCollisionSystems( self ):
 		self.__collisionSystems = self._partBuilder.createCollisionSystem()
 		for collisionNode in self.__collisionSystems:
 			collisionNode.setPythonTag( 'collision_target', self )
+		self.__rigidBodyNodes = self._partBuilder.createRigidBodies()
 
 	def decide( self ):
 		currentState = self._stateMachine.currentState
@@ -80,9 +71,6 @@ class Entity:
 
 	def pendingCommand( self ) -> Command | None:
 		return self._commandManager.pendingCommand()
-
-	def _createRigidBodies( self ):
-		self.__rigidBodyNode = self._partBuilder.createRigidBodies()
 
 	def handleSelection( self, mode ):
 		if mode == "mouse1":
