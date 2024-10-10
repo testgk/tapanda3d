@@ -47,7 +47,7 @@ class Entity:
 		return self.__collisionSystems
 
 	@property
-	def rigidBodyNode( self ) -> BulletRigidBodyNode:
+	def rigidBodyNode( self ) -> [ BulletRigidBodyNode ]:
 		return self.__rigidBodyNode
 
 	def buildModels( self, loader ):
@@ -63,7 +63,7 @@ class Entity:
 		self.__models = self._partBuilder.buildAllParts( loader )
 
 	def _createCollisionSystems( self ):
-		self.__collisionSystems = self._partBuilder.createCollisionSystem( self.__models )
+		self.__collisionSystems = self._partBuilder.createCollisionSystem()
 		for collisionNode in self.__collisionSystems:
 			collisionNode.setPythonTag( 'collision_target', self )
 
@@ -82,13 +82,14 @@ class Entity:
 		return self._commandManager.pendingCommand()
 
 	def _createRigidBodies( self ):
-		self.__rigidBodyNode = self._partBuilder.createRigidBodies( self.__models )
+		self.__rigidBodyNode = self._partBuilder.createRigidBodies()
 
 	def handleSelection( self, mode ):
 		if mode == "mouse1":
 			for model in self.__models:
 				model.setColor( Color.RED.value )
-		self.collisionSystems[ 0 ].show()
+		for system in self.__collisionSystems:
+			system.show()
 
 	def clearSelection( self ):
 		for model in self.__models:

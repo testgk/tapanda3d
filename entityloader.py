@@ -10,9 +10,13 @@ class EntityLoader:
 
 	def loadEntity( self, entity: Entity, entry ):
 		entity.buildModels( loader = self.__loader )
-		model_np = self.__render.attachNewNode( entity.rigidBodyNode )
-		self.__physicsWorld.attachRigidBody( entity.rigidBodyNode )
-		model_np.set_pos( entry.getSurfacePoint( self.__render ) )
-		model_np.setZ( model_np.getZ() + 50 )
-		for models in entity.models:
-			models.reparentTo( model_np )
+		for node in entity.rigidBodyNode:
+			model = node.getPythonTag( 'body_node' )
+			model_np = self.__render.attachNewNode( node )
+			self.__physicsWorld.attachRigidBody( node )
+			model_np.set_pos( entry.getSurfacePoint( self.__render ) )
+			model_np.setZ( model_np.getZ() + 50 )
+			model.reparentTo( model_np )
+
+		#for models in entity.models:
+		#	models.reparentTo( model_np )
