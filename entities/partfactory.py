@@ -27,6 +27,7 @@ def find_entity_parts( cls ) -> tuple[ list[ Callable ], list[ Callable ] ]:
 
 class PartFactory:
 	def __init__( self, entity: 'Entity' ):
+		self.partModels = {}
 		self.__modules = [ ]
 		self.__parts = [ ]
 		self.__entity = entity
@@ -37,6 +38,7 @@ class PartFactory:
 			self.__parts.append( part() )
 		for module in modules:
 			self.__modules.append( module() )
+		return self.__parts, self.__modules
 
 	def modules( self ):
 		return self.__modules
@@ -51,7 +53,8 @@ class PartFactory:
 				continue
 			try:
 				eggPath = self.__getPartEggPath( part )
-				models.append( self.__loadModel( eggPath, loader, part ) )
+				model = self.__loadModel( eggPath, loader, part )
+				self.partModels[ part ] = model
 			except Exception as e:
 				pass
 		return models
@@ -62,14 +65,15 @@ class PartFactory:
 		model.setPythonTag( 'model_part', part )
 		return model
 
-	def createCollisionSystem( self, models ):
+	def createCollisionSystem( self ):
 		collision_nps = [ ]
-		for model in models:
+		for part, model in self.partModels.items():
 			if model is None:
 				return
 			collision_box_node = create_collision_box( model )
 			if collision_box_node:
 				collision_np = model.attachNewNode( collision_box_node )
+				#collision_np.setCollideMask( BitMask32.bit( part.rigidBodyMask ) )
 				#collision_np.show()
 				collision_nps.append( collision_np )
 		return collision_nps
@@ -85,18 +89,21 @@ class PartFactory:
 				convert_stl_to_egg( stlPath, eggPath )
 				return eggPath
 
-	def createRigidBodies( self, models ) -> BulletRigidBodyNode:
-		body_node = BulletRigidBodyNode( 'multi_shape_body' )
-		for model in models:
+	def createRigidBodies( self ) -> [ BulletRigidBodyNode ]:
+		body_nodes = []
+		for part, model in self.partModels.items():
 			if model is None:
 				pass
 
 			mesh = BulletTriangleMesh()
 			add_model_to_bullet_mesh( mesh, model )
 			model_shape = BulletTriangleMeshShape( mesh, dynamic = True )  # dynamic=True for movable objects
+			body_node = BulletRigidBodyNode( 'multi_shape_body' )
 			body_node.addShape( model_shape )
-			body_node.setMass( 0.1 )
-		return body_node
+			body_node.setMass( 0.01 )
+			body_node.setPythonTag( 'body_node', model )
+			body_nodes.append( body_node )
+		return body_nodes
 
 
 from panda3d.core import Vec3, CollisionBox, CollisionNode

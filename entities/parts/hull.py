@@ -7,6 +7,7 @@ class Hull( Part ):
 	def __init__( self, partId ):
 		super().__init__( parts.HULLS, partId )
 		self._color = Color.GREEN.value
+		self._rigidBodyMask = 2
 
 	@property
 	def objectPath( self ) -> str:
