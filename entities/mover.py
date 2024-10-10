@@ -27,6 +27,6 @@ class Mover( Entity ):
     def mobility( self ):
         return self._mobility
 
-    @entitypart
+ #   @entitypart
     def engine( self ) -> Engine:
         return self._engine
