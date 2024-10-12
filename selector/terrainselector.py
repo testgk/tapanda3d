@@ -60,24 +60,6 @@ class TerrainSelector:
 			print( f' height {custom_collision_polygon.terrainPosition[ 2 ]}' )
 			self.__last_custom_collision_polygon = custom_collision_polygon
 
-	def on_map_loader_click( self, entity: Entity ):
-		entry = self.getNewEntry()
-		if entry is None:
-			return
-		picked_obj = entry.getIntoNodePath()
-		print( f"Clicked node: { picked_obj }" )
-		custom_collision_polygon = picked_obj.node().getPythonTag( 'collision_target' )
-		if custom_collision_polygon:
-			custom_collision_polygon.showDebugNode()
-			model_np = self.__render.attachNewNode( entity.rigidBodyNode )
-			self.physicsWorld.attachRigidBody( entity.rigidBodyNode )
-			model_np.set_pos( entry.getSurfacePoint( self.__render ) )
-			model_np.setZ( model_np.getZ() + 50 )
-			for models in entity.models:
-				models.reparentTo( model_np )
-			force = Vec3( 500, 0, 0 )
-			entity.rigidBodyNode.applyForce( force, Vec3(0, 0, 0) )
-
 	def on_map_hover( self ):
 		entry = self.getNewEntry()
 		if entry:

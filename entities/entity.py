@@ -47,7 +47,7 @@ class Entity:
 		return self.__collisionSystems
 
 	@property
-	def rigidBodyNode( self ) -> [ BulletRigidBodyNode ]:
+	def rigidBodyNodes( self ) -> dict:
 		return self.__rigidBodyNodes
 
 	def buildModels( self, loader ):
