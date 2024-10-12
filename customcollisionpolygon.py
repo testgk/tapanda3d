@@ -353,10 +353,10 @@ class CustomCollisionPolygon:
 	def clearSelection( self ):
 		self.hideNeighbors()
 
-	def __markArea( self ):
+	def __markArea( self, level = 0 ):
 		self.removeAllEdges()
 		currentFrame.clear()
 		self.hideNeighbors()
-		self.showNeighbors( self.row, self.col, 2 )
+		self.showNeighbors( self.row, self.col, level )
 		self.showDebugNode()
 		self.colorDebugNode()
