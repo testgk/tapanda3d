@@ -16,11 +16,10 @@ class Tank( Mover ):
     def turret( self ) -> Turret:
         return self.__turret
 
-    #@entitypart
+    @entitypart
     def frontRolls( self ):
         return self.__frontRolls
 
-    #@entitypart
+    @entitypart
     def rearRolls( self ):
         return self.__rearRolls
-

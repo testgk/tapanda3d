@@ -26,8 +26,9 @@ def find_entity_parts( cls ) -> tuple[ list[ Callable ], list[ Callable ] ]:
 
 
 class PartFactory:
+
 	def __init__( self, entity: 'Entity' ):
-		self.partModels = {}
+		self.partModels = { }
 		self.__modules = [ ]
 		self.__parts = [ ]
 		self.__entity = entity
@@ -62,6 +63,7 @@ class PartFactory:
 
 	def __loadModel( self, eggPath, loader, part ):
 		model = loader.loadModel( eggPath )
+		model.setScale( 1 )
 		model.setColor( part.color )
 		model.setPythonTag( 'model_part', part )
 		return model
@@ -74,7 +76,7 @@ class PartFactory:
 			collision_box_node = create_collision_box( model )
 			if collision_box_node:
 				collision_np = model.attachNewNode( collision_box_node )
-				#collision_np.setCollideMask( BitMask32.bit( part.rigidBodyMask ) )
+				collision_np.setCollideMask( BitMask32.bit( part.rigidBodyMask ) )
 				#collision_np.show()
 				collision_nps.append( collision_np )
 		return collision_nps
@@ -90,30 +92,28 @@ class PartFactory:
 				convert_stl_to_egg( stlPath, eggPath )
 				return eggPath
 
-	def createRigidBodies( self ) -> [ BulletRigidBodyNode ]:
-		body_nodes = []
+	def createRigidBodies( self ) -> dict:
+		body_nodes = { }
 		groupedPartModels = defaultdict( list )
 		for part, model in self.partModels.items():
 			groupedPartModels[ part.rigidGroup ].append( model )
 
 		for rg, models in groupedPartModels.items():
 			body_node = self.__createRigidBody( models )
-			body_nodes.append( body_node )
+			body_nodes[ body_node ] = models
 
 		return body_nodes
 
-
 	def __createRigidBody( self, models: list ):
-		mesh = BulletTriangleMesh()
+		body_node = BulletRigidBodyNode( 'multi_shape_body' )
 		for model in models:
+			mesh = BulletTriangleMesh()
 			add_model_to_bullet_mesh( mesh, model )
 			model_shape = BulletTriangleMeshShape( mesh, dynamic = True )
-			body_node = BulletRigidBodyNode( 'multi_shape_body' )
 			body_node.addShape( model_shape )
 			body_node.setMass( 0.01 )
 			body_node.setPythonTag( 'body_node', model )
-			return body_node
-
+		return body_node
 
 
 from panda3d.core import Vec3, CollisionBox, CollisionNode
