@@ -19,11 +19,11 @@ class Mover( Entity ):
     def turn( self, degrees ):
         pass
 
-    @entitypart
+    #@entitypart
     def hull( self ):
         return self._hull
 
-    @entitypart
+    #@entitypart
     def mobility( self ):
         return self._mobility
 
