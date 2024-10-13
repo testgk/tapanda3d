@@ -172,7 +172,6 @@ class CustomCollisionPolygon:
 		self.__geom = self.__child.node().getGeom( 0 )  # Assuming each GeomNode has one Geom
 		self.__vertices = getVertices( self.__geom )
 		self.__collision_node = CollisionNode( f'terrain_{self.__child.getName()}' )
-		self.__collision_node.setCollideMask( BitMask32.bit( 1 ) )
 		self.createCollisionNode( self.__vertices )
 
 	def createCollisionNode( self, vertices ):

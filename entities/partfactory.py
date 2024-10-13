@@ -6,6 +6,8 @@ from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriang
 from panda3d.core import BitMask32, CollisionBox, CollisionHandlerPusher, CollisionNode, CollisionTraverser, NodePath, \
 	Vec3
 
+from collsiongroups import CollisionGroup
+
 if TYPE_CHECKING:
 	from entities.entity import Entity
 	from entities.parts.part import Part
@@ -76,7 +78,6 @@ class PartFactory:
 			collision_box_node = create_collision_box( model )
 			if collision_box_node:
 				collision_np = model.attachNewNode( collision_box_node )
-				collision_np.setCollideMask( BitMask32.bit( part.rigidBodyMask ) )
 				#collision_np.show()
 				collision_nps.append( collision_np )
 		return collision_nps
@@ -100,6 +101,7 @@ class PartFactory:
 
 		for rg, models in groupedPartModels.items():
 			body_node = self.__createRigidBody( models )
+			body_node.setIntoCollideMask( CollisionGroup.GROUP_TERRAIN )
 			body_nodes[ body_node ] = models
 
 		return body_nodes

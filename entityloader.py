@@ -1,4 +1,6 @@
 from panda3d.core import Vec3
+
+from collsiongroups import CollisionGroup
 from entities.entity import Entity
 
 
