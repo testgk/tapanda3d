@@ -162,3 +162,6 @@ cython_debug/
 .idea/
 /__pycache__/
 maps/__pycache__/__pycache__/
+
+.idea/misc.xml
+.idea/tapanda3d.iml
