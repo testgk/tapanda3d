@@ -1,5 +1,7 @@
 from panda3d.core import BitMask32, CollisionHandlerQueue, CollisionNode, CollisionRay, CollisionTraverser
 
+from collsiongroups import CollisionGroup
+
 
 class Picker:
     def __init__(self, camera ):
@@ -8,7 +10,7 @@ class Picker:
         self.__pickerQueue = CollisionHandlerQueue()
         self.__pickerNode = CollisionNode( 'mouseRay' )
         self.__pickerNP = self.__camera.attachNewNode( self.__pickerNode )
-        self.__pickerNode.setFromCollideMask( BitMask32.bit( 1 ) )
+        self.__pickerNode.setFromCollideMask( CollisionGroup.GROUP_TERRAIN | CollisionGroup.GROUP_MODEL )
         self.__pickerRay = CollisionRay()
         self.__pickerNode.addSolid( self.__pickerRay )
         self.__picker.addCollider( self.__pickerNP, self.__pickerQueue )

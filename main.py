@@ -33,11 +33,12 @@ class MyApp( ShowBase ):
 		# Set up Bullet physics world
 		self.physics_world = BulletWorld()
 		self.physics_world.setGravity( Vec3( 0, 0, -9.81 ) )
+		self.physics_world.setGroupCollisionFlag( 1, 1, False )
 		self.terrainCamera = TerrainCamera( self.camera, self.terrainInfo.terrainCenter, self.terrainInfo.terrainSize )
 		self.cameraButtons = CameraButtons( self.terrainCamera, debugNode = self.get_debug_visualization() )
 		self.lights = Lights( self.render )
 		self.createCollisionLayer( terrain = self.terrain )
-		self.terrainPhysicsLayer = self.createPhysicsLayer( blockSize = 128 )
+		self.createPhysicsLayer( blockSize = 128 )
 
 		self.__selector = Selector(
 				terrain = self.terrain,
