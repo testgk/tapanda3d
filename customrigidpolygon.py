@@ -10,6 +10,7 @@ from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, Directional
 from collsiongroups import CollisionGroup
 from enums.colors import Color
 from enums.directions import Direction, mapDirections
+from selector.selector import Selector
 
 
 def getVertices( geom: GeomNode ) -> list:
@@ -50,20 +51,17 @@ class CustomRigidPolygon:
 
     def attachRigidBodyNodeToTerrain( self ):
         self.__rigid_body_node = create_convex_hull_rigid_body( self.__vertices )
-        self.__rigid_body_node.setIntoCollideMask( CollisionGroup.GROUP_TERRAIN )
+        self.__rigid_body_node.setIntoCollideMask( CollisionGroup.MODEL | CollisionGroup.ROLLS )
         self.__rigid_body_node.setMass( 0 )
         self.__rigid_body_node_path = self.__child.attachNewNode( self.__rigid_body_node )
 
 def create_convex_hull_rigid_body( vertices_list: list ) -> BulletRigidBodyNode:
-    # Create a BulletConvexHullShape
     shape = BulletConvexHullShape()
 
-    # Add vertices to the convex hull
     for triangle in vertices_list:
         for vertex in triangle:
             shape.addPoint( vertex )
 
-    # Create a BulletRigidBodyNode
     rigid_body_node = BulletRigidBodyNode( 'ConvexHullRigidBody' )
     rigid_body_node.addShape( shape )
     rigid_body_node.setMass( 0 )  # Set a non-zero mass for dynamic objects

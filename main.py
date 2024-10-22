@@ -38,7 +38,7 @@ class MyApp( ShowBase ):
 		self.cameraButtons = CameraButtons( self.terrainCamera, debugNode = self.get_debug_visualization() )
 		self.lights = Lights( self.render )
 		self.createCollisionLayer( terrain = self.terrain )
-		self.createPhysicsLayer( blockSize = 128 )
+		self.createPhysicsLayer( blockSize = 32 )
 
 		self.__selector = Selector(
 				terrain = self.terrain,

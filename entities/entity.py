@@ -36,7 +36,7 @@ class Entity:
 		self._stateMachine = StateMachine( self )
 		self._commandManager = CommandManager()
 		self.__collisionSystems = [ ]
-		self.__rigidBodyNodes = None
+		self.__rigidBodies = None
 
 	@property
 	def models( self ) -> list[ NodePath ]:
@@ -48,15 +48,15 @@ class Entity:
 
 	@property
 	def rigidBodyNodes( self ) -> dict:
-		return self.__rigidBodyNodes
+		return self.__rigidBodies
 
 	def buildModels( self, loader ):
-		self._partBuilder.addParts()
-		self.__models = self._partBuilder.buildAllParts( loader )
-		self.__collisionSystems = self._partBuilder.createCollisionSystem()
+		self._partBuilder.build( loader )
+		self.__models = self._partBuilder.models
+		self.__collisionSystems = self._partBuilder.collisionSystems
 		for collisionNode in self.__collisionSystems:
 			collisionNode.setPythonTag( 'collision_target', self )
-		self.__rigidBodyNodes = self._partBuilder.createRigidBodies()
+		self.__rigidBodies = self._partBuilder.rigidBodies
 
 	def decide( self ):
 		currentState = self._stateMachine.currentState
@@ -83,4 +83,5 @@ class Entity:
 		for model in self.__models:
 			part = model.node().getPythonTag( 'model_part' )
 			model.setColor( part.color )
-		self.collisionSystems[ 0 ].hide()
+		for system in self.__collisionSystems:
+			system.hide()

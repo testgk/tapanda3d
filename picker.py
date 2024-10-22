@@ -10,7 +10,7 @@ class Picker:
         self.__pickerQueue = CollisionHandlerQueue()
         self.__pickerNode = CollisionNode( 'mouseRay' )
         self.__pickerNP = self.__camera.attachNewNode( self.__pickerNode )
-        self.__pickerNode.setFromCollideMask( CollisionGroup.GROUP_TERRAIN | CollisionGroup.GROUP_MODEL )
+        self.__pickerNode.setFromCollideMask( CollisionGroup.TERRAIN | CollisionGroup.MODEL )
         self.__pickerRay = CollisionRay()
         self.__pickerNode.addSolid( self.__pickerRay )
         self.__picker.addCollider( self.__pickerNP, self.__pickerQueue )

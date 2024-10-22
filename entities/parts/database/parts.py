@@ -8,13 +8,15 @@ MOBILITY = {
 		"protection" : 100,
 		"damage" : 100,
 		"mobile_ability" : 100,
+		"friction" : 0.01,
 	},
 	"basic_wheels": {
 		"metal" : 80,
 		"energy" : 80,
 		"protection" : 50,
 		"damage" : 50,
-		"mobile_ability" : 60
+		"mobile_ability" : 60,
+		"friction" : 0.1,
 	},
 }
 
