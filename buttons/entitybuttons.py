@@ -36,7 +36,7 @@ class EntityButtons:
 		)
 
 	def __applyVelocity( self ):
-		Entityphysics.applyForce( self.__selector.selectedEntity )
+		Entityphysics.applyVelocity( self.__selector.selectedEntity )
 
 	def __createEntity( self ):
 		engine = BasicEngine()

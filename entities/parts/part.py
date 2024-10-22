@@ -8,12 +8,13 @@ from enums.colors import Color
 class Part:
     def __init__( self, partData = None, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
         self._rigidGroup = partId
-        self._rigidBodyMask = 1
+        self.collideGroup = 0
         self.__device = device
         self._external = external
         self.__partId = partId
         self.__isRendered = isRendered
         self._color = Color.WHITE.value
+        self.__friction = 0.01
         if partId and partData:
             part_data = partData.get( partId )
             self._readPartData( part_data )
@@ -25,10 +26,6 @@ class Part:
     @property
     def isRendered( self ) -> bool:
         return self.__isRendered
-
-    @property
-    def rigidBodyMask( self ) -> int:
-        return self._rigidBodyMask
 
     @property
     def rigidGroup( self ):
