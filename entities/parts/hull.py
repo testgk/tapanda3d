@@ -7,8 +7,8 @@ class Hull( Part ):
 	def __init__( self, partId ):
 		super().__init__( parts.HULLS, partId )
 		self._color = Color.GREEN.value
-		self._rigidBodyMask = 2
 		self._rigidGroup = "hull_mobility"
+		self.collideGroup = 4
 
 	@property
 	def objectPath( self ) -> str:

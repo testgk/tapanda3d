@@ -1,4 +1,5 @@
-from panda3d.core import Vec3
+from panda3d.bullet import BulletConstraint, BulletGenericConstraint, BulletHingeConstraint, BulletSliderConstraint
+from panda3d.core import BitMask32, LPoint3, LVector3, Point3, TransformState, Vec3
 
 from collsiongroups import CollisionGroup
 from entities.entity import Entity
@@ -12,13 +13,15 @@ class EntityLoader:
 
 	def loadEntity( self, entity: Entity, entry ):
 		entity.buildModels( loader = self.__loader )
-		for node, models in entity.rigidBodyNodes.items():
-			model_np = self.__render.attachNewNode( node )
-			self.__physicsWorld.attachRigidBody( node )
-			model_np.set_pos( entry.getSurfacePoint( self.__render ) )
-			model_np.setZ( model_np.getZ() + 50 )
-			for model in models:
-				model.reparentTo( model_np )
+		nps = [ ]
+		for bulletNode, models in entity.rigidBodyNodes.items():
+			nps.append( self.__renderModelsGroup( entry, models, bulletNode ) )
 
-		#for models in entity.models:
-		#	models.reparentTo( model_np )
+	def __renderModelsGroup( self, entry, models, bulletNode ):
+		modelBullet = self.__render.attachNewNode( bulletNode )
+		self.__physicsWorld.attachRigidBody( bulletNode )
+		modelBullet.set_pos( entry.getSurfacePoint( self.__render ) )
+		modelBullet.setZ( modelBullet.getZ() + 50  )
+		for model in models:
+			model.reparentTo( modelBullet )
+		return modelBullet
