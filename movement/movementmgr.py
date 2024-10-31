@@ -14,33 +14,27 @@ class MovementManager:
 
     def rotate( self, degrees ):
         rotation_duration = 6
-        rotation_interval = LerpHprInterval( self.__entity.coreBody, rotation_duration, ( degrees, 0, 0) )
-        rotation_interval.loop()
+        current_hpr = Vec3( self.__entity.coreBody.getHpr() )
+        rotation_interval = LerpHprInterval( self.__entity.coreBody, rotation_duration, (  current_hpr.x +  degrees, 0, 0) )
+        rotation_interval.start()
 
     def velocity( self, velocity ):
         self.__entity.coreRigidBody.set_linear_velocity( velocity )
+
+    def track_target_velocity( self, target_velocity ):
+
 
     def track_target_angle(self, angle ):
         # Get the model's current HPR
         tracking_speed = 10
         current_hpr = Vec3( self.__entity.coreBody.getHpr() )
-        target_angle = Vec3( angle, 0, 0)
-
-        # Calculate the shortest angle difference for each component (H, P, R)
+        target_angle = Vec3( angle, 0, 0 )
         h_diff = target_angle.x - current_hpr.x
-        p_diff = target_angle.y - current_hpr.y
-        r_diff = target_angle.z - current_hpr.z
-        print( f"Current H: {current_hpr.x}, Target H: {target_angle.x}, h_diff: {h_diff}" )
-        # Clamp the rotation speed to the tracking speed per frame
+        #print( f"Current H: {current_hpr.x}, Target H: {target_angle.x}, h_diff: {h_diff}" )
         h_adjust = max( - tracking_speed * globalClock.getDt(), min(h_diff, tracking_speed * globalClock.getDt() ) )
-        p_adjust = max( - tracking_speed * globalClock.getDt(), min(p_diff, tracking_speed * globalClock.getDt() ) )
-        r_adjust = max( - tracking_speed * globalClock.getDt(), min(r_diff, tracking_speed * globalClock.getDt() ) )
-
-        print( f"h_adjust: {h_adjust}, p_adjust: {p_adjust}, r_adjust: {r_adjust}" )
-        if abs( h_diff ) < 0.1:
-            return True
-        # Apply the adjustments to the current HPR
-        new_hpr = current_hpr + Vec3( h_adjust, p_adjust, r_adjust )
-
-        self.__entity.coreBody.setHpr(new_hpr)
+        #print( f"h_adjust: {h_adjust}, p_adjust: {p_adjust}, r_adjust: {r_adjust}" )
+        #if abs( h_diff ) < 0.1:
+        #    return True
+        new_hpr = current_hpr + Vec3( h_adjust, 0, 0 )
+        self.__entity.coreBody.setHpr( new_hpr )
         return False
