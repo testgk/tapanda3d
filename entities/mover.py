@@ -1,5 +1,6 @@
 from entities.parts.engine import Engine
 from entities.entity import Entity, entitypart
+from entities.parts.part import Part
 from movement.movementmgr import MovementManager
 
 
@@ -10,7 +11,8 @@ class Mover( Entity ):
         self._engine = engine
         self._mobility = mobility
         self._hull = hull
-        self._movementManager = MovementManager()
+        self._movementManager = MovementManager( self )
+        self._corePart = self.mobility()
 
     def move( self, destination ):
         pass
@@ -18,15 +20,21 @@ class Mover( Entity ):
     def stop( self ):
         pass
 
-    def turn( self, degrees ):
-        pass
+    def rotate( self, degrees = 0 ):
+        self._movementManager.rotate( degrees )
+
+    def track_target_angle( self, degrees, task ):
+        print( 'Running task' )
+        if self._movementManager.track_target_angle( degrees ):
+            return task.done
+        return task.cont
 
     @entitypart
-    def hull( self ):
+    def hull( self ) -> Part:
         return self._hull
 
     @entitypart
-    def mobility( self ):
+    def mobility( self ) -> Part:
         return self._mobility
 
  #   @entitypart

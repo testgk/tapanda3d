@@ -27,6 +27,8 @@ def nonrenderedpart( func ):
 
 class Entity:
 	def __init__( self ):
+		self._coreRigidBody = None
+		self._coreRigidGroup = None
 		self.__pendingCommand = None
 		self._commands = [ ]
 		self.name = None
@@ -37,6 +39,8 @@ class Entity:
 		self._commandManager = CommandManager()
 		self.__collisionSystems = [ ]
 		self.__rigidBodies = None
+		self._corePart = None
+		self._coreBody = None
 
 	@property
 	def models( self ) -> list[ NodePath ]:
@@ -50,6 +54,18 @@ class Entity:
 	def rigidBodyNodes( self ) -> dict:
 		return self.__rigidBodies
 
+	@property
+	def coreBody( self ) -> NodePath:
+		return self._coreBody
+
+	@property
+	def coreRigidBody( self ) -> BulletRigidBodyNode:
+		return self._coreRigidBody
+
+	def setCoreBody( self, coreBody, bulletCoreBody ):
+		self._coreBody = coreBody
+		self._coreRigidBody = bulletCoreBody
+
 	def buildModels( self, loader ):
 		self._partBuilder.build( loader )
 		self.__models = self._partBuilder.models
@@ -57,6 +73,9 @@ class Entity:
 		for collisionNode in self.__collisionSystems:
 			collisionNode.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies
+
+	def isRigidGroup( self, rigidGroup ) -> bool:
+		return self._corePart.rigidGroup == rigidGroup
 
 	def decide( self ):
 		currentState = self._stateMachine.currentState

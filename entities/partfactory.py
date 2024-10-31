@@ -116,7 +116,7 @@ class PartFactory:
 				body_node.setFriction( part.friction )
 			body_node.setIntoCollideMask( BitMask32.allOff() )
 			body_node.setIntoCollideMask(  part.collideGroup )
-			self.__rigidBodies[ body_node ] = models
+			self.__rigidBodies[ part.rigidGroup ] = { "rb": body_node, "models": models }
 
 	def __createRigidBody( self, models: list ) -> BulletRigidBodyNode:
 		body_node = BulletRigidBodyNode( 'multi_shape_body' )
