@@ -1,4 +1,5 @@
 from direct.gui.DirectButton import DirectButton
+from direct.task.Task import TaskManager
 
 from entities.entityphysics import Entityphysics
 from entities.full.movers.tank import Tank
@@ -11,9 +12,10 @@ from selector.selector import Selector
 
 class EntityButtons:
 
-	def __init__( self, selector: Selector, loader ):
+	def __init__( self, selector: Selector, loader: EntityLoader, taskMgr: TaskManager ):
 		self.__selector = selector
 		self.__loader = loader
+		self.__taskMgr = taskMgr
 		self.create_entity_button()
 		self.create_velocity_button()
 
