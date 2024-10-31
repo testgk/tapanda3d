@@ -73,10 +73,10 @@ class MyApp( ShowBase ):
 		while True:
 			command = input( "Enter a command: " ).strip()
 			if command.startswith( "rotate" ):
-				self.taskMgr.add( self.rotate_entity, "trackAngleTask" )
+				self.rotate_entity()
 
-	def rotate_entity( self, task, degrees = 120 ):
-		self.__selector.selectedEntity.track_target_angle( degrees, task )
+	def rotate_entity( self,  degrees = 120 ):
+		self.__selector.selectedEntity.rotate( degrees )
 		print( "Action triggered from terminal command!" )
 
 	def __createCollisionForEntity( self, entity: Entity ):
