@@ -1,4 +1,3 @@
-from panda3d.core import Vec3
 from camera import TerrainCamera
 from entities.entity import Entity
 

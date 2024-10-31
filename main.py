@@ -1,3 +1,5 @@
+import threading
+
 from direct.task import Task
 from panda3d.core import CollisionHandlerQueue, CollisionTraverser,Vec3
 
@@ -48,8 +50,8 @@ class MyApp( ShowBase ):
 				terrainCamera = self.terrainCamera,
 				physicsWorld = self.physics_world,
 				render = self.render )
-		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader )
-		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader )
+		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader, taskMgr = self.taskMgr )
+		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, taskMgr = self.taskMgr )
 
 
 		self.task_duration = 0.2
@@ -60,8 +62,22 @@ class MyApp( ShowBase ):
 		self.taskMgr.add( self.update_physics, "update_physics" )
 		#self.taskMgr.doMethodLater( 0.02 ,self.check_collisions ,'check_collisions' )
 		self.taskMgr.doMethodLater( 0.02, self.update_physics, 'update_physics' )
-
 		self.terrainCamera.hoverAbove()
+		self.start_command_listener()
+
+	def start_command_listener( self ):
+		# Start a new thread to listen for terminal input
+		threading.Thread( target = self.command_listener, daemon = True ).start()
+
+	def command_listener( self ):
+		while True:
+			command = input( "Enter a command: " ).strip()
+			if command.startswith( "rotate" ):
+				self.taskMgr.add( self.rotate_entity, "trackAngleTask" )
+
+	def rotate_entity( self, task, degrees = 120 ):
+		self.__selector.selectedEntity.track_target_angle( degrees, task )
+		print( "Action triggered from terminal command!" )
 
 	def __createCollisionForEntity( self, entity: Entity ):
 		self.collision_handler = CollisionHandlerQueue()
@@ -91,12 +107,10 @@ class MyApp( ShowBase ):
 		return debug_np
 
 	def check_collisions( self, task ):
-		"""Check for collisions and print results."""
 		self.cTrav.traverse( self.render )
 		return task.cont
 
 	def update_physics( self, task ):
-		"""Update the physics world."""
 		dt = globalClock.getDt()
 		self.physics_world.doPhysics( dt )
 		return task.cont

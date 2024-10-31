@@ -6,10 +6,10 @@ from entities.entity import Entity
 class Entityphysics:
 
 	@staticmethod
-	def applyVelocity( entity: Entity, velocity: Vec3 = Vec3( 10, 0, 0 ) ):
+	def applyVelocity( entity: Entity, velocity: Vec3 = Vec3( 25, 0, 0 ) ):
 		if entity is None:
 			return
-		next( iter( entity.rigidBodyNodes ) ).set_linear_velocity( velocity )
+		entity.coreRigidBody.set_linear_velocity( velocity )
 
 	@staticmethod
 	def applyForce( entity: Entity, force: Vec3 = Vec3( 500, 500, 0 ) ):
