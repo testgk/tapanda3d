@@ -21,7 +21,9 @@ class EntityLoader:
 			modelBulletNodePath = self.__renderModelsGroup( entry, rm[ "models" ], rm[ "rb" ] )
 			if entity.isRigidGroup( rigidGroup ):
 				entity.setCoreBody( modelBulletNodePath,  rm[ "rb" ] )
-		self.__taskMgr.add( entity.track_target_angle, "track entity", extraArgs=[ 60 ], appendTask = True )
+				entity.coreRigidBody.set_linear_damping( 0 )
+				entity.coreRigidBody.set_angular_damping( 0 )
+		#self.__taskMgr.add( entity.track_target_angle, "track entity", extraArgs = [ 60 ], appendTask = True )
 
 
 	def __renderModelsGroup( self, entry, models, bulletNode ):
@@ -32,6 +34,3 @@ class EntityLoader:
 		for model in models:
 			model.reparentTo( modelBullet )
 		return modelBullet
-
-	def track_entity( self, entity: Mover, task ):
-		entity.track_target_angle( -120, task )

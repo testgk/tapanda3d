@@ -1,11 +1,13 @@
 from camera import TerrainCamera
 from entities.entity import Entity
+from entities.mover import Mover
+
 
 class Selector:
 	last_picked_entity = None
 
 	@property
-	def selectedEntity( self ) -> Entity:
+	def selectedEntity( self ) -> Mover:
 		return self.last_picked_entity
 
 	@property
