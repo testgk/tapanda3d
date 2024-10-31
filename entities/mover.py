@@ -24,9 +24,12 @@ class Mover( Entity ):
         self._movementManager.rotate( degrees )
 
     def track_target_angle( self, degrees, task ):
-        print( 'Running task' )
         if self._movementManager.track_target_angle( degrees ):
             return task.done
+        return task.cont
+
+    def maintain_velocity( self, velocity, angle, task ):
+        self._movementManager.velocity( velocity, angle = angle  )
         return task.cont
 
     @entitypart
