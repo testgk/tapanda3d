@@ -1,11 +1,16 @@
+import queue
+
 from camera import TerrainCamera
+from customcollisionpolygon import CustomCollisionPolygon
 from entities.entity import Entity
+from entities.mover import Mover
+
 
 class Selector:
 	last_picked_entity = None
 
 	@property
-	def selectedEntity( self ) -> Entity:
+	def selectedEntity( self ) -> Mover:
 		return self.last_picked_entity
 
 	@property
@@ -22,6 +27,7 @@ class Selector:
 		self.__mouseWatcherNode = mouseWatcherNode
 		self.__terrainCamera = terrainCamera
 		self.physicsWorld = physicsWorld
+		self.__selectionQueue = queue.Queue()
 
 	def __getNewEntry( self ):
 		if self.__mouseWatcherNode.hasMouse():
@@ -45,8 +51,12 @@ class Selector:
 		if picked_obj is None:
 			return
 		self.__entry = entry
+		if self.__selectionQueue.pe
+
+
 		if self.last_picked_entity is not None:
-			self.last_picked_entity.clearSelection()
+			if isinstance( self.last_picked_entity, CustomCollisionPolygon ):
+				self.last_picked_entity.clearSelection()
 		print( f"Clicked node: { picked_obj }" )
 		picked_entity = picked_obj.node().getPythonTag( 'collision_target' )
 		self.last_picked_entity = picked_entity

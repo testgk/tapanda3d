@@ -19,8 +19,8 @@ def getVertices( geom: GeomNode ) -> list:
     tris = tris.decompose()
     vertex_data = geom.getVertexData()
     vertex_reader = GeomVertexReader( vertex_data, 'vertex' )
-    primitives = tris.getNumPrimitives()
-    print( f"Primitives: { primitives }" )
+    #primitives = tris.getNumPrimitives()
+    #print( f"Primitives: { primitives }" )
     for i in range( tris.getNumPrimitives() ):
         prim_start = tris.getPrimitiveStart( i )
         prim_end = tris.getPrimitiveEnd( i )

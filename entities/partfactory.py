@@ -77,7 +77,7 @@ class PartFactory:
 
 	def __loadModel( self, eggPath, loader, part ):
 		model = loader.loadModel( eggPath )
-		model.setScale( 1 )
+		model.setScale( 0.3 )
 		model.setColor( part.color )
 		model.setPythonTag( 'model_part', part )
 		return model

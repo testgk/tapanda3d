@@ -38,7 +38,11 @@ class EntityButtons:
 		)
 
 	def __applyVelocity( self ):
-		Entityphysics.applyVelocity( self.__selector.selectedEntity )
+		try:
+			self.__taskMgr.add( self.__selector.selectedEntity.track_target_angle, "track velocity", extraArgs = [ 90 ], appendTask = True )
+			self.__taskMgr.add( self.__selector.selectedEntity.maintain_velocity, "track entity", extraArgs = [ 30 ], appendTask = True )
+		except:
+			pass
 
 	def __createEntity( self ):
 		engine = BasicEngine()
