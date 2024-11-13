@@ -40,5 +40,5 @@ class TerrainProvider:
         texture = self._loader.loadTexture( "maps/terrain_texture.png" )
         texture.setMinfilter( Texture.FTLinearMipmapLinear )
         texture.setMagfilter( Texture.FTLinear )
-        #terrain.getRoot().setTexture( texture )
+        terrain.getRoot().setTexture( texture )
         return TerrainInfo( terrain, heightmap )

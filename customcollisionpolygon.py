@@ -8,6 +8,8 @@ from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, GeomVertexR
 
 from enums.colors import Color
 from enums.directions import Direction, mapDirections
+from selectionitem import SelectionItem
+from selectionmodes import SelectionModes
 
 
 def getPolygonFromPool( row, column ) -> Any | None:
@@ -148,9 +150,10 @@ def getNodePosition( name ):
 	return int( pos[ 0 ] ), int( pos[ 1 ] )
 
 
-class CustomCollisionPolygon:
+class CustomCollisionPolygon( SelectionItem ):
 	def __init__( self, child: NodePath, height, *args, **kwargs ):
-		super().__init__( *args, **kwargs )
+		super().__init__()
+		self._isTerrain = True
 		self.__rigid_body_node_path = None
 		self.__rigid_body_node = None
 		self.__edges = { }
@@ -160,7 +163,6 @@ class CustomCollisionPolygon:
 		self.__row = None
 		self.__area = None
 		self.__name = None
-		self.__name = None
 		self.__angle = None
 		self.__debug_node_path = None
 		self.__collision_node_path = None
@@ -169,10 +171,10 @@ class CustomCollisionPolygon:
 		self.__terrainPosition = self.__child.get_pos()
 		self.__terrainPosition[ 2 ] = height
 		self.__height = height
-		self.__geom = self.__child.node().getGeom( 0 )  # Assuming each GeomNode has one Geom
-		self.__vertices = getVertices( self.__geom )
+		self.__vertices = getVertices( self.__child.node().getGeom( 0 )  )
 		self.__collision_node = CollisionNode( f'terrain_{self.__child.getName()}' )
 		self.createCollisionNode( self.__vertices )
+		self.__assignEdges( self.__vertices )
 
 	def createCollisionNode( self, vertices ):
 		triangleCount = 0
@@ -182,16 +184,17 @@ class CustomCollisionPolygon:
 			self.__name = self.__child.getName()
 			self.__area = triangle_area( vertex[ 0 ], vertex[ 1 ], vertex[ 2 ] )
 			self.__row, self.__col = getNodePosition( self.__name )
-			print(
-					f"{self.__name}: triangle: {triangleCount} {self.__angle}, row = {self.__row}, column = {self.__col} area = {self.__area}" )
+			print( self )
 			self.__collision_node.addSolid( poly )
 			triangleCount += 1
 		self.__collision_node.setPythonTag( 'collision_target', self )
+		addPolygonToPool( self.__name, self )
+
+	def __assignEdges( self, vertices ):
 		self.__edges[ Direction.UP_RIGHT ] = vertices[ 0 ][ 0 ]
 		self.__edges[ Direction.UP_LEFT ] = vertices[ 0 ][ 1 ]
 		self.__edges[ Direction.DOWN_RIGHT ] = vertices[ 1 ][ 1 ]
 		self.__edges[ Direction.DOWN_LEFT ] = vertices[ 1 ][ 0 ]
-		addPolygonToPool( self.__name, self )
 
 	@property
 	def row( self ) -> int:
@@ -201,15 +204,7 @@ class CustomCollisionPolygon:
 	def col( self ) -> int:
 		return self.__col
 
-	@property
-	def terrainPosition( self ):
-		return self.__terrainPosition
-
-	@property
-	def rigidBodyNode( self ) -> BulletRigidBodyNode:
-		return self.__rigid_body_node
-
-	def getNeighbors( self ):
+	def __getNeighbors( self ):
 		neighborsDic = { }
 		for direction, val in mapDirections.items():
 			neighborsDic[ direction ] = getPolygonFromPool( self.__row + val[ 0 ], self.__col + val[ 1 ] )
@@ -219,13 +214,12 @@ class CustomCollisionPolygon:
 		row_diff = abs( self.__row - startRow )
 		col_diff = abs( self.__col - startCol )
 
-		# Check visibility and distance constraints
 		if self.__visible or abs( row_diff ) > level or abs( col_diff ) > level:
 			return
 
 		self.__displayFrameAndEdges( level, col_diff, row_diff, startCol, startRow )
-		self.showDebugNode()
-		self.colorDebugNode()
+		self.__showDebugNode()
+		self.__colorDebugNode()
 		self.__visible = True
 		for neighbor in self.__neighborsDic.values():
 			neighbor.showNeighbors( startRow, startCol, level )
@@ -274,7 +268,7 @@ class CustomCollisionPolygon:
 		self.__debug_node_path.hide()
 		self.__wire_node_path.hide()
 
-	def showDebugNode( self ):
+	def __showDebugNode( self ):
 		self.__visible = True
 		self.__debug_node_path.show()
 
@@ -284,14 +278,10 @@ class CustomCollisionPolygon:
 			print( f'point: {point}' )
 			self.__draw_point( point, self.pointColor() )
 
-	def removeAllEdges( self ):
+	def __removeAllEdges( self ):
 		for edge in currentFrame:
 			edge.remove_node()
 		currentFrame.clear()
-
-	def attachModel( self, model ):
-		__model_node_path = self.__child.attachNewNode( model.node() )
-		__model_node_path.setZ( __model_node_path.getZ() + 0.2 )
 
 	def __draw_point( self, point: Point3, color = Color.GREEN ):
 		geom_node = getPointGeomNode( point )
@@ -300,10 +290,6 @@ class CustomCollisionPolygon:
 		__point_node_path.set_render_mode_thickness( 5 )
 		__point_node_path.setColor( color.value )
 		currentFrame.append( __point_node_path )
-
-	def attachCube( self, cube ):
-		__cube_node_path = self.__child.attachNewNode( cube )
-		__cube_node_path.show()
 
 	def __str__( self ):
 		return (f'{self.__name}, row: {self.__row}, column: {self.__col}, '
@@ -331,31 +317,38 @@ class CustomCollisionPolygon:
 		self.__debug_node_path.setZ( self.__debug_node_path.getZ() + height_offset )
 		self.__debug_node_path.hide()
 
-	def colorDebugNode( self, color = Color.RED_TRANSPARENT.value ):
+	def __colorDebugNode( self, color = Color.RED_TRANSPARENT.value ):
 		self.__debug_node_path.setColor( color )  # Set the color to red
 		self.__debug_node_path.setTransparency( True )
 
 	@classmethod
 	def acquireAllNeighbors( cls ):
 		for name, polygon in polygons.items():
-			polygon.getNeighbors()
+			polygon.__getNeighbors()
 
 	def pointColor( self ):
 		if self.__angle > 0.2:
 			return Color.RED
 		return Color.WHITE
 
-	def handleSelection( self, mode ):
-		if mode == "mouse1":
-			self.__markArea()
+	def handleSelection( self, mode: SelectionModes ):
+		if self.isSelected( mode ):
+			return
+
+		self._selectionMode = mode
+		if mode == SelectionModes.CREATE:
+			self.__markArea( level = 0, color = Color.BLUE.value )
+		if mode == SelectionModes.P2P:
+			self.__markArea( level = 0, color = Color.YELLOW.value )
 
 	def clearSelection( self ):
+		self._selectionMode = SelectionModes.NONE
 		self.hideNeighbors()
 
-	def __markArea( self, level = 0 ):
-		self.removeAllEdges()
+	def __markArea( self, level = 0, color = None ):
+		self.__removeAllEdges()
 		currentFrame.clear()
 		self.hideNeighbors()
 		self.showNeighbors( self.row, self.col, level )
-		self.showDebugNode()
-		self.colorDebugNode()
+		self.__showDebugNode()
+		self.__colorDebugNode( color )

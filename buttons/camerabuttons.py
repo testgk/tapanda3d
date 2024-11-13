@@ -100,3 +100,4 @@ class CameraButtons:
        else:
            self.__debugNode.show()
            self.DEBUG = True
+           

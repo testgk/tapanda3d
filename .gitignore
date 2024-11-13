@@ -4,7 +4,11 @@ __pycache__
 maps/__pycache__/
 *.py[cod]
 *$py.class
-
+__pycache__/*
+__pycache__/camera.cpython-311.pyc
+__pycache__/customcollisionpolygon.cpython-311.pyc
+__pycache__/terraincolision.cpython-311.pyc
+*.pyc
 # C extensions
 *.so
 

@@ -6,6 +6,8 @@ from panda3d.core import NodePath
 from entities.partfactory import PartFactory
 from entities.commandmanager import CommandManager
 from enums.colors import Color
+from selectionitem import SelectionItem
+from selectionmodes import SelectionModes
 from statemachine.commands.command import Command
 from statemachine.statemachine import StateMachine
 
@@ -25,8 +27,9 @@ def nonrenderedpart( func ):
 	return func
 
 
-class Entity:
+class Entity( SelectionItem ):
 	def __init__( self ):
+		super().__init__()
 		self._coreRigidBody = None
 		self._coreRigidGroup = None
 		self.__pendingCommand = None
@@ -91,14 +94,19 @@ class Entity:
 	def pendingCommand( self ) -> Command | None:
 		return self._commandManager.pendingCommand()
 
-	def handleSelection( self, mode ):
-		if mode == "mouse1":
+	def handleSelection( self, mode: SelectionModes ):
+		if self.isSelected( mode ):
+			return
+
+		self._selectionMode = mode
+		if mode == SelectionModes.P2P:
 			for model in self.__models:
-				model.setColor( Color.RED.value )
+				model.setColor( Color.GREEN.value )
 		for system in self.__collisionSystems:
 			system.show()
 
 	def clearSelection( self ):
+		self._selectionMode = SelectionModes.NONE
 		for model in self.__models:
 			part = model.node().getPythonTag( 'model_part' )
 			model.setColor( part.color )
