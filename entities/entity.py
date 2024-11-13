@@ -41,10 +41,14 @@ class Entity:
 		self.__rigidBodies = None
 		self._corePart = None
 		self._coreBody = None
+		self._isMover = False
 
 	@property
 	def models( self ) -> list[ NodePath ]:
 		return self.__models
+
+	def isMover( self ) -> bool:
+		return self._isMover
 
 	@property
 	def collisionSystems( self ):
