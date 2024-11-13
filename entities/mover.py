@@ -16,6 +16,7 @@ class Mover( Entity ):
         self._hull = hull
         self._movementManager = MovementManager( self )
         self._corePart = self.mobility()
+        self._isMover = True
 
     def move( self, destination ):
         pass

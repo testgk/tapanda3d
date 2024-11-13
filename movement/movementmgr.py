@@ -53,7 +53,7 @@ class MovementManager:
         current_pos = self.__entity.coreBody.getPos()
 
         # Calculate direction to the target point (point B)
-        direction = (point_b - current_pos).normalized()
+        direction = ( point_b - current_pos ).normalized()
 
         # Set velocity towards the target point
         velocity = direction * speed
