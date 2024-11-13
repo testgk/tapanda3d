@@ -19,18 +19,18 @@ from terrainrigidbody import TerrainRigidBody
 from terraincolision import TerrainCollision
 from direct.showbase.ShowBase import ShowBase
 from maps.terrainprovider import TerrainProvider
+import sys
+sys.dont_write_bytecode = True
 
 
 class MyApp( ShowBase ):
 
 	def __init__( self ):
+
 		ShowBase.__init__( self )
-		self.camera_centered = False
-		terrainProvider = TerrainProvider( self.loader )
-		self.terrainInfo = terrainProvider.create_terrain( "heightmap1" )
-		self.terrain = self.terrainInfo.terrain
-		self.terrain.getRoot().reparentTo( self.render )
-		self.terrain.setFocalPoint( self.camera )
+		self.__terrainPhysicsLayer = None
+		self.__terrainCollisionLayer = None
+		self.__createTerrain()
 		self.disableMouse()
 		# Set up Bullet physics world
 		self.physics_world = BulletWorld()
@@ -39,16 +39,14 @@ class MyApp( ShowBase ):
 		self.terrainCamera = TerrainCamera( self.camera, self.terrainInfo.terrainCenter, self.terrainInfo.terrainSize )
 		self.cameraButtons = CameraButtons( self.terrainCamera, debugNode = self.get_debug_visualization() )
 		self.lights = Lights( self.render )
-		self.createCollisionLayer( terrain = self.terrain )
-		self.createPhysicsLayer( blockSize = 32 )
+		self.__createCollisionLayer( terrain = self.terrain )
+		self.__createPhysicsLayer( blockSize = 32 )
 
 		self.__selector = Selector(
-				terrain = self.terrain,
 				picker = Picker( self.camera ),
 				mouseWatcherNode = self.mouseWatcherNode,
 				camNode = self.camNode,
 				terrainCamera = self.terrainCamera,
-				physicsWorld = self.physics_world,
 				render = self.render )
 		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader, taskMgr = self.taskMgr )
 		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, taskMgr = self.taskMgr )
@@ -65,8 +63,14 @@ class MyApp( ShowBase ):
 		self.terrainCamera.hoverAbove()
 		self.start_command_listener()
 
+	def __createTerrain( self ):
+		terrainProvider = TerrainProvider( self.loader )
+		self.terrainInfo = terrainProvider.create_terrain( "heightmap1" )
+		self.terrain = self.terrainInfo.terrain
+		self.terrain.getRoot().reparentTo( self.render )
+		self.terrain.setFocalPoint( self.camera )
+
 	def start_command_listener( self ):
-		# Start a new thread to listen for terminal input
 		threading.Thread( target = self.command_listener, daemon = True ).start()
 
 	def command_listener( self ):
@@ -76,7 +80,7 @@ class MyApp( ShowBase ):
 				self.rotate_entity()
 
 	def rotate_entity( self,  degrees = 120 ):
-		self.__selector.selectedEntity.rotate( degrees )
+		self.__selector.selectedMover.rotate( degrees )
 		print( "Action triggered from terminal command!" )
 
 	def __createCollisionForEntity( self, entity: Entity ):
@@ -115,15 +119,15 @@ class MyApp( ShowBase ):
 		self.physics_world.doPhysics( dt )
 		return task.cont
 
-	def createPhysicsLayer( self, blockSize ):
+	def __createPhysicsLayer( self, blockSize ):
 		terrainProvider = TerrainProvider( self.loader )
 		terrainInfo = terrainProvider.create_terrain( "heightmap1", blockSize = blockSize )
-		self.terrainPhysicsLayer = TerrainRigidBody( terrainInfo.terrain, self.physics_world )
-		self.terrainPhysicsLayer.createTerrainRigidBody()
+		self.__terrainPhysicsLayer = TerrainRigidBody( terrainInfo.terrain, self.physics_world )
+		self.__terrainPhysicsLayer.createTerrainRigidBody()
 
-	def createCollisionLayer( self, terrain ):
-		self.terrainCollisionLayer = TerrainCollision( terrain )
-		self.terrainCollisionLayer.createTerrainCollision()
+	def __createCollisionLayer( self, terrain ):
+		self.__terrainCollisionLayer = TerrainCollision( terrain )
+		self.__terrainCollisionLayer.createTerrainCollision()
 
 
 app = MyApp()

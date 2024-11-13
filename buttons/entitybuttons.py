@@ -38,13 +38,16 @@ class EntityButtons:
 		)
 
 	def __applyVelocity( self ):
-		self.__taskMgr.add( self.__selector.selectedEntity.track_target_angle, "track velocity", extraArgs = [ 60 ], appendTask = True )
-		self.__taskMgr.add( self.__selector.selectedEntity.maintain_velocity, "track entity", extraArgs = [ 20, 60 ], appendTask = True )
-		#Entityphysics.applyVelocity( self.__selector.selectedEntity )
+		try:
+			self.__taskMgr.add( self.__selector.selectedMover.track_target_angle, "track velocity", extraArgs = [ 90 ], appendTask = True )
+			self.__taskMgr.add( self.__selector.selectedMover.maintain_velocity, "track entity", extraArgs = [ 30 ], appendTask = True )
+		except:
+			pass
 
 	def __createEntity( self ):
 		engine = BasicEngine()
 		turret = CannonTurret()
 		mobility = BasicTracks()
 		tank = Tank( engine = engine, turret = turret, mobility = mobility )
-		self.__loader.loadEntity( entity = tank, entry = self.__selector.entry )
+		self.__loader.loadEntity( entity = tank, entry = self.__selector.point )
+		#self.__selector.clearSelect()

@@ -25,11 +25,10 @@ class EntityLoader:
 				entity.coreRigidBody.set_angular_damping( 0 )
 		#self.__taskMgr.add( entity.track_target_angle, "track entity", extraArgs = [ 60 ], appendTask = True )
 
-
-	def __renderModelsGroup( self, entry, models, bulletNode ):
+	def __renderModelsGroup( self, point, models, bulletNode ):
 		modelBullet = self.__render.attachNewNode( bulletNode )
 		self.__physicsWorld.attachRigidBody( bulletNode )
-		modelBullet.set_pos( entry.getSurfacePoint( self.__render ) )
+		modelBullet.set_pos( point )
 		modelBullet.setZ( modelBullet.getZ() + 50  )
 		for model in models:
 			model.reparentTo( modelBullet )
