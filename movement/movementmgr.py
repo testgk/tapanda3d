@@ -1,3 +1,5 @@
+import math
+
 from direct.interval.LerpInterval import LerpHprInterval
 from direct.task import Task
 from panda3d.core import LVector3, Vec3
@@ -8,6 +10,7 @@ from phyisics import globalClock
 class MovementManager:
     def __init__( self, entity ):
         self.__entity = entity
+        self.__adjusted = False
 
     def update( self ):
         pass
@@ -18,38 +21,44 @@ class MovementManager:
         rotation_interval = LerpHprInterval( self.__entity.coreBody, rotation_duration, (  current_hpr.x +  degrees, 0, 0) )
         rotation_interval.start()
 
-    def velocity( self, velocity, angle  ):
-        # Assuming 'velocity' is a float or int representing the speed
-        direction = LVector3( Vec3( angle, 0, 0 ) )  # Desired direction along the X-axis
-
-        # Multiply direction by speed
-        velocity_vector = direction * float( velocity )
-
-        # Apply to rigid body
+    def velocity( self, velocity  ):
+        if not self.__adjusted:
+            return
+        rotation_quat = self.__entity.coreBody.getQuat()
+        local_forward = LVector3( 1, 0, 0 )
+        forward_direction = rotation_quat.xform( local_forward )
+        velocity_vector = forward_direction.normalized() * velocity
+        print( f"Apply velocity: {velocity_vector }" )
         self.__entity.coreRigidBody.setLinearVelocity( velocity_vector )
 
     #def track_target_velocity( self, target_velocity ):
 
     def track_target_angle(self, angle ):
-        tracking_speed = 10
+        tracking_speed = 30
         current_hpr = Vec3( self.__entity.coreBody.getHpr() )
         target_angle = Vec3( angle, 0, 0 )
-
-        # Calculate the shortest angle difference for each component (H, P, R)
         h_diff = target_angle.x - current_hpr.x
-        p_diff = target_angle.y - current_hpr.y
-        r_diff = target_angle.z - current_hpr.z
-        print( f"Current H: {current_hpr.x}, Target H: {target_angle.x}, h_diff: {h_diff}" )
-        # Clamp the rotation speed to the tracking speed per frame
+        print( f"Current H: { current_hpr.x }, Target H: { target_angle.x }, h_diff: { h_diff }" )
         h_adjust = max( - tracking_speed * globalClock.getDt(), min( h_diff, tracking_speed * globalClock.getDt() ) )
-        p_adjust = max( - tracking_speed * globalClock.getDt(), min( p_diff, tracking_speed * globalClock.getDt() ) )
-        r_adjust = max( - tracking_speed * globalClock.getDt(), min( r_diff, tracking_speed * globalClock.getDt() ) )
-
-        print( f"h_adjust: {h_adjust}, p_adjust: {p_adjust}, r_adjust: {r_adjust}" )
-        if abs( h_diff ) < 0.1:
-            return True
-        # Apply the adjustments to the current HPR
-        new_hpr = current_hpr + Vec3( h_adjust, p_adjust, r_adjust )
-
+        new_hpr = current_hpr + Vec3( h_adjust,  0,  0 )
         self.__entity.coreBody.setHpr( new_hpr )
+        print( f"h_adjust: { h_adjust }, h_diff: { h_diff }" )
+        if abs( h_diff ) ==0:
+            self.__adjusted = True
+            return True
+        self.__adjusted = False
         return False
+
+    def follow_a_path( self, point_b, speed = 20 ):
+        current_pos = self.__entity.coreBody.getPos()
+
+        # Calculate direction to the target point (point B)
+        direction = ( point_b - current_pos ).normalized()
+
+        # Set velocity towards the target point
+        velocity = direction * speed
+        self.__entity.coreRigidBody.setLinearVelocity( velocity )
+
+        # Rotate the model to face the direction of movement
+        angle = math.degrees( math.atan2( direction.y, direction.x ) )
+        self.__entity.coreBody.setH( angle )
