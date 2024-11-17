@@ -7,8 +7,10 @@ from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, Directional
     GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3, GeomLines, \
     GeomPoints
 
+from collsiongroups import CollisionGroup
 from enums.colors import Color
 from enums.directions import Direction, mapDirections
+from selector.selector import Selector
 
 
 def getVertices( geom: GeomNode ) -> list:
@@ -17,8 +19,8 @@ def getVertices( geom: GeomNode ) -> list:
     tris = tris.decompose()
     vertex_data = geom.getVertexData()
     vertex_reader = GeomVertexReader( vertex_data, 'vertex' )
-    primitives = tris.getNumPrimitives()
-    print( f"Primitives: { primitives }" )
+    #primitives = tris.getNumPrimitives()
+    #print( f"Primitives: { primitives }" )
     for i in range( tris.getNumPrimitives() ):
         prim_start = tris.getPrimitiveStart( i )
         prim_end = tris.getPrimitiveEnd( i )
@@ -49,21 +51,18 @@ class CustomRigidPolygon:
 
     def attachRigidBodyNodeToTerrain( self ):
         self.__rigid_body_node = create_convex_hull_rigid_body( self.__vertices )
+        self.__rigid_body_node.setIntoCollideMask( CollisionGroup.MODEL | CollisionGroup.ROLLS )
         self.__rigid_body_node.setMass( 0 )
         self.__rigid_body_node_path = self.__child.attachNewNode( self.__rigid_body_node )
 
-
 def create_convex_hull_rigid_body( vertices_list: list ) -> BulletRigidBodyNode:
-    # Create a BulletConvexHullShape
     shape = BulletConvexHullShape()
 
-    # Add vertices to the convex hull
     for triangle in vertices_list:
         for vertex in triangle:
             shape.addPoint( vertex )
 
-    # Create a BulletRigidBodyNode
     rigid_body_node = BulletRigidBodyNode( 'ConvexHullRigidBody' )
     rigid_body_node.addShape( shape )
-    rigid_body_node.setMass( 1.0 )  # Set a non-zero mass for dynamic objects
+    rigid_body_node.setMass( 0 )  # Set a non-zero mass for dynamic objects
     return rigid_body_node

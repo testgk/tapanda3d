@@ -1,10 +1,14 @@
 import os
-
+from collections import defaultdict
 from typing import TYPE_CHECKING, Callable
 
 from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
 from panda3d.core import BitMask32, CollisionBox, CollisionHandlerPusher, CollisionNode, CollisionTraverser, NodePath, \
 	Vec3
+from panda3d.core import Vec3, CollisionBox, CollisionNode
+
+
+from collsiongroups import CollisionGroup
 
 if TYPE_CHECKING:
 	from entities.entity import Entity
@@ -27,6 +31,7 @@ def find_entity_parts( cls ) -> tuple[ list[ Callable ], list[ Callable ] ]:
 
 class PartFactory:
 	def __init__( self, entity: 'Entity' ):
+		self.partModels = { }
 		self.__modules = [ ]
 		self.__parts = [ ]
 		self.__entity = entity
@@ -37,41 +42,45 @@ class PartFactory:
 			self.__parts.append( part() )
 		for module in modules:
 			self.__modules.append( module() )
+		return self.__parts, self.__modules
 
-	def modules( self ):
-		return self.__modules
+	@property
+	def collisionSystems( self ):
+		return self.__collision_nps
 
-	def parts( self ):
-		return self.__parts
+	@property
+	def models( self ):
+		return self.__models
 
-	def buildAllParts( self, loader ) -> list[ NodePath ]:
-		models = [ ]
+	@property
+	def rigidBodies( self ):
+		return self.__rigidBodies
+
+	def build( self, loader ):
+		self.addParts()
+		self.createModels( loader )
+		self.createCollisionSystem()
+		self.createRigidBodies()
+
+	def createModels( self, loader ) -> None:
+		self.__models = []
 		for part in self.__parts:
 			if not part.isRendered:
 				continue
 			try:
 				eggPath = self.__getPartEggPath( part )
-				models.append( self.__loadModel( eggPath, loader, part.color ) )
+				model = self.__loadModel( eggPath, loader, part )
+				self.partModels[ part ] = model
+				self.__models.append( model )
 			except Exception as e:
 				pass
-		return models
 
-	def __loadModel( self, eggPath, loader, color ):
+	def __loadModel( self, eggPath, loader, part ):
 		model = loader.loadModel( eggPath )
-		model.setColor( color )
+		model.setScale( 0.3 )
+		model.setColor( part.color )
+		model.setPythonTag( 'model_part', part )
 		return model
-
-	def getCollisionSystem( self, models ):
-		collision_nps = [ ]
-		for model in models:
-			if model is None:
-				return
-			collision_box_node = create_collision_box( model )
-			if collision_box_node:
-				collision_np = model.attachNewNode( collision_box_node )
-				collision_np.show()
-				collision_nps.append( collision_np )
-		return collision_nps
 
 	def __getPartEggPath( self, part: 'Part' ):
 		fullPath = os.path.join( "objects/parts/", part.objectPath, part.partId )
@@ -84,22 +93,41 @@ class PartFactory:
 				convert_stl_to_egg( stlPath, eggPath )
 				return eggPath
 
-	def createRigidBodies( self, models ):
+	def createCollisionSystem( self ):
+		self.__collision_nps = [ ]
+		for part, model in self.partModels.items():
+			if model is None:
+				return
+			collision_box_node = create_collision_box( model )
+			if collision_box_node:
+				collision_np = model.attachNewNode( collision_box_node )
+				self.__collision_nps.append( collision_np )
+
+	def createRigidBodies( self ) -> None:
+		self.__rigidBodies = {}
+		groupedPartModels = defaultdict( list )
+		for part, model in self.partModels.items():
+			groupedPartModels[ part.rigidGroup ].append( model )
+
+		for rg, models in groupedPartModels.items():
+			part = models[ 0 ].getPythonTag( 'model_part' )
+			body_node = self.__createRigidBody( models )
+			if hasattr( part, 'friction' ):
+				body_node.setFriction( part.friction )
+			body_node.setIntoCollideMask( BitMask32.allOff() )
+			body_node.setIntoCollideMask(  part.collideGroup )
+			self.__rigidBodies[ part.rigidGroup ] = { "rb": body_node, "models": models }
+
+	def __createRigidBody( self, models: list ) -> BulletRigidBodyNode:
 		body_node = BulletRigidBodyNode( 'multi_shape_body' )
 		for model in models:
-			if model is None:
-				pass
-
 			mesh = BulletTriangleMesh()
 			add_model_to_bullet_mesh( mesh, model )
-			model_shape = BulletTriangleMeshShape( mesh, dynamic = True )  # dynamic=True for movable objects
+			model_shape = BulletTriangleMeshShape( mesh, dynamic = True )
 			body_node.addShape( model_shape )
-			#body_node.applyCentralImpulse( Vec3( 0, 0, 100 ) )
-			body_node.setMass( 0.1 )
+			body_node.setMass( 100 )
+			#body_node.setPythonTag( 'body_node', model )
 		return body_node
-
-
-from panda3d.core import Vec3, CollisionBox, CollisionNode
 
 
 def get_model_dimensions( model_np ):
@@ -129,7 +157,6 @@ def get_model_dimensions( model_np ):
 
 	return min_bounds, max_bounds
 
-
 def create_collision_box( model_np ):
 	"""Creates a CollisionBox that roughly matches the model's dimensions."""
 	dimensions = get_model_dimensions( model_np )
@@ -158,7 +185,6 @@ def create_collision_box( model_np ):
 	collision_node = CollisionNode( 'model_collision' )
 	collision_node.addSolid( collision_box )
 	return collision_node
-
 
 def add_model_to_bullet_mesh( mesh, model_np ):
 	"""Adds the geometry of the model to a BulletTriangleMesh."""

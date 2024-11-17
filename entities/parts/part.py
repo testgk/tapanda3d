@@ -6,14 +6,16 @@ from enums.colors import Color
 
 
 class Part:
-    def __init__( self, partData, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
-        self._rigidBodyMask = 0
+    def __init__( self, partData = None, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
+        self._rigidGroup = partId
+        self.collideGroup = 0
         self.__device = device
         self._external = external
         self.__partId = partId
         self.__isRendered = isRendered
         self._color = Color.WHITE.value
-        if partId is not None:
+        self.__friction = 0.01
+        if partId and partData:
             part_data = partData.get( partId )
             self._readPartData( part_data )
 
@@ -25,8 +27,9 @@ class Part:
     def isRendered( self ) -> bool:
         return self.__isRendered
 
-    def rigidBodyMask( self ) -> int:
-        return self._rigidBodyMask
+    @property
+    def rigidGroup( self ):
+        return self._rigidGroup
 
     @property
     def color( self ):

@@ -1,5 +1,6 @@
 from panda3d.core import GeoMipTerrain, GeomNode, NodePath
 
+from collsiongroups import CollisionGroup
 from customcollisionpolygon import CustomCollisionPolygon
 from customrigidpolygon import CustomRigidPolygon
 
@@ -16,3 +17,5 @@ class TerrainRigidBody:
 				customRigidPolygon = CustomRigidPolygon( child )
 				customRigidPolygon.attachRigidBodyNodeToTerrain()
 				self.__physicsWorld.attachRigidBody( customRigidPolygon.rigidBodyNode )
+
+

@@ -1,3 +1,4 @@
+from collsiongroups import CollisionGroup
 from entities.parts.part import Part
 from entities.parts.database import parts
 from enums.colors import Color
@@ -6,14 +7,21 @@ from enums.colors import Color
 class Mobility( Part ) :
 	def __init__( self, partId ):
 		super().__init__( parts.MOBILITY, partId, external = True )
-		self._color = Color.RED.value
+		self._color = Color.YELLOW.value
+		self._rigidGroup = "hull_mobility"
+		self.collideGroup = CollisionGroup.MODEL
 
 	@property
 	def objectPath( self ) -> str:
 		return "mobility"
 
+	@property
+	def friction( self ) -> float:
+		return self.__friction
+
 	def _readPartData( self, part_data ):
 		self.mobile_ability = part_data[ "mobile_ability" ]
+		self.__friction = part_data[ "friction" ]
 
 
 class BasicTracks( Mobility ):
