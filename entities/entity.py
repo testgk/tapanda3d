@@ -22,11 +22,6 @@ def entitymodule( func ):
 	return func
 
 
-def nonrenderedpart( func ):
-	func._is_nonrenderd = True
-	return func
-
-
 class Entity( SelectionItem ):
 	def __init__( self ):
 		super().__init__()
@@ -45,9 +40,6 @@ class Entity( SelectionItem ):
 		self._corePart = None
 		self._coreBody = None
 
-	@property
-	def models( self ) -> list[ NodePath ]:
-		return self.__models
 
 	@property
 	def collisionSystems( self ):
@@ -102,8 +94,8 @@ class Entity( SelectionItem ):
 		if mode == SelectionModes.P2P:
 			for model in self.__models:
 				model.setColor( Color.GREEN.value )
-		for system in self.__collisionSystems:
-			system.show()
+		self.__collisionSystems[ 0 ].show()
+
 
 	def clearSelection( self ):
 		self._selectionMode = SelectionModes.NONE
