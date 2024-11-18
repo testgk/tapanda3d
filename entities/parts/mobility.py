@@ -21,7 +21,7 @@ class Mobility( Part ) :
 
 	def _readPartData( self, part_data ):
 		self.mobile_ability = part_data[ "mobile_ability" ]
-		self.__friction = part_data[ "friction" ]
+		#self.__friction = part_data[ "friction" ]
 
 
 class BasicTracks( Mobility ):

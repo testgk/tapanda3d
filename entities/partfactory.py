@@ -3,12 +3,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Callable
 
 from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
-from panda3d.core import BitMask32, CollisionBox, CollisionHandlerPusher, CollisionNode, CollisionTraverser, NodePath, \
-	Vec3
-from panda3d.core import Vec3, CollisionBox, CollisionNode
-
-
-from collsiongroups import CollisionGroup
+from panda3d.core import BitMask32, Vec3, CollisionBox, CollisionNode
 
 if TYPE_CHECKING:
 	from entities.entity import Entity
@@ -31,6 +26,9 @@ def find_entity_parts( cls ) -> tuple[ list[ Callable ], list[ Callable ] ]:
 
 class PartFactory:
 	def __init__( self, entity: 'Entity' ):
+		self.__models = None
+		self.__collisionBoxes = []
+		self.__rigidBodies = { }
 		self.partModels = { }
 		self.__modules = [ ]
 		self.__parts = [ ]
@@ -46,7 +44,7 @@ class PartFactory:
 
 	@property
 	def collisionSystems( self ):
-		return self.__collision_nps
+		return self.__collisionBoxes
 
 	@property
 	def models( self ):
@@ -59,7 +57,7 @@ class PartFactory:
 	def build( self, loader ):
 		self.addParts()
 		self.createModels( loader )
-		self.createCollisionSystem()
+		self.createCollisionBox()
 		self.createRigidBodies()
 
 	def createModels( self, loader ) -> None:
@@ -82,52 +80,52 @@ class PartFactory:
 		model.setPythonTag( 'model_part', part )
 		return model
 
-	def __getPartEggPath( self, part: 'Part' ):
+	def __getPartEggPath( self, part: 'Part' ) -> str:
 		fullPath = os.path.join( "objects/parts/", part.objectPath, part.partId )
 		eggPath = fullPath + ".egg"
 		if os.path.exists( eggPath ):
 			return eggPath
-		else:
-			stlPath = fullPath + ".stl"
-			if os.path.exists( stlPath ):
-				convert_stl_to_egg( stlPath, eggPath )
-				return eggPath
 
-	def createCollisionSystem( self ):
-		self.__collision_nps = [ ]
+		stlPath = fullPath + ".stl"
+		if os.path.exists( stlPath ):
+			convert_stl_to_egg( stlPath, eggPath )
+			return eggPath
+
+	def createCollisionBox( self ):
 		for part, model in self.partModels.items():
-			if model is None:
-				return
 			collision_box_node = create_collision_box( model )
 			if collision_box_node:
-				collision_np = model.attachNewNode( collision_box_node )
-				self.__collision_nps.append( collision_np )
+				self.__collisionBoxes.append( model.attachNewNode( collision_box_node ) )
 
 	def createRigidBodies( self ) -> None:
-		self.__rigidBodies = {}
-		groupedPartModels = defaultdict( list )
-		for part, model in self.partModels.items():
-			groupedPartModels[ part.rigidGroup ].append( model )
+		groupedModels = self.__groupRigidModels().items()
+		for rg, models in groupedModels:
+			body_node = self.__createSingleRigidBody( models )
+			self.__rigidBodies[ rg ] = { "rb": body_node, "models": models }
 
-		for rg, models in groupedPartModels.items():
-			part = models[ 0 ].getPythonTag( 'model_part' )
-			body_node = self.__createRigidBody( models )
-			if hasattr( part, 'friction' ):
-				body_node.setFriction( part.friction )
-			body_node.setIntoCollideMask( BitMask32.allOff() )
-			body_node.setIntoCollideMask(  part.collideGroup )
-			self.__rigidBodies[ part.rigidGroup ] = { "rb": body_node, "models": models }
-
-	def __createRigidBody( self, models: list ) -> BulletRigidBodyNode:
+	def __createSingleRigidBody( self, models: list ) -> BulletRigidBodyNode:
 		body_node = BulletRigidBodyNode( 'multi_shape_body' )
 		for model in models:
 			mesh = BulletTriangleMesh()
 			add_model_to_bullet_mesh( mesh, model )
 			model_shape = BulletTriangleMeshShape( mesh, dynamic = True )
 			body_node.addShape( model_shape )
-			body_node.setMass( 100 )
-			#body_node.setPythonTag( 'body_node', model )
+			self.__setRigidBodyAttributes( model, body_node )
 		return body_node
+
+	def __groupRigidModels( self ) -> defaultdict:
+		gr = defaultdict( list )
+		for part, model in self.partModels.items():
+			gr[ part.rigidGroup ].append( model )
+		return gr
+
+	def __setRigidBodyAttributes( self, model, body_node ):
+		part = model.getPythonTag( 'model_part' )
+		if hasattr( part, 'friction' ):
+			body_node.setAnisotropicFriction( part.friction )
+		body_node.setIntoCollideMask( BitMask32.allOff() )
+		body_node.setIntoCollideMask( part.collideGroup )
+		body_node.setMass( body_node.mass + part.mass )
 
 
 def get_model_dimensions( model_np ):

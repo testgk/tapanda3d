@@ -51,7 +51,6 @@ def getVertices( geom: GeomNode ) -> list:
 
 
 def getPointGeomNode( point ):
-	print( f' drawing point {point}' )
 	vertex_format = GeomVertexFormat.get_v3()
 	vertex_data = GeomVertexData( "vertices", vertex_format, Geom.UHStatic )
 	vertex_writer = GeomVertexWriter( vertex_data, "vertex" )
@@ -275,7 +274,6 @@ class CustomCollisionPolygon( SelectionItem ):
 	def __drawEdges( self, *args ):
 		for direction in args:
 			point = Point3( self.__edges[ direction ] )
-			print( f'point: {point}' )
 			self.__draw_point( point, self.pointColor() )
 
 	def __removeAllEdges( self ):
