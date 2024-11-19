@@ -12,16 +12,21 @@ if TYPE_CHECKING:
 from objects.stltoeggconverter import convert_stl_to_egg
 
 
-def find_entity_parts( cls ) -> tuple[ list[ Callable ], list[ Callable ] ]:
+def find_entity_parts( cls ) ->  list[ Callable ]:
 	entityParts = [ ]
-	entityModules = [ ]
 	for name in dir( cls ):
 		attr = getattr( cls, name )
 		if getattr( attr, '_is_entitypart', False ):
 			entityParts.append( attr )
-		elif getattr( attr, '_is_entitymodule', False ):
+	return entityParts
+
+def find_entity_modules( cls ) -> list[ Callable ]:
+	entityModules = [ ]
+	for name in dir( cls ):
+		attr = getattr( cls, name )
+		if getattr( attr, '_is_entitymodule', False ):
 			entityModules.append( attr )
-	return entityParts, entityModules
+	return entityModules
 
 
 class PartFactory:
@@ -35,12 +40,15 @@ class PartFactory:
 		self.__entity = entity
 
 	def addParts( self ):
-		parts, modules = find_entity_parts( self.__entity )
+		parts = find_entity_parts( self.__entity )
 		for part in parts:
 			self.__parts.append( part() )
+		modules = find_entity_modules( self.__entity )
 		for module in modules:
-			self.__modules.append( module() )
-		return self.__parts, self.__modules
+			parts = find_entity_parts( module() )
+			for part in parts:
+				self.__parts.append( part() )
+		return self.__parts
 
 	@property
 	def collisionSystems( self ):

@@ -1,16 +1,18 @@
+from entities.parts.chassis import Chassis
 from entities.parts.engine import Engine
-from entities.entity import Entity, entitypart
+from entities.entity import Entity, entitypart, entitymodule
 from entities.parts.part import Part
 from movement.movementmgr import MovementManager
 
 
 class Mover( Entity ):
-    def __init__( self, engine, mobility, hull ):
+    def __init__( self, engine, chassis: Chassis ):
         super().__init__()
+        self._chassis = None
         self._currentPosition = None
         self._engine = engine
-        self._mobility = mobility
-        self._hull = hull
+        self._mobility = chassis.mobility
+        self._hull = chassis.hull
         self._movementManager = MovementManager( self )
         self._corePart = self.mobility()
         self._isMover = True
@@ -40,6 +42,10 @@ class Mover( Entity ):
     @entitypart
     def mobility( self ) -> Part:
         return self._mobility
+
+    @entitymodule
+    def chassis( self ) -> Part:
+        return self._chassis
 
  #   @entitypart
     def engine( self ) -> Engine:
