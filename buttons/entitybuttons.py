@@ -4,6 +4,7 @@ from direct.task.Task import TaskManager
 from entities.entityphysics import Entityphysics
 from entities.full.movers.tank import Tank
 from entities.modules.turret import CannonTurret
+from entities.parts.chassis import BasicTracksChassis
 from entities.parts.engine import BasicEngine
 from entities.parts.mobility import BasicTracks
 from entityloader import EntityLoader
@@ -47,7 +48,7 @@ class EntityButtons:
 	def __createEntity( self ):
 		engine = BasicEngine()
 		turret = CannonTurret()
-		mobility = BasicTracks()
-		tank = Tank( engine = engine, turret = turret, mobility = mobility )
+		chassis = BasicTracksChassis()
+		tank = Tank( engine = engine, turret = turret, chassis = chassis )
 		self.__loader.loadEntity( entity = tank, entry = self.__selector.point )
 		#self.__selector.clearSelect()

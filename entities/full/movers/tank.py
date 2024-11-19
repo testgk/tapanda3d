@@ -6,8 +6,8 @@ from entities.parts.rolls import Rolls
 
 
 class Tank( Mover ):
-    def __init__( self, engine, mobility, turret ):
-        super().__init__( mobility = mobility, engine = engine, hull = BasicHull() )
+    def __init__( self, engine, chassis, turret ):
+        super().__init__( chassis = chassis, engine = engine )
         self.__turret = turret
         self.__frontRolls = Rolls( "front" )
         self.__rearRolls = Rolls( "rear" )

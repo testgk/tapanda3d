@@ -16,14 +16,12 @@ class EntityLoader:
 
 	def loadEntity( self, entity: Mover, entry ):
 		entity.buildModels( loader = self.__loader )
-		nps = [ ]
 		for rigidGroup, rm in entity.rigidBodyNodes.items():
 			modelBulletNodePath = self.__renderModelsGroup( entry, rm[ "models" ], rm[ "rb" ] )
 			if entity.isRigidGroup( rigidGroup ):
 				entity.setCoreBody( modelBulletNodePath,  rm[ "rb" ] )
 				entity.coreRigidBody.set_linear_damping( 0 )
 				entity.coreRigidBody.set_angular_damping( 0 )
-		#self.__taskMgr.add( entity.track_target_angle, "track entity", extraArgs = [ 60 ], appendTask = True )
 
 	def __renderModelsGroup( self, point, models, bulletNode ):
 		modelBullet = self.__render.attachNewNode( bulletNode )
