@@ -8,8 +8,6 @@ class Mobility( Part ) :
 	def __init__( self, partId ):
 		super().__init__( parts.MOBILITY, partId, external = True )
 		self._color = Color.YELLOW.value
-		self._rigidGroup = "hull_mobility"
-		self.collideGroup = CollisionGroup.MODEL
 
 	@property
 	def objectPath( self ) -> str:

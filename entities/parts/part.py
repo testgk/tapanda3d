@@ -49,3 +49,9 @@ class Part:
         if self._external:
             self.__protection = part_data[ "protection" ]
             self.__damage = part_data[ "damage" ]
+
+    def setRigidGroup( self, group: str ):
+        self._rigidGroup = group
+
+    def setCollideGroup( self, collideGroup ):
+        self.collideGroup = collideGroup
