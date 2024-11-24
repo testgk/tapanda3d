@@ -36,18 +36,21 @@ class Entity( SelectionItem ):
 		self._stateMachine = StateMachine( self )
 		self._commandManager = CommandManager()
 		self.__collisionSystems = [ ]
-		self.__rigidBodies = None
+		self.__rigidBodyNodes = None
 		self._corePart = None
 		self._coreBody = None
 
+	@property
+	def models( self ):
+		return self._partBuilder.models
 
 	@property
 	def collisionSystems( self ):
-		return self.__collisionSystems
+		return self._partBuilder.collisionSystems
 
 	@property
 	def rigidBodyNodes( self ) -> dict:
-		return self.__rigidBodies
+		return self._partBuilder.rigidBodies
 
 	@property
 	def coreBody( self ) -> NodePath:
@@ -63,13 +66,8 @@ class Entity( SelectionItem ):
 
 	def buildModels( self, loader ):
 		self._partBuilder.build( loader )
-		self.__models = self._partBuilder.models
-		self.__collisionSystems = self._partBuilder.collisionSystems
-		for collisionNode in self.__collisionSystems:
-			collisionNode.setPythonTag( 'collision_target', self )
-		self.__rigidBodies = self._partBuilder.rigidBodies
 
-	def isRigidGroup( self, rigidGroup ) -> bool:
+	def isCoreBodyRigidGroup( self, rigidGroup: str ) -> bool:
 		return self._corePart.rigidGroup == rigidGroup
 
 	def decide( self ):
@@ -92,7 +90,7 @@ class Entity( SelectionItem ):
 
 		self._selectionMode = mode
 		if mode == SelectionModes.P2P:
-			for model in self.__models:
+			for model in self.models:
 				model.setColor( Color.GREEN.value )
 		self.__collisionSystems[ 0 ].show()
 

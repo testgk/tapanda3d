@@ -21,5 +21,3 @@ class LaserCannon( Cannon ):
 class ShellCannon( Cannon ):
     def __init__( self ):
         super().__init__( "shell_cannon" )
-
-

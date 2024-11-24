@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Callable
 
 from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
-from panda3d.core import BitMask32, Vec3, CollisionBox, CollisionNode
+from panda3d.core import BitMask32, Vec3, CollisionBox, CollisionNode, NodePath
 
 if TYPE_CHECKING:
 	from entities.entity import Entity
@@ -34,7 +34,7 @@ class PartFactory:
 		self.__models = None
 		self.__collisionBoxes = []
 		self.__rigidBodies = { }
-		self.partModels = { }
+		self.__partModels = { }
 		self.__modules = [ ]
 		self.__parts = [ ]
 		self.__entity = entity
@@ -57,11 +57,18 @@ class PartFactory:
 	def rigidBodies( self ):
 		return self.__rigidBodies
 
+	@property
+	def partModels( self ) -> dict[ 'Part', NodePath ]:
+		return self.__partModels
+
 	def build( self, loader ):
 		self. addParts()
 		self.createModels( loader )
 		self.createCollisionBox()
 		self.createRigidBodies()
+
+		for collisionNode in self.collisionSystems:
+			collisionNode.setPythonTag( 'collision_target', self.__entity )
 
 	def createModels( self, loader ) -> None:
 		self.__models = []
@@ -71,12 +78,12 @@ class PartFactory:
 			try:
 				eggPath = self.__getPartEggPath( part )
 				model = self.__loadModel( eggPath, loader, part )
-				self.partModels[ part ] = model
+				self.__partModels[ part ] = model
 				self.__models.append( model )
 			except Exception as e:
 				pass
 
-	def __loadModel( self, eggPath, loader, part ):
+	def __loadModel( self, eggPath, loader, part ) -> NodePath:
 		model = loader.loadModel( eggPath )
 		model.setScale( 1 )
 		model.setColor( part.color )
@@ -95,7 +102,7 @@ class PartFactory:
 			return eggPath
 
 	def createCollisionBox( self ):
-		for part, model in self.partModels.items():
+		for part, model in self.__partModels.items():
 			collision_box_node = create_collision_box( model )
 			if collision_box_node:
 				self.__collisionBoxes.append( model.attachNewNode( collision_box_node ) )
@@ -118,7 +125,7 @@ class PartFactory:
 
 	def __groupRigidModels( self ) -> defaultdict:
 		gr = defaultdict( list )
-		for part, model in self.partModels.items():
+		for part, model in self.__partModels.items():
 			gr[ part.rigidGroup ].append( model )
 		return gr
 

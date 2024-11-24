@@ -1,5 +1,5 @@
-from entities.mover import Mover, entitypart
-from entities.parts.turret import Turret
+from entities.full.movers.mover import Mover, entitypart
+from entities.modules.turret import Turret
 
 
 class Tank( Mover ):

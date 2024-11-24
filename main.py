@@ -11,7 +11,7 @@ from enums.colors import Color
 from lights import Lights
 from phyisics import globalClock
 from picker import Picker
-from camera import TerrainCamera
+from camera.camera import TerrainCamera
 from panda3d.bullet import BulletDebugNode, BulletWorld
 from buttons.camerabuttons import CameraButtons
 from selector.selector import Selector
@@ -86,8 +86,8 @@ class MyApp( ShowBase ):
 	def __createCollisionForEntity( self, entity: Entity ):
 		self.collision_handler = CollisionHandlerQueue()
 		self.cTrav = CollisionTraverser()
-		for col in entity.collisionSystems:
-			self.cTrav.addCollider( col, self.collision_handler )
+		#for col in entity.collisionSystems:
+		#	self.cTrav.addCollider( col, self.collision_handler )
 
 	def on_map_click( self ):
 		self.__selector.on_map_click()

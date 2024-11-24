@@ -18,7 +18,7 @@ track_length = tank_length * 0.9;
 
 
 module track( ){
-     cube( [ track_length, track_width, track_height  ], true );
+     cube( [ track_length, track_width,  ], true );
      translate( [ track_length / 2,track_width / 2, 0 ] )
         wheel( track_width,track_height );
      translate( [ -track_length / 2, track_width/2, 0 ] )
@@ -34,7 +34,7 @@ module innertrack(){
 }
 
 module wheel( width, diameter ){
-    color("purple")
+    color( "purple")
          rotate( [ 90, 0, 0 ] ){
          cylinder( h = width, r = diameter / 2 );
     } 
@@ -66,7 +66,7 @@ module tracks(){
 }
 
 module hull(){
-    color("blue")
+    color( "blue")
     difference(){
     translate( [ 0, 0, tank_height / 4 ] )
     cube( [ tank_length,tank_width ,3 * tank_height / 4 ], center = true);
@@ -84,6 +84,6 @@ module turret(){
 
 
 
-tracks();
+//tracks();
 //hull();
-//turret();
+turret();

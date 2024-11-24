@@ -1,4 +1,4 @@
-from panda3d.core import BitMask32, CollisionHandlerQueue, CollisionNode, CollisionRay, CollisionTraverser
+from panda3d.core import CollisionHandlerQueue, CollisionNode, CollisionRay, CollisionTraverser
 
 from collsiongroups import CollisionGroup
 

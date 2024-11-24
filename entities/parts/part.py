@@ -5,7 +5,7 @@ from enums.colors import Color
 
 class Part:
     def __init__( self, partData = None, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
-        self._rigidGroup = partId
+        self.__rigidGroup = None
         self.collideGroup = 0
         self.__device = device
         self._external = external
@@ -28,7 +28,7 @@ class Part:
 
     @property
     def rigidGroup( self ):
-        return self._rigidGroup
+        return self.__rigidGroup
 
     @property
     def color( self ):
@@ -51,7 +51,7 @@ class Part:
             self.__damage = part_data[ "damage" ]
 
     def setRigidGroup( self, group: str ):
-        self._rigidGroup = group
+        self.__rigidGroup = group
 
     def setCollideGroup( self, collideGroup ):
         self.collideGroup = collideGroup

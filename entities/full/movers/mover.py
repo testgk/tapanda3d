@@ -1,5 +1,4 @@
-from entities.modules.module import Module
-from entities.parts.chassis import Chassis
+from entities.modules.chassis import Chassis
 from entities.parts.engine import Engine
 from entities.entity import Entity, entitypart, entitymodule
 from entities.parts.part import Part
@@ -51,3 +50,6 @@ class Mover( Entity ):
  #   @entitypart
     def engine( self ) -> Engine:
         return self._engine
+
+    def reparentModels( self ):
+        raise NotImplementedError
