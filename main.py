@@ -11,7 +11,7 @@ from enums.colors import Color
 from lights import Lights
 from phyisics import globalClock
 from picker import Picker
-from camera import TerrainCamera
+from camera.camera import TerrainCamera
 from panda3d.bullet import BulletDebugNode, BulletWorld
 from buttons.camerabuttons import CameraButtons
 from selector.selector import Selector
@@ -50,7 +50,6 @@ class MyApp( ShowBase ):
 				render = self.render )
 		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader, taskMgr = self.taskMgr )
 		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, taskMgr = self.taskMgr )
-
 
 		self.task_duration = 0.2
 		self.accept( 'mouse1', self.on_map_click )

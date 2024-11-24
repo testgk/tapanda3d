@@ -1,7 +1,7 @@
 import math
 from direct.task import Task
 from panda3d.core import Point3
-from cameracontroller import CameraController
+from camera.cameracontroller import CameraController
 
 
 

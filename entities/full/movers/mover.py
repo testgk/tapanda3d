@@ -1,5 +1,4 @@
-from entities.modules.module import Module
-from entities.parts.chassis import Chassis
+from entities.modules.chassis import Chassis
 from entities.parts.engine import Engine
 from entities.entity import Entity, entitypart, entitymodule
 from entities.parts.part import Part
@@ -9,7 +8,7 @@ from movement.movementmgr import MovementManager
 class Mover( Entity ):
     def __init__( self, engine, chassis: Chassis ):
         super().__init__()
-        self._chassis = None
+        self._chassis = chassis
         self._currentPosition = None
         self._engine = engine
         self._mobility = chassis.mobility()
@@ -51,3 +50,6 @@ class Mover( Entity ):
  #   @entitypart
     def engine( self ) -> Engine:
         return self._engine
+
+    def reparentModels( self ):
+        print( self.partModels.get( self.chassis ) )

@@ -10,15 +10,16 @@ tank_height = 30;
 track_width = 30;
 track_height = 20;
 turret_height = 20;
+cannon_length =40;
 
 
 track_length = tank_length * 0.9;
-
+turret_radius = tank_width / 3;
 
 
 
 module track( ){
-     cube( [ track_length, track_width, track_height  ], true );
+     cube( [ track_length, track_width, track_height ], true );
      translate( [ track_length / 2,track_width / 2, 0 ] )
         wheel( track_width,track_height );
      translate( [ -track_length / 2, track_width/2, 0 ] )
@@ -34,7 +35,7 @@ module innertrack(){
 }
 
 module wheel( width, diameter ){
-    color("purple")
+    color( "purple")
          rotate( [ 90, 0, 0 ] ){
          cylinder( h = width, r = diameter / 2 );
     } 
@@ -66,7 +67,7 @@ module tracks(){
 }
 
 module hull(){
-    color("blue")
+    color( "blue")
     difference(){
     translate( [ 0, 0, tank_height / 4 ] )
     cube( [ tank_length,tank_width ,3 * tank_height / 4 ], center = true);
@@ -82,8 +83,23 @@ module turret(){
       cylinder( h = turret_height, r = tank_width/3, center = true  );
 }
 
+module cannon()
+{
+    translate( [ cannon_length/2 + turret_radius, 0, tank_height  ] )
+    rotate( [0, 90, 0])
+    {
+            difference() {
+                cylinder(h = cannon_length, r = 5, center = true);
+                cylinder(h = cannon_length + 2, r = 2, center = true);
+            }
+                
+            
+    }
+    
+}
 
 
-tracks();
+//tracks();
 //hull();
 //turret();
+cannon();
