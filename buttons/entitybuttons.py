@@ -1,12 +1,10 @@
 from direct.gui.DirectButton import DirectButton
 from direct.task.Task import TaskManager
 
-from entities.entityphysics import Entityphysics
 from entities.full.movers.tank import Tank
 from entities.modules.turret import CannonTurret
-from entities.parts.chassis import BasicTracksChassis
+from entities.modules.chassis import BasicTracksChassis
 from entities.parts.engine import BasicEngine
-from entities.parts.mobility import BasicTracks
 from entityloader import EntityLoader
 from selector.selector import Selector
 

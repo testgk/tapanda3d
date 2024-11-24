@@ -1,9 +1,7 @@
 import queue
 
-from camera import TerrainCamera
-from customcollisionpolygon import CustomCollisionPolygon
-from entities.entity import Entity
-from entities.mover import Mover
+from camera.camera import TerrainCamera
+from entities.full.movers.mover import Mover
 from selectionmodes import SelectionModes
 
 

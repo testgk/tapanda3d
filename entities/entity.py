@@ -40,7 +40,6 @@ class Entity( SelectionItem ):
 		self._corePart = None
 		self._coreBody = None
 
-
 	@property
 	def collisionSystems( self ):
 		return self.__collisionSystems
@@ -57,9 +56,20 @@ class Entity( SelectionItem ):
 	def coreRigidBody( self ) -> BulletRigidBodyNode:
 		return self._coreRigidBody
 
-	def setCoreBody( self, coreBody, bulletCoreBody ):
+	@property
+	def selectBox( self ):
+		try:
+			return self.__collisionSystems[ 0 ]
+		except IndexError:
+			return None
+
+	def setCoreBody( self, coreBody: NodePath, bulletCoreBody: BulletRigidBodyNode ):
 		self._coreBody = coreBody
 		self._coreRigidBody = bulletCoreBody
+
+	@property
+	def partModels( self ):
+		return self._partBuilder.partModels
 
 	def buildModels( self, loader ):
 		self._partBuilder.build( loader )
@@ -69,7 +79,7 @@ class Entity( SelectionItem ):
 			collisionNode.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies
 
-	def isRigidGroup( self, rigidGroup ) -> bool:
+	def isCoreBodyRigidGroup( self, rigidGroup ) -> bool:
 		return self._corePart.rigidGroup == rigidGroup
 
 	def decide( self ):
@@ -94,8 +104,8 @@ class Entity( SelectionItem ):
 		if mode == SelectionModes.P2P:
 			for model in self.__models:
 				model.setColor( Color.GREEN.value )
-		self.__collisionSystems[ 0 ].show()
-
+		self.selectBox.show()
+		#self.__collisionSystems[ 0 ].show()
 
 	def clearSelection( self ):
 		self._selectionMode = SelectionModes.NONE

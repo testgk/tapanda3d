@@ -4,10 +4,12 @@ from entities.parts.database import parts
 
 class Cannon( Part ) :
 	def __init__( self, barrelId ) :
+		self._objectPath = "barrels"
 		super().__init__( parts.CANNONS, partId = barrelId )
 
+	@property
 	def objectPath( self ) -> str:
-		return "cannons"
+		return "barrels"
 
 	def _readPartData( self, part_data ):
 		super()._readPartData( part_data )

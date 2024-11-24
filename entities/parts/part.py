@@ -1,11 +1,12 @@
-from panda3d.core import LVector3
+from panda3d.core import BitMask32, LVector3
 
 from enums.colors import Color
 
 
 class Part:
     def __init__( self, partData = None, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
-        self._rigidGroup = partId
+        self._objectPath = ''
+        self.__rigidGroup = None
         self.collideGroup = 0
         self.__device = device
         self._external = external
@@ -17,10 +18,12 @@ class Part:
         if partId and partData:
             part_data = partData.get( partId )
             self._readPartData( part_data )
+        self.__model = None
+        self.__rigidBody = None
 
     @property
     def objectPath( self ) -> str:
-        return ''
+        return self._objectPath
 
     @property
     def isRendered( self ) -> bool:
@@ -28,7 +31,7 @@ class Part:
 
     @property
     def rigidGroup( self ):
-        return self._rigidGroup
+        return self.__rigidGroup
 
     @property
     def color( self ):
@@ -42,6 +45,25 @@ class Part:
     def partId( self ) -> str:
         return self.__partId
 
+    @property
+    def model( self ):
+        return self.__model
+
+    @property
+    def rigidBody( self ):
+        return self.__rigidBody
+
+    def setModel( self, model ):
+        self.__model = model
+
+    def setRigidBodyProperties( self, rigidBody ):
+        self.__rigidBody = rigidBody
+        if self.__friction is not None:
+            self.__rigidBody.setAnisotropicFriction( self.__friction )
+        self.__rigidBody.setIntoCollideMask( BitMask32.allOff() )
+        self.__rigidBody.setIntoCollideMask( self.collideGroup )
+        self.__rigidBody.setMass( self.__rigidBody.mass + self.mass )
+
     def _readPartData( self, part_data ) :
         self.__metal = part_data[ "metal" ]
         self.__energy = part_data[ "energy" ]
@@ -51,7 +73,7 @@ class Part:
             self.__damage = part_data[ "damage" ]
 
     def setRigidGroup( self, group: str ):
-        self._rigidGroup = group
+        self.__rigidGroup = group
 
     def setCollideGroup( self, collideGroup ):
         self.collideGroup = collideGroup

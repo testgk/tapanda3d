@@ -1,6 +1,6 @@
 from direct.gui.DirectButton import DirectButton
 
-from camera import TerrainCamera
+from camera.camera import TerrainCamera
 
 
 class CameraButtons:
