@@ -30,7 +30,7 @@ class Part:
         return self.__isRendered
 
     @property
-    def rigidGroup( self ):
+    def rigidGroup( self ) -> str:
         return self.__rigidGroup
 
     @property
