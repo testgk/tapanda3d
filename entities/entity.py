@@ -79,7 +79,7 @@ class Entity( SelectionItem ):
 			collisionNode.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies
 
-	def isCoreBodyRigidGroup( self, rigidGroup ) -> bool:
+	def isCoreBodyRigidGroup( self, rigidGroup: str ) -> bool:
 		return self._corePart.rigidGroup == rigidGroup
 
 	def decide( self ):
