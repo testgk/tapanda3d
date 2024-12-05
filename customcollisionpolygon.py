@@ -338,6 +338,11 @@ class CustomCollisionPolygon( SelectionItem ):
 		if mode == SelectionModes.P2P:
 			self.__markArea( level = 0, color = Color.YELLOW.value )
 
+	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
+		item.handleSelection( SelectionModes.CREATE )
+		self.clearSelection()
+		return item
+
 	def clearSelection( self ):
 		self._selectionMode = SelectionModes.NONE
 		self.hideNeighbors()
