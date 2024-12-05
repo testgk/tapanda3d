@@ -96,16 +96,14 @@ class Entity( SelectionItem ):
 	def pendingCommand( self ) -> Command | None:
 		return self._commandManager.pendingCommand()
 
+	def isSelected( self, mode: SelectionModes ) -> bool:
+		return self._selectionMode != SelectionModes.NONE
+
 	def handleSelection( self, mode: SelectionModes ):
 		if self.isSelected( mode ):
-			return
-
-		self._selectionMode = mode
-		if mode == SelectionModes.P2P:
-			for model in self.__models:
-				model.setColor( Color.GREEN.value )
+			self.clearSelection()
+		self._selectionMode = SelectionModes.P2P
 		self.selectBox.show()
-		#self.__collisionSystems[ 0 ].show()
 
 	def clearSelection( self ):
 		self._selectionMode = SelectionModes.NONE
@@ -114,3 +112,18 @@ class Entity( SelectionItem ):
 			model.setColor( part.color )
 		for system in self.__collisionSystems:
 			system.hide()
+
+	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
+		if item.isMover:
+			self.clearSelection()
+			for target in self._selectTargets:
+				target.clearSelection()
+			self._selectTargets.clear()
+			if item != self:
+				item.handleSelection( SelectionModes.P2P )
+				return item
+		if item.isTerrain:
+			self._selectTargets.append( item )
+			item.handleSelection( SelectionModes.P2P )
+			return self
+		return None

@@ -2,11 +2,14 @@ import queue
 
 from camera.camera import TerrainCamera
 from entities.full.movers.mover import Mover
+from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
 
 
 class Selector:
 	def __init__( self, picker, mouseWatcherNode, camNode, terrainCamera: TerrainCamera, render ):
+		self.__point = None
+		self.__selectedItem: SelectionItem | None = None
 		self.__entry = None
 		self.__camNode = camNode
 		self.__render = render
@@ -16,10 +19,6 @@ class Selector:
 		self.__selectionQueue = queue.Queue()
 		self.__clearSelection = queue.Queue()
 		self.__selectionMode = SelectionModes.NONE
-		self.__selectionHandlers = {
-				SelectionModes.CREATE: self.__createSelection,
-				SelectionModes.P2P: self.__p2pSelection
-		}
 		self.__selectedMover = None
 
 	@property
@@ -55,42 +54,8 @@ class Selector:
 		print( f"Clicked node: { picked_obj }" )
 		picked_item = picked_obj.node().getPythonTag( 'collision_target' )
 		print( f"Clicked entity: { picked_item }" )
-		if self.__selectionQueue.empty() and picked_item.isTerrain:
-			self.__selectionMode = SelectionModes.CREATE
-			self.__clearSelections( self.__clearSelection)
-		elif picked_item.isMover:
-			if self.__selectionQueue.empty():
-				self.__clearSelections( self.__clearSelection )
-			self.__selectionMode = SelectionModes.P2P
-
-		self.__selectionQueue.put( picked_item )
-		self.__selectionHandlers[ self.__selectionMode ].__call__()
-
-	def __createSelection( self ):
-		pick = self.__selectionQueue.get()
-		pick.handleSelection( self.__selectionMode )
-		self.__clearSelection.put( pick )
-
-	def __p2pSelection( self ):
-		tempQueue = queue.Queue()
-		mover = self.__selectionQueue.get()
-		if not mover.isMover:
-			return
-		mover.handleSelection( self.__selectionMode )
-		self.__selectedMover = mover
-		tempQueue.put( mover )
-		while not self.__selectionQueue.empty():
-			terrain = self.__selectionQueue.get()
-			if terrain.isTerrain:
-				terrain.handleSelection( self.__selectionMode )
-				tempQueue.put( terrain )
-			else:
-				self.__clearSelections( tempQueue )
-				return
-		self.__selectionQueue = tempQueue
-
-	def __clearSelections( self, selectionQueue ):
-		while not selectionQueue.empty():
-			selection = selectionQueue.get()
-			selection.clearSelection()
-		selectionQueue.empty()
+		if self.__selectedItem is None:
+			self.__selectedItem = picked_item
+			self.__selectedItem.handleSelection( SelectionModes.CREATE )
+		else:
+			self.__selectedItem = self.__selectedItem.handleSelectItem( picked_item )

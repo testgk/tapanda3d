@@ -3,6 +3,7 @@ from entities.parts.engine import Engine
 from entities.entity import Entity, entitypart, entitymodule
 from entities.parts.part import Part
 from movement.movementmgr import MovementManager
+from selectionitem import SelectionItem
 
 
 class Mover( Entity ):
@@ -16,6 +17,7 @@ class Mover( Entity ):
         self._movementManager = MovementManager( self )
         self._corePart = self.mobility()
         self._isMover = True
+
 
     def move( self, destination ):
         pass
