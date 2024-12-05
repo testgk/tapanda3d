@@ -1,3 +1,5 @@
+import queue
+
 from selectionmodes import SelectionModes
 
 
@@ -7,7 +9,7 @@ class SelectionItem:
 		self._isMover = False
 		self._isTerrain = False
 		self._selectionMode = SelectionModes.NONE
-		self._selectTargets: list[ SelectionItem ] = [ ]
+		self._selectTargets: queue.Queue = queue.Queue()
 
 	@property
 	def isMover( self ) -> bool:
@@ -28,3 +30,7 @@ class SelectionItem:
 
 	def clearSelection( self ):
 		raise NotImplementedError
+
+	@property
+	def selectTargets( self ):
+		return self._selectTargets

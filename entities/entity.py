@@ -116,14 +116,14 @@ class Entity( SelectionItem ):
 	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
 		if item.isMover:
 			self.clearSelection()
-			for target in self._selectTargets:
+			while not self._selectTargets.empty():
+				target = self._selectTargets.get()
 				target.clearSelection()
-			self._selectTargets.clear()
 			if item != self:
 				item.handleSelection( SelectionModes.P2P )
 				return item
 		if item.isTerrain:
-			self._selectTargets.append( item )
+			self._selectTargets.put( item )
 			item.handleSelection( SelectionModes.P2P )
 			return self
 		return None
