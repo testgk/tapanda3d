@@ -166,8 +166,6 @@ class CustomCollisionPolygon( SelectionItem ):
 		self.__collision_node_path = None
 		self.__wire_node_path = None
 		self.__child = child
-		self.__terrainPosition = self.__child.get_pos()
-		self.__terrainPosition[ 2 ] = height
 		self.__height = height
 		self.__vertices = getVertices( self.__child.node().getGeom( 0 )  )
 		self.__collision_node = CollisionNode( f'terrain_{self.__child.getName()}' )
@@ -201,6 +199,10 @@ class CustomCollisionPolygon( SelectionItem ):
 	@property
 	def col( self ) -> int:
 		return self.__col
+
+	@property
+	def position( self ):
+		return self.__child.get_pos()
 
 	def __getNeighbors( self ):
 		neighborsDic = { }

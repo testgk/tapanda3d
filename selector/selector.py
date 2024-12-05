@@ -19,11 +19,10 @@ class Selector:
 		self.__selectionQueue = queue.Queue()
 		self.__clearSelection = queue.Queue()
 		self.__selectionMode = SelectionModes.NONE
-		self.__selectedMover = None
 
 	@property
 	def selectedMover( self ) -> Mover:
-		return self.__selectedMover
+		return self.__selectedItem
 
 	@property
 	def point( self ):

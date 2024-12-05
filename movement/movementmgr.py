@@ -1,4 +1,5 @@
 import math
+from time import perf_counter
 
 from direct.interval.LerpInterval import LerpHprInterval
 from direct.task import Task
@@ -31,7 +32,25 @@ class MovementManager:
         print( f"Apply velocity: {velocity_vector }" )
         self.__entity.coreRigidBody.setLinearVelocity( velocity_vector )
 
-    #def track_target_velocity( self, target_velocity ):
+    def set_velocity_toward_point_with_stop( self, target_pos, speed, stop_threshold = 10 ):
+        # Get the current position
+        current_pos = self.__entity.coreBody.get_pos()
+        # Calculate the direction vector, considering only X and Y
+        direction = Vec3( target_pos.x - current_pos.x, target_pos.y - current_pos.y, 0 )
+
+        # Check the distance in the X-Y plane
+        distance = direction.length()
+        if distance < stop_threshold:
+            # Stop the object
+            self.__entity.coreRigidBody.set_linear_velocity( Vec3( 0, 0, 0 ) )
+            return False
+
+        # Normalize the direction and set velocity
+        direction.normalize()
+        velocity = direction * speed
+        self.__entity.coreRigidBody.set_linear_velocity( velocity )
+        return True
+
 
     def track_target_angle(self, angle ):
         tracking_speed = 30

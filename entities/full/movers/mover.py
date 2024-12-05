@@ -33,9 +33,10 @@ class Mover( Entity ):
             return task.done
         return task.cont
 
-    def maintain_velocity( self, velocity, task ):
-        self._movementManager.velocity( velocity  )
-        return task.cont
+    def maintain_velocity( self, target, velocity, task ):
+        if self._movementManager.set_velocity_toward_point_with_stop( target, velocity  ):
+            return task.cont
+        return task.done
 
     @entitypart
     def hull( self ) -> Part:

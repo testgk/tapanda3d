@@ -64,7 +64,7 @@ class MyApp( ShowBase ):
 
 	def __createTerrain( self ):
 		terrainProvider = TerrainProvider( self.loader )
-		self.terrainInfo = terrainProvider.create_terrain( "heightmap1" )
+		self.terrainInfo = terrainProvider.create_terrain( "heightmap_flat" )
 		self.terrain = self.terrainInfo.terrain
 		self.terrain.getRoot().reparentTo( self.render )
 		self.terrain.setFocalPoint( self.camera )
@@ -120,7 +120,7 @@ class MyApp( ShowBase ):
 
 	def __createPhysicsLayer( self, blockSize ):
 		terrainProvider = TerrainProvider( self.loader )
-		terrainInfo = terrainProvider.create_terrain( "heightmap1", blockSize = blockSize )
+		terrainInfo = terrainProvider.create_terrain( "heightmap_flat", blockSize = blockSize )
 		self.__terrainPhysicsLayer = TerrainRigidBody( terrainInfo.terrain, self.physics_world )
 		self.__terrainPhysicsLayer.createTerrainRigidBody()
 
