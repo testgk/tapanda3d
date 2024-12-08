@@ -1,11 +1,11 @@
-from sys import modules
+import random
 
+from direct.task.Task import TaskManager
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.core import NodePath
 
 from entities.partfactory import PartFactory
 from entities.commandmanager import CommandManager
-from enums.colors import Color
 from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
 from statemachine.commands.command import Command
@@ -25,15 +25,16 @@ def entitymodule( func ):
 class Entity( SelectionItem ):
 	def __init__( self ):
 		super().__init__()
+		self._taskMgr = None
+		self._stateMachine = None
 		self._coreRigidBody = None
 		self._coreRigidGroup = None
 		self.__pendingCommand = None
 		self._commands = [ ]
-		self.name = None
+		self.name = f'{ self.__class__.__name__}_{ random.randint(1, 1000 ) }'
 		self._id = None
 		self.__models = [ ]
 		self._partBuilder = PartFactory( self )
-		self._stateMachine = StateMachine( self )
 		self._commandManager = CommandManager()
 		self.__collisionSystems = [ ]
 		self.__rigidBodies = None
@@ -62,6 +63,11 @@ class Entity( SelectionItem ):
 			return self.__collisionSystems[ 0 ]
 		except IndexError:
 			return None
+
+	def createStateMachine( self, taskManager: TaskManager ):
+		self._taskMgr = taskManager
+		self._stateMachine = StateMachine( self )
+		self.scheduleTask( self._stateMachine.stateMachineMainLoop, "state machine loop"  )
 
 	def setCoreBody( self, coreBody: NodePath, bulletCoreBody: BulletRigidBodyNode ):
 		self._coreBody = coreBody
@@ -95,6 +101,9 @@ class Entity( SelectionItem ):
 
 	def pendingCommand( self ) -> Command | None:
 		return self._commandManager.pendingCommand()
+
+	def scheduleTask( self, method, name: str, args: list = None ):
+		self._taskMgr.add( method, name = name, extraArgs = args  )
 
 	def isSelected( self, mode: SelectionModes ) -> bool:
 		return self._selectionMode != SelectionModes.NONE

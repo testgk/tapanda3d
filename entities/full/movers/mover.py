@@ -3,12 +3,13 @@ from entities.parts.engine import Engine
 from entities.entity import Entity, entitypart, entitymodule
 from entities.parts.part import Part
 from movement.movementmgr import MovementManager
-from selectionitem import SelectionItem
+from selectionmodes import SelectionModes
 
 
 class Mover( Entity ):
     def __init__( self, engine, chassis: Chassis ):
         super().__init__()
+        self.readyToMove = False
         self._chassis = chassis
         self._currentPosition = None
         self._engine = engine
@@ -33,10 +34,29 @@ class Mover( Entity ):
             return task.done
         return task.cont
 
-    def maintain_velocity( self, target, velocity, task ):
-        if self._movementManager.set_velocity_toward_point_with_stop( target, velocity  ):
+    def trackPositionCommand( self ):
+        return not self.selectTargets.empty()
+
+    def monitorIdleState( self, task ):
+        if not self.isSelected( mode = SelectionModes.P2P ):
             return task.cont
+        if self.selectTargets.empty():
+            return task.cont
+        print( f'{ self.name } moving p2p to { self.selectTargets }' )
+        self.readyToMove = True
         return task.done
+
+    def schedulePointToPointTask( self ):
+        position = self.selectTargets.get().position
+        self._taskMgr.add(
+            self._movementManager.set_velocity_toward_point_with_stop,
+            "move_p2p",
+            extraArgs = [ position ],
+            appendTask = True
+        )
+
+    def finishedMovement( self ):
+        return not self._taskMgr.hasTaskNamed( "move p2p" )
 
     @entitypart
     def hull( self ) -> Part:
@@ -56,3 +76,4 @@ class Mover( Entity ):
 
     def reparentModels( self ):
         print( self.partModels.get( self.chassis ) )
+

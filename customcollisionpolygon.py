@@ -204,6 +204,9 @@ class CustomCollisionPolygon( SelectionItem ):
 	def position( self ):
 		return self.__child.get_pos()
 
+	def handleMoveTo( self ):
+		self.__markArea( level = 0, color = Color.WHITE.value )
+
 	def __getNeighbors( self ):
 		neighborsDic = { }
 		for direction, val in mapDirections.items():
