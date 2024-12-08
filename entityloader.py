@@ -20,6 +20,7 @@ class EntityLoader:
 				entity.coreRigidBody.set_linear_damping( 0 )
 				entity.coreRigidBody.set_angular_damping( 0 )
 		entity.reparentModels()
+		return entity
 
 	def __renderModelsGroup( self, point, models, bulletNode ):
 		modelBullet = self.__render.attachNewNode( bulletNode )

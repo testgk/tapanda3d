@@ -1,4 +1,3 @@
-from entities.entity import entitypart
 from entities.modules.module import Module
 from entities.parts.hull import Hull, BasicHull
 from entities.parts.mobility import Mobility, BasicTracks, BasicWheels

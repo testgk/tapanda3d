@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Callable
 
 from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
-from panda3d.core import BitMask32, NodePath, Vec3, CollisionBox, CollisionNode, Point3
+from panda3d.core import  NodePath, Vec3, CollisionBox, CollisionNode, Point3
 
 if TYPE_CHECKING:
     from entities.entity import Entity

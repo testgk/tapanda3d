@@ -36,17 +36,20 @@ class EntityButtons:
 				scale = 0.1
 		)
 
+
+
 	def __applyVelocity( self ):
 			#self.__taskMgr.add( self.__selector.selectedMover.track_target_angle, "track velocity", extraArgs = [  90 ], appendTask = True )
+			target = self.__selector.selectedMover.selectTargets.get()
+			target.handleMoveTo()
 			self.__taskMgr.add( self.__selector.selectedMover.maintain_velocity,
-			                    "track entity",
-			                    extraArgs = [ self.__selector.selectedMover.selectTargets.get().position, 100 ],
-			                    appendTask = True )
+			                    "track entity" )
 
 	def __createEntity( self ):
 		engine = BasicEngine()
 		turret = CannonTurret()
 		chassis = BasicTracksChassis()
 		tank = Tank( engine = engine, turret = turret, chassis = chassis )
-		self.__loader.loadEntity( entity = tank, entry = self.__selector.point )
-		#self.__selector.clearSelect()
+		entity = self.__loader.loadEntity( entity = tank, entry = self.__selector.point )
+		entity.createStateMachine( self.__taskMgr )
+

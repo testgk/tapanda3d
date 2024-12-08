@@ -1,5 +1,4 @@
 from statemachine.commands.command import Command
-from statemachine.states.processcommandstate import ProcessCommandState
 
 
 class CommandManager:
