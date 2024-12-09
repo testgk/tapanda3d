@@ -12,10 +12,6 @@ class MovementState( State ):
     def entity( self ) -> 'Mover':
         return self._entity
 
-#   @property
-#    def nextState( self ):
-#        return IdleState( self._entity )
-
     def enter( self ):
         self.entity.schedulePointToPointTask()
 
