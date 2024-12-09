@@ -34,7 +34,7 @@ class MovementManager:
 
     def set_velocity_toward_point_with_stop( self, target_pos, task ):
         speed = 100
-        stop_threshold = 10
+        stop_threshold = 1
         current_pos = self.__entity.coreBody.get_pos()
         direction = Vec3( target_pos.x - current_pos.x, target_pos.y - current_pos.y, 0 )
         distance = direction.length()

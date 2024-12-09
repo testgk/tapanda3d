@@ -4,6 +4,9 @@ from entities.entity import Entity, entitypart, entitymodule
 from entities.parts.part import Part
 from movement.movementmgr import MovementManager
 from selectionmodes import SelectionModes
+from statemachine.state import State
+from states.idlestate import IdleState
+from states.movementstate import MovementState
 
 
 class Mover( Entity ):
@@ -19,13 +22,6 @@ class Mover( Entity ):
         self._corePart = self.mobility()
         self._isMover = True
 
-
-    def move( self, destination ):
-        pass
-
-    def stop( self ):
-        pass
-
     def rotate( self, degrees = 0 ):
         self._movementManager.rotate( degrees )
 
@@ -33,9 +29,6 @@ class Mover( Entity ):
         if self._movementManager.track_target_angle( degrees ):
             return task.done
         return task.cont
-
-    def trackPositionCommand( self ):
-        return not self.selectTargets.empty()
 
     def monitorIdleState( self, task ):
         if not self.isSelected( mode = SelectionModes.P2P ):
@@ -46,17 +39,33 @@ class Mover( Entity ):
         self.readyToMove = True
         return task.done
 
+    def decide( self, currentState: 'State' ) -> str:
+        if currentState == "MovementState":
+            return "idle"
+
+    def initStatesPool( self ):
+        self._statesPool = {
+            "idle": IdleState( self ),
+            "movement": MovementState( self ),
+        }
+
+    def scheduleIdleMonitoringTask( self ):
+        self.scheduleTask( self.monitorIdleState, "monitoring command" )
+
     def schedulePointToPointTask( self ):
         position = self.selectTargets.get().position
-        self._taskMgr.add(
+        self.scheduleTask(
             self._movementManager.set_velocity_toward_point_with_stop,
-            "move_p2p",
+            f"{ self.name }_move_p2p",
             extraArgs = [ position ],
             appendTask = True
         )
 
     def finishedMovement( self ):
-        return not self._taskMgr.hasTaskNamed( "move p2p" )
+        if self._taskMgr.hasTaskNamed( f"{ self.name }_move_p2p" ):
+            return False
+        self.readyToMove = False
+        return True
 
     @entitypart
     def hull( self ) -> Part:
@@ -73,7 +82,3 @@ class Mover( Entity ):
  #   @entitypart
     def engine( self ) -> Engine:
         return self._engine
-
-    def reparentModels( self ):
-        print( self.partModels.get( self.chassis ) )
-

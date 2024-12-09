@@ -9,7 +9,9 @@ from entities.commandmanager import CommandManager
 from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
 from statemachine.commands.command import Command
+from statemachine.state import State
 from statemachine.statemachine import StateMachine
+from states.idlestate import IdleState
 
 
 def entitypart( func ):
@@ -25,6 +27,7 @@ def entitymodule( func ):
 class Entity( SelectionItem ):
 	def __init__( self ):
 		super().__init__()
+		self._statesPool = None
 		self._taskMgr = None
 		self._stateMachine = None
 		self._coreRigidBody = None
@@ -40,6 +43,7 @@ class Entity( SelectionItem ):
 		self.__rigidBodies = None
 		self._corePart = None
 		self._coreBody = None
+		self.initStatesPool()
 
 	@property
 	def collisionSystems( self ):
@@ -67,7 +71,7 @@ class Entity( SelectionItem ):
 	def createStateMachine( self, taskManager: TaskManager ):
 		self._taskMgr = taskManager
 		self._stateMachine = StateMachine( self )
-		self.scheduleTask( self._stateMachine.stateMachineMainLoop, "state machine loop"  )
+		self.scheduleTask( self._stateMachine.stateMachineMainLoop, f"{ self.name}_state_machine_loop", appendTask = True  )
 
 	def setCoreBody( self, coreBody: NodePath, bulletCoreBody: BulletRigidBodyNode ):
 		self._coreBody = coreBody
@@ -88,13 +92,11 @@ class Entity( SelectionItem ):
 	def isCoreBodyRigidGroup( self, rigidGroup: str ) -> bool:
 		return self._corePart.rigidGroup == rigidGroup
 
-	def decide( self ):
-		currentState = self._stateMachine.currentState
-		stateOptions = currentState.possibleNextStates
-		return self._decideState( currentState, stateOptions )
-
-	def _decideState( self, currentState, stateOptions ):
+	def decide( self, currentState: State ) -> str:
 		raise NotImplementedError
+
+	def getStateFromEntityPool( self, stateName: str ):
+		return self._statesPool[ stateName ]
 
 	def receiveCommand( self, command: Command, serial: bool ):
 		self._commandManager.receiveCommand( command )
@@ -102,10 +104,10 @@ class Entity( SelectionItem ):
 	def pendingCommand( self ) -> Command | None:
 		return self._commandManager.pendingCommand()
 
-	def scheduleTask( self, method, name: str, args: list = None ):
-		self._taskMgr.add( method, name = name, extraArgs = args  )
+	def scheduleTask( self, method, name: str, extraArgs: list = None, appendTask = True ):
+		self._taskMgr.add( method, name = name, extraArgs = extraArgs, appendTask = appendTask )
 
-	def isSelected( self, mode: SelectionModes ) -> bool:
+	def isSelected( self, mode: SelectionModes = None ) -> bool:
 		return self._selectionMode != SelectionModes.NONE
 
 	def handleSelection( self, mode: SelectionModes ):
@@ -136,3 +138,8 @@ class Entity( SelectionItem ):
 			item.handleSelection( SelectionModes.P2P )
 			return self
 		return None
+
+	def initStatesPool( self ):
+		self._statesPool = {
+			"idle" : IdleState,
+		}
