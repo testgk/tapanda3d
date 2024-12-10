@@ -28,8 +28,9 @@ class PartFactory:
         self.__rigidBodies = { }
         self.__partModels: dict[ Part, NodePath ] = { }
         self.__modules = [ ]
-        self.__parts = [ ]
+        self.__parts: list[ Part ] = [ ]
         self.__entity = entity
+        self.__modelData = defaultdict( list )
 
     def addParts( self ):
         parts = find_entity_parts( self.__entity )
@@ -96,10 +97,14 @@ class PartFactory:
         self.__collisionBoxes.append( self.__parts[ 0 ].model.attachNewNode( collision_box_node ) )
 
     def createRigidBodies( self ) -> None:
-        groupedModels = self.__groupRigidModels().items()
-        for rg, models in groupedModels:
+        self.__modelData = defaultdict( list )
+        for part in self.__parts:
+            self.__modelData[ part.rigidGroup ].append( part )
+
+        for rg, parts in self.__modelData.items():
+            models = [ p.model for p in parts ]
             body_node = self.__createSingleRigidBody( models )
-            self.__rigidBodies[ rg ] = { "rigidbody": body_node, "models": models }
+            self.__rigidBodies[ rg ] = { "rigidbody": body_node, "parts": parts }
 
     def __createSingleRigidBody( self, models: list ) -> BulletRigidBodyNode:
         body_node = BulletRigidBodyNode( 'multi_shape_body' )

@@ -18,7 +18,7 @@ class Tank( Mover ):
     def cannon( self ):
         return self.__turret.turretCannon
 
-    def reparentModels( self ):
+    def reparentModules( self ):
         hull = self._chassis.hull().model
         turret = self.turretBase().model
         cannon = self.cannon().model

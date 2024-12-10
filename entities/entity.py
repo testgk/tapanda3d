@@ -1,4 +1,5 @@
 import random
+from collections import defaultdict
 
 from direct.task.Task import TaskManager
 from panda3d.bullet import BulletRigidBodyNode
@@ -30,8 +31,6 @@ class Entity( SelectionItem ):
 		self._statesPool = None
 		self._taskMgr = None
 		self._stateMachine = None
-		self._coreRigidBody = None
-		self._coreRigidGroup = None
 		self.__pendingCommand = None
 		self._commands = [ ]
 		self.name = f'{ self.__class__.__name__}_{ random.randint(1, 1000 ) }'
@@ -42,8 +41,9 @@ class Entity( SelectionItem ):
 		self.__collisionSystems = [ ]
 		self.__rigidBodies = None
 		self._corePart = None
-		self._coreBody = None
+		self._coreBodyPath = None
 		self.initStatesPool()
+		self.__modelData = defaultdict( list )
 
 	@property
 	def collisionSystems( self ):
@@ -54,12 +54,12 @@ class Entity( SelectionItem ):
 		return self.__rigidBodies
 
 	@property
-	def coreBody( self ) -> NodePath:
-		return self._coreBody
+	def coreBodyPath( self ) -> NodePath:
+		return self._corePart.rigidBodyPath
 
 	@property
 	def coreRigidBody( self ) -> BulletRigidBodyNode:
-		return self._coreRigidBody
+		return self._corePart.rigidBody
 
 	@property
 	def selectBox( self ):
@@ -73,8 +73,8 @@ class Entity( SelectionItem ):
 		self._stateMachine = StateMachine( self )
 		self.scheduleTask( self._stateMachine.stateMachineMainLoop, f"{ self.name}_state_machine_loop", appendTask = True  )
 
-	def setCoreBody( self, coreBody: NodePath, bulletCoreBody: BulletRigidBodyNode ):
-		self._coreBody = coreBody
+	def setCoreBody( self, coreBodyPath: NodePath, bulletCoreBody: BulletRigidBodyNode ):
+		self._coreBodyPath = coreBodyPath
 		self._coreRigidBody = bulletCoreBody
 
 	@property
@@ -88,6 +88,9 @@ class Entity( SelectionItem ):
 		for collisionNode in self.__collisionSystems:
 			collisionNode.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies
+
+	def reparentModules( self ):
+		raise NotImplementedError
 
 	def isCoreBodyRigidGroup( self, rigidGroup: str ) -> bool:
 		return self._corePart.rigidGroup == rigidGroup
@@ -106,6 +109,10 @@ class Entity( SelectionItem ):
 
 	def scheduleTask( self, method, name: str, extraArgs: list = None, appendTask = True ):
 		self._taskMgr.add( method, name = name, extraArgs = extraArgs, appendTask = appendTask )
+
+	def setDamping( self ):
+		self.coreRigidBody.set_linear_damping( 0 )
+		self.coreRigidBody.set_angular_damping( 0 )
 
 	def isSelected( self, mode: SelectionModes = None ) -> bool:
 		return self._selectionMode != SelectionModes.NONE
