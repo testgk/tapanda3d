@@ -20,10 +20,27 @@ class Part:
             self._readPartData( part_data )
         self.__model = None
         self.__rigidBody = None
+        self.__rigidBodyPath = None
 
     @property
     def objectPath( self ) -> str:
         return self._objectPath
+
+    @property
+    def rigidBodyPath( self ):
+        return self.__rigidBodyPath
+
+    @rigidBodyPath.setter
+    def rigidBodyPath( self, path ) -> None:
+        self.__rigidBodyPath = path
+
+    @property
+    def rigidBody( self ):
+        return self.__rigidBody
+
+    @rigidBody.setter
+    def rigidBody( self, path ) -> None:
+        self.__rigidBody = path
 
     @property
     def isRendered( self ) -> bool:

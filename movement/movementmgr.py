@@ -18,14 +18,14 @@ class MovementManager:
 
     def rotate( self, degrees ):
         rotation_duration = 6
-        current_hpr = Vec3( self.__entity.coreBody.getHpr() )
-        rotation_interval = LerpHprInterval( self.__entity.coreBody, rotation_duration, (  current_hpr.x +  degrees, 0, 0) )
+        current_hpr = Vec3( self.__entity.coreBodyPath.getHpr() )
+        rotation_interval = LerpHprInterval( self.__entity.coreBodyPath, rotation_duration, (current_hpr.x + degrees, 0, 0) )
         rotation_interval.start()
 
     def velocity( self, velocity  ):
         if not self.__adjusted:
             return
-        rotation_quat = self.__entity.coreBody.getQuat()
+        rotation_quat = self.__entity.coreBodyPath.getQuat()
         local_forward = LVector3( 1, 0, 0 )
         forward_direction = rotation_quat.xform( local_forward )
         velocity_vector = forward_direction.normalized() * velocity
@@ -35,7 +35,7 @@ class MovementManager:
     def set_velocity_toward_point_with_stop( self, target_pos, task ):
         speed = 100
         stop_threshold = 1
-        current_pos = self.__entity.coreBody.get_pos()
+        current_pos = self.__entity.coreBodyPath.get_pos()
         direction = Vec3( target_pos.x - current_pos.x, target_pos.y - current_pos.y, 0 )
         distance = direction.length()
         if distance < stop_threshold:
@@ -49,13 +49,13 @@ class MovementManager:
 
     def track_target_angle(self, angle ):
         tracking_speed = 30
-        current_hpr = Vec3( self.__entity.coreBody.getHpr() )
+        current_hpr = Vec3( self.__entity.coreBodyPath.getHpr() )
         target_angle = Vec3( angle, 0, 0 )
         h_diff = target_angle.x - current_hpr.x
         print( f"Current H: { current_hpr.x }, Target H: { target_angle.x }, h_diff: { h_diff }" )
         h_adjust = max( - tracking_speed * globalClock.getDt(), min( h_diff, tracking_speed * globalClock.getDt() ) )
         new_hpr = current_hpr + Vec3( h_adjust,  0,  0 )
-        self.__entity.coreBody.setHpr( new_hpr )
+        self.__entity.coreBodyPath.setHpr( new_hpr )
         print( f"h_adjust: { h_adjust }, h_diff: { h_diff }" )
         if abs( h_diff ) ==0:
             self.__adjusted = True
@@ -64,7 +64,7 @@ class MovementManager:
         return False
 
     def follow_a_path( self, point_b, speed = 20 ):
-        current_pos = self.__entity.coreBody.getPos()
+        current_pos = self.__entity.coreBodyPath.getPos()
 
         # Calculate direction to the target point (point B)
         direction = ( point_b - current_pos ).normalized()
@@ -75,4 +75,4 @@ class MovementManager:
 
         # Rotate the model to face the direction of movement
         angle = math.degrees( math.atan2( direction.y, direction.x ) )
-        self.__entity.coreBody.setH( angle )
+        self.__entity.coreBodyPath.setH( angle )
