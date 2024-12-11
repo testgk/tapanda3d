@@ -17,9 +17,8 @@ class EntityLoader:
 			parts = rm[ "parts" ]
 			bulletNode = rm[ "rigidbody" ]
 			self.__renderModelsGroup( point = entry, parts = parts,  bulletNode = bulletNode )
-			#entity.rigidBodyNodes[ rigidGroup ][ "bulletNodePath" ] = modelBulletNodePath
 		entity.setDamping()
-		entity.reparentModules()
+		entity.connectModules( self.__physicsWorld )
 		return entity
 
 	def __renderModelsGroup( self, point, parts, bulletNode ):

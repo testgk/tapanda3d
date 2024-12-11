@@ -26,7 +26,11 @@ sys.dont_write_bytecode = True
 class MyApp( ShowBase ):
 
 	def __init__( self ):
-
+		self.mapName = "heightmap1"
+		self.showTexture = True
+		if True:
+			self.mapName = "heightmap_flat"
+			self.showTexture = False
 		ShowBase.__init__( self )
 		self.__terrainPhysicsLayer = None
 		self.__terrainCollisionLayer = None
@@ -64,7 +68,7 @@ class MyApp( ShowBase ):
 
 	def __createTerrain( self ):
 		terrainProvider = TerrainProvider( self.loader )
-		self.terrainInfo = terrainProvider.create_terrain( "heightmap_flat" )
+		self.terrainInfo = terrainProvider.create_terrain( self.mapName, showTexture = False )
 		self.terrain = self.terrainInfo.terrain
 		self.terrain.getRoot().reparentTo( self.render )
 		self.terrain.setFocalPoint( self.camera )
@@ -105,7 +109,6 @@ class MyApp( ShowBase ):
 		debug_node.showBoundingBoxes( True )
 		debug_np = self.render.attachNewNode( debug_node )
 		debug_np.setColor( Color.RED.value )
-		#debug_np.show()
 		self.physics_world.setDebugNode( debug_np.node() )
 		return debug_np
 
@@ -120,7 +123,7 @@ class MyApp( ShowBase ):
 
 	def __createPhysicsLayer( self, blockSize ):
 		terrainProvider = TerrainProvider( self.loader )
-		terrainInfo = terrainProvider.create_terrain( "heightmap_flat", blockSize = blockSize )
+		terrainInfo = terrainProvider.create_terrain( self.mapName, showTexture = False, blockSize = blockSize )
 		self.__terrainPhysicsLayer = TerrainRigidBody( terrainInfo.terrain, self.physics_world )
 		self.__terrainPhysicsLayer.createTerrainRigidBody()
 
