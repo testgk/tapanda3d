@@ -1,8 +1,10 @@
-from entities.entity import entitymodule, entitypart
+from panda3d.bullet import BulletHingeConstraint
+from panda3d.core import Vec3
+
+from entities.entity import entitypart
 from entities.full.movers.mover import Mover
 from entities.modules.chassis import Chassis
-from entities.modules.turret import Turret, TurretBase
-from entities.parts.rolls import Rolls
+from entities.modules.turret import Turret
 
 
 class Tank( Mover ):
@@ -18,10 +20,17 @@ class Tank( Mover ):
     def cannon( self ):
         return self.__turret.turretCannon
 
-    def reparentModules( self ):
-        hull = self._chassis.hull().model
-        turret = self.turretBase().model
-        cannon = self.cannon().model
-        turret.reparentTo( hull )
-        cannon.reparentTo( turret )
+    def connectModules( self, world ):
+        pivot_in_hull = Vec3( 0, 0, 1 )
+        axis_in_hull = Vec3( 0, 0, 1 )
+        pivot_in_turret = Vec3( 0, 0, 0 )
+        axis_in_turret = Vec3( 0, 0, 1 )
 
+        hinge = BulletHingeConstraint(
+            self._chassis.hull().rigidBody,
+            self.turretBase().rigidBody,
+            pivot_in_hull, axis_in_hull,
+            pivot_in_turret, axis_in_turret,
+        )
+        hinge.setLimit( 0, 180 )
+        world.attachConstraint( hinge )

@@ -1,6 +1,7 @@
 from entities.modules.module import Module
 from entities.parts.cannon import ShellCannon
 from entities.parts.part import Part
+from enums.colors import Color
 
 
 class Turret( Module ):
@@ -8,6 +9,7 @@ class Turret( Module ):
         self.__turretBase = TurretBase()
         self.__cannon = device
         super().__init__( [ self.__turretBase , device ])
+
 
     @property
     def turretBase( self ):
@@ -26,6 +28,7 @@ class CannonTurret( Turret ):
 class TurretBase( Part ):
     def __init__( self ):
         super().__init__( partId = "turret_base" )
+        self._color = Color.RED.value
 
     @property
     def objectPath( self ) -> str:

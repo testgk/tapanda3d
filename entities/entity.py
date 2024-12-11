@@ -89,7 +89,7 @@ class Entity( SelectionItem ):
 			collisionNode.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies
 
-	def reparentModules( self ):
+	def connectModules( self, world ):
 		raise NotImplementedError
 
 	def isCoreBodyRigidGroup( self, rigidGroup: str ) -> bool:

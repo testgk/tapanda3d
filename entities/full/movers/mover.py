@@ -25,11 +25,6 @@ class Mover( Entity ):
     def rotate( self, degrees = 0 ):
         self._movementManager.rotate( degrees )
 
-    def track_target_angle( self, degrees, task ):
-        if self._movementManager.track_target_angle( degrees ):
-            return task.done
-        return task.cont
-
     def monitorIdleState( self, task ):
         if not self.isSelected( mode = SelectionModes.P2P ):
             return task.cont
@@ -57,6 +52,12 @@ class Mover( Entity ):
         self.scheduleTask(
             self._movementManager.set_velocity_toward_point_with_stop,
             f"{ self.name }_move_p2p",
+            extraArgs = [ position ],
+            appendTask = True
+        )
+        self.scheduleTask(
+            self._movementManager.track_target_angle,
+            f"{ self.name }_monitor_angle",
             extraArgs = [ position ],
             appendTask = True
         )

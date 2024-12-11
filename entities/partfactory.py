@@ -1,6 +1,7 @@
 import os
 from collections import defaultdict
-from typing import TYPE_CHECKING, Callable
+import random
+from typing import TYPE_CHECKING, Callable, Any
 
 from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
 from panda3d.core import  NodePath, Vec3, CollisionBox, CollisionNode, Point3
@@ -107,7 +108,7 @@ class PartFactory:
             self.__rigidBodies[ rg ] = { "rigidbody": body_node, "parts": parts }
 
     def __createSingleRigidBody( self, models: list ) -> BulletRigidBodyNode:
-        body_node = BulletRigidBodyNode( 'multi_shape_body' )
+        body_node = BulletRigidBodyNode( f'multi_shape_body_{random.randint(1,1000)}' )
         for model in models:
             mesh = BulletTriangleMesh()
             add_model_to_bullet_mesh( mesh, model )
@@ -117,7 +118,7 @@ class PartFactory:
             part.setRigidBodyProperties( body_node )
         return body_node
 
-    def __groupRigidModels( self ) -> defaultdict[ str, NodePath ]:
+    def __groupRigidModels( self ) -> defaultdict[ Any, list ]:
         gr = defaultdict( list )
         for part in self.__parts:
             gr[ part.rigidGroup ].append( part.model )
