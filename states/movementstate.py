@@ -9,15 +9,16 @@ class MovementState( State ):
         super().__init__( entity )
 
     @property
-    def entity( self ) -> 'Mover':
+    def mover( self ) -> 'Mover':
         return self._entity
 
     def enter( self ):
-        self.entity.schedulePointToPointTask()
+        self.mover.schedulePointToPointTask()
 
     def execute( self ):
-        if self.entity.finishedMovement():
+        if self.mover.finishedMovement():
             self._done = True
             print( f'{self._entity.name} finished moving' )
-        else:
-            print( f'{ self._entity.name } moving' )
+            self.mover.currentTarget.clearSelection()
+        #else:
+        #    print( f'{ self._entity.name } moving' )
