@@ -15,7 +15,7 @@ class MovementManager:
 
     def set_velocity_toward_point_with_stop( self, target_pos, task ):
         speed = 100
-        stop_threshold = 10
+        stop_threshold = 20
         if not self.__aligned:
             return task.cont
         current_pos = self.__entity.coreBodyPath.get_pos()
@@ -31,22 +31,33 @@ class MovementManager:
 
     def track_target_angle( self, target_position, task ):
         if self.__entity.finishedMovement():
+            print( f'{ self.__entity.name } finished angle tracking' )
             return task.done
+        h_diff, new_hpr = self.__getRelativeHpr( self.__entity.coreBodyPath, target_position )
+        self.__entity.coreBodyPath.setHpr( new_hpr )
+        if abs( h_diff ) <= 5:  # Small threshold for floating-point precision
+            self.__aligned = True
+        else:
+            self.__aligned = False
+            print( f'{ self.__entity.name } is not aligned' )
+        return task.cont
 
-        tracking_speed = 50  # Degrees per second
-        current_pos = self.__entity.coreBodyPath.getPos()
-        current_hpr = Vec3( self.__entity.coreBodyPath.getHpr() )
+    def __getRelativeHpr( self, bodyPart, target_position, tracking_speed = 100 ):
+        current_pos = bodyPart.getPos()
+        current_hpr = Vec3( bodyPart.getHpr() )
         direction_vector = target_position - current_pos
         target_heading = math.degrees( math.atan2( direction_vector.y, direction_vector.x ) )  # atan2(y, x)
         target_hpr = Vec3( target_heading, 0, 0 )
         h_diff = target_hpr.x - current_hpr.x
-        h_diff = (h_diff + 180) % 360 - 180
-        #print( f"Current H: {current_hpr.x}, Target H: {target_hpr.x}, h_diff: {h_diff}" )
+        h_diff = ( h_diff + 180 ) % 360 - 180
         h_adjust = max( -tracking_speed * globalClock.getDt(), min( h_diff, tracking_speed * globalClock.getDt() ) )
         new_hpr = current_hpr + Vec3( h_adjust, 0, 0 )
-        self.__entity.coreBodyPath.setHpr( new_hpr )
-        if abs( h_diff ) <= 0.1:  # Small threshold for floating-point precision
-            self.__aligned = True
-        else:
-            self.__aligned = False
+        return h_diff, new_hpr
+
+    def maintain_turret_angle( self, target, task ):
+        if self.__entity.finishedMovement():
+            print( f'{ self.__entity.name } finished angle tracking' )
+            return task.done
+        h_diff, new_hpr = self.__getRelativeHpr( self.__entity.turretBase().rigidBodyPath, target, tracking_speed = 25 )
+        self.__entity.turretBase().rigidBodyPath.setHpr( new_hpr )
         return task.cont

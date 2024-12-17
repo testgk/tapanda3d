@@ -3,6 +3,7 @@ from entities.parts.engine import Engine
 from entities.entity import Entity, entitypart, entitymodule
 from entities.parts.part import Part
 from movement.movementmgr import MovementManager
+from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
 from statemachine.state import State
 from states.idlestate import IdleState
@@ -21,13 +22,18 @@ class Mover( Entity ):
         self._movementManager = MovementManager( self )
         self._corePart = self.mobility()
         self._isMover = True
+        self._currentTarget = None
+
+    @property
+    def currentTarget( self ) -> SelectionItem:
+        return self._currentTarget
 
     def rotate( self, degrees = 0 ):
         self._movementManager.rotate( degrees )
 
     def monitorIdleState( self, task ):
-        if not self.isSelected( mode = SelectionModes.P2P ):
-            return task.cont
+        #if not self.isSelected( mode = SelectionModes.P2P ):
+        #    return task.cont
         if self.selectTargets.empty():
             return task.cont
         print( f'{ self.name } moving p2p to { self.selectTargets }' )
@@ -48,7 +54,8 @@ class Mover( Entity ):
         self.scheduleTask( self.monitorIdleState, "monitoring command" )
 
     def schedulePointToPointTask( self ):
-        position = self.selectTargets.get().position
+        self._currentTarget = self.selectTargets.get()
+        position = self._currentTarget.position
         self.scheduleTask(
             self._movementManager.set_velocity_toward_point_with_stop,
             f"{ self.name }_move_p2p",
@@ -61,6 +68,7 @@ class Mover( Entity ):
             extraArgs = [ position ],
             appendTask = True
         )
+        self._maintainTurretAngle( target = position )
 
     def finishedMovement( self ):
         if self._taskMgr.hasTaskNamed( f"{ self.name }_move_p2p" ):
@@ -83,3 +91,6 @@ class Mover( Entity ):
  #   @entitypart
     def engine( self ) -> Engine:
         return self._engine
+
+    def _maintainTurretAngle( self, target ):
+        raise NotImplementedError

@@ -132,11 +132,13 @@ class Entity( SelectionItem ):
 			system.hide()
 
 	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
-		if item.isMover:
+		if item == self:
 			self.clearSelection()
-			while not self._selectTargets.empty():
-				target = self._selectTargets.get()
-				target.clearSelection()
+		#if item.isMover:
+		#	self.clearSelection()
+			#while not self._selectTargets.empty():
+			#	target = self._selectTargets.get()
+			#	target.clearSelection()
 			if item != self:
 				item.handleSelection( SelectionModes.P2P )
 				return item

@@ -9,8 +9,8 @@ class StateMachine:
         self.__currentState.enter()
 
     def stateMachineMainLoop( self, task ):
-        if self.__entity.isSelected():
-            print( f"Main loop: current state: { self.__currentState } " )
+        if False and self.__entity.isSelected():
+            print( f"{ self.__entity.name } current state: { self.__currentState }" )
         if self.__currentState.done:
             self.changeState( self.__currentState.nextState )
         self.__currentState.execute()

@@ -28,7 +28,7 @@ class MyApp( ShowBase ):
 	def __init__( self ):
 		self.mapName = "heightmap1"
 		self.showTexture = True
-		if True:
+		if False:
 			self.mapName = "heightmap_flat"
 			self.showTexture = False
 		ShowBase.__init__( self )
@@ -68,7 +68,7 @@ class MyApp( ShowBase ):
 
 	def __createTerrain( self ):
 		terrainProvider = TerrainProvider( self.loader )
-		self.terrainInfo = terrainProvider.create_terrain( self.mapName, showTexture = False )
+		self.terrainInfo = terrainProvider.create_terrain( self.mapName, showTexture = self.showTexture )
 		self.terrain = self.terrainInfo.terrain
 		self.terrain.getRoot().reparentTo( self.render )
 		self.terrain.setFocalPoint( self.camera )
