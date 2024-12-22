@@ -27,7 +27,7 @@ class MyApp( ShowBase ):
 
 	def __init__( self ):
 		self.mapName = "heightmap1"
-		self.showTexture = True
+		self.showTexture = False
 		if False:
 			self.mapName = "heightmap_flat"
 			self.showTexture = False

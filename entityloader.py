@@ -19,6 +19,8 @@ class EntityLoader:
 			self.__renderModelsGroup( point = entry, parts = parts,  bulletNode = bulletNode )
 		entity.setDamping()
 		entity.connectModules( self.__physicsWorld )
+		entity.createStateMachine( self.__taskMgr )
+		entity.initMovementManager( self.__physicsWorld )
 		return entity
 
 	def __renderModelsGroup( self, point, parts, bulletNode ):

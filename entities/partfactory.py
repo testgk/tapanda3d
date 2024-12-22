@@ -24,14 +24,15 @@ def find_entity_parts( cls ) -> list[ Callable ]:
 
 class PartFactory:
     def __init__( self, entity: 'Entity' ):
-        self.__models = None
+        self.__entity = entity
         self.__collisionBoxes = []
         self.__rigidBodies = { }
-        self.__partModels: dict[ Part, NodePath ] = { }
         self.__modules = [ ]
+        self.__partModels: dict[ Part, NodePath ] = { }
         self.__parts: list[ Part ] = [ ]
-        self.__entity = entity
         self.__modelData = defaultdict( list )
+        self.__rigidBodyNodes = []
+        self.__models = None
 
     def addParts( self ):
         parts = find_entity_parts( self.__entity )
@@ -54,6 +55,11 @@ class PartFactory:
     @property
     def rigidBodies( self ):
         return self.__rigidBodies
+
+    @property
+    def rigidBodyNodes( self ):
+        return self.__rigidBodyNodes
+
 
     def build( self, loader ):
         self.addParts()
@@ -98,13 +104,14 @@ class PartFactory:
         self.__collisionBoxes.append( self.__parts[ 0 ].model.attachNewNode( collision_box_node ) )
 
     def createRigidBodies( self ) -> None:
-        self.__modelData = defaultdict( list )
+        modelData = defaultdict( list )
         for part in self.__parts:
-            self.__modelData[ part.rigidGroup ].append( part )
+            modelData[ part.rigidGroup ].append( part )
 
-        for rg, parts in self.__modelData.items():
+        for rg, parts in modelData.items():
             models = [ p.model for p in parts ]
             body_node = self.__createSingleRigidBody( models )
+            self.__rigidBodyNodes.append( body_node )
             self.__rigidBodies[ rg ] = { "rigidbody": body_node, "parts": parts }
 
     def __createSingleRigidBody( self, models: list ) -> BulletRigidBodyNode:

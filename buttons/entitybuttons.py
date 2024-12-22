@@ -51,5 +51,3 @@ class EntityButtons:
 		chassis = BasicTracksChassis()
 		tank = Tank( engine = engine, turret = turret, chassis = chassis )
 		entity = self.__loader.loadEntity( entity = tank, entry = self.__selector.point )
-		entity.createStateMachine( self.__taskMgr )
-

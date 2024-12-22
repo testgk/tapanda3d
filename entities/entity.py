@@ -43,7 +43,6 @@ class Entity( SelectionItem ):
 		self._corePart = None
 		self._coreBodyPath = None
 		self.initStatesPool()
-		self.__modelData = defaultdict( list )
 
 	@property
 	def collisionSystems( self ):
@@ -78,8 +77,13 @@ class Entity( SelectionItem ):
 		self._coreRigidBody = bulletCoreBody
 
 	@property
-	def partModels( self ):
-		return self._partBuilder.partModels
+	def position( self ):
+		if self.coreBodyPath:
+			return self.coreBodyPath.get_pos()
+
+	@property
+	def models( self ):
+		return self._partBuilder.models
 
 	def buildModels( self, loader ):
 		self._partBuilder.build( loader )
