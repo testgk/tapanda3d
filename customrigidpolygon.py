@@ -1,7 +1,7 @@
 import math
 from typing import Any
 
-from panda3d.bullet import BulletConvexHullShape, BulletRigidBodyNode
+from panda3d.bullet import BulletConvexHullShape, BulletRigidBodyNode, BulletDebugNode
 from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, DirectionalLight, GeomVertexReader, LVector4, \
     NodePath, Vec3, \
     GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3, GeomLines, \
@@ -38,6 +38,8 @@ def getVertices( geom: GeomNode ) -> list:
 class CustomRigidPolygon:
     def __init__( self, child: NodePath, *args, **kwargs ):
         super().__init__( *args, **kwargs )
+        self.__debugNode = None
+        self.__debug_np = None
         self.__child = child
         self.__rigid_body_node_path = None
         self.__rigid_body_node = None
@@ -53,10 +55,20 @@ class CustomRigidPolygon:
         self.__rigid_body_node.setIntoCollideMask( CollisionGroup.MODEL | CollisionGroup.ROLLS )
         self.__rigid_body_node.setMass( 0 )
         self.__rigid_body_node_path = self.__child.attachNewNode( self.__rigid_body_node )
+        self.__debugNode = BulletDebugNode( 'DebugSpecific' )
+        self.__debugNode.showWireframe( True )
+        self.__child.attachNewNode( self.__debugNode )
+        self.__debug_np = self.__child.attachNewNode( self.__debugNode )
+        self.__debug_np.setZ( self.__debug_np.getZ() + 10 )
+        self.__debug_np.setColor( Color.BLACK.value  )
+        self.__debug_np.show()
+        self.__rigid_body_node.setPythonTag( 'raytest_target', self )
+
+    def show( self, world ):
+        self.__debug_np.show()
 
 def create_convex_hull_rigid_body( vertices_list: list ) -> BulletRigidBodyNode:
     shape = BulletConvexHullShape()
-
     for triangle in vertices_list:
         for vertex in triangle:
             shape.addPoint( vertex )

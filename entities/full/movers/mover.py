@@ -1,3 +1,5 @@
+from panda3d.core import Vec3
+
 from entities.modules.chassis import Chassis
 from entities.parts.engine import Engine
 from entities.entity import Entity, entitypart, entitymodule
@@ -13,13 +15,15 @@ from states.movementstate import MovementState
 class Mover( Entity ):
     def __init__( self, engine, chassis: Chassis ):
         super().__init__()
+        self._movementManager = None
+        self.__hpr = None
+        self.regularSpeed = 100
         self.readyToMove = False
         self._chassis = chassis
         self._currentPosition = None
         self._engine = engine
         self._mobility = chassis.mobility()
         self._hull = chassis.hull()
-        self._movementManager = MovementManager( self )
         self._corePart = self.mobility()
         self._isMover = True
         self._currentTarget = None
@@ -28,17 +32,20 @@ class Mover( Entity ):
     def currentTarget( self ) -> SelectionItem:
         return self._currentTarget
 
-    def rotate( self, degrees = 0 ):
-        self._movementManager.rotate( degrees )
+    @property
+    def hpr( self ) -> Vec3:
+        if self.coreBodyPath:
+          return Vec3( self.coreBodyPath.getHpr() )
 
     def monitorIdleState( self, task ):
-        #if not self.isSelected( mode = SelectionModes.P2P ):
-        #    return task.cont
         if self.selectTargets.empty():
             return task.cont
         print( f'{ self.name } moving p2p to { self.selectTargets }' )
         self.readyToMove = True
         return task.done
+
+    def initMovementManager( self, world ):
+        self._movementManager = MovementManager( self, world )
 
     def decide( self, currentState: 'State' ) -> str:
         if currentState == "MovementState":
@@ -68,13 +75,31 @@ class Mover( Entity ):
             extraArgs = [ position ],
             appendTask = True
         )
+        self.scheduleTask(
+            self._movementManager.monitor_obstacles,
+            f"{ self.name }_monitor_obstacles",
+            extraArgs = [ position ],
+            appendTask = True
+        )
         self._maintainTurretAngle( target = position )
+
+    def handleObstacleTask( self ):
+        position = self._currentTarget.position
+        self.scheduleTask(
+            self._movementManager.handleObstacleTask,
+            f"{ self.name }_move_p2p",
+            extraArgs = [ position ],
+            appendTask = True
+        )
 
     def finishedMovement( self ):
         if self._taskMgr.hasTaskNamed( f"{ self.name }_move_p2p" ):
             return False
         self.readyToMove = False
         return True
+
+    def obstacle( self ) -> bool:
+        return False
 
     @entitypart
     def hull( self ) -> Part:
@@ -94,3 +119,6 @@ class Mover( Entity ):
 
     def _maintainTurretAngle( self, target ):
         raise NotImplementedError
+
+    def selfHit( self, hit ):
+        return hit in self._partBuilder.rigidBodyNodes
