@@ -8,64 +8,45 @@ from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, Directional
     GeomPoints
 
 from collsiongroups import CollisionGroup
+from custompolygon import CustomPolygon, getVertices
 from enums.colors import Color
 from enums.directions import Direction, mapDirections
 from selector.selector import Selector
 
 
-def getVertices( geom: GeomNode ) -> list:
-    all_vertices = [ ]
-    tris = geom.getPrimitive( 0 )  # Assuming the first primitive is triangles
-    tris = tris.decompose()
-    vertex_data = geom.getVertexData()
-    vertex_reader = GeomVertexReader( vertex_data, 'vertex' )
-    primitives = tris.getNumPrimitives()
-    for i in range( tris.getNumPrimitives() ):
-        prim_start = tris.getPrimitiveStart( i )
-        prim_end = tris.getPrimitiveEnd( i )
-        assert prim_end - prim_start == 3
-
-        vertices = [ ]
-        for pr_index in range( prim_start, prim_end ):
-            vi = tris.getVertex( pr_index )
-            vertex_reader.setRow( vi )
-            v = vertex_reader.getData3()
-            vertices.append( v )
-        all_vertices.append( vertices )
-    return all_vertices
 
 
-class CustomRigidPolygon:
+
+class CustomRigidPolygon( CustomPolygon ):
     def __init__( self, child: NodePath, *args, **kwargs ):
-        super().__init__( *args, **kwargs )
+        super().__init__( child )
         self.__debugNode = None
-        self.__debug_np = None
-        self.__child = child
+        self._debug_node_path = None
         self.__rigid_body_node_path = None
         self.__rigid_body_node = None
-        self.__geom = child.node().getGeom( 0 )  # Assuming each GeomNode has one Geom
-        self.__vertices = getVertices( self.__geom )
 
     @property
     def rigidBodyNode( self ) -> BulletRigidBodyNode:
         return self.__rigid_body_node
 
     def attachRigidBodyNodeToTerrain( self ):
-        self.__rigid_body_node = create_convex_hull_rigid_body( self.__vertices )
+        self.__rigid_body_node = create_convex_hull_rigid_body( self._vertices )
         self.__rigid_body_node.setIntoCollideMask( CollisionGroup.MODEL | CollisionGroup.ROLLS )
         self.__rigid_body_node.setMass( 0 )
-        self.__rigid_body_node_path = self.__child.attachNewNode( self.__rigid_body_node )
-        self.__debugNode = BulletDebugNode( 'DebugSpecific' )
-        self.__debugNode.showWireframe( True )
-        self.__child.attachNewNode( self.__debugNode )
-        self.__debug_np = self.__child.attachNewNode( self.__debugNode )
-        self.__debug_np.setZ( self.__debug_np.getZ() + 10 )
-        self.__debug_np.setColor( Color.BLACK.value  )
-        self.__debug_np.show()
+        self.__rigid_body_node_path = self._child.attachNewNode( self.__rigid_body_node )
+
+    def _createTempDebug( self ):
+        debugNode = BulletDebugNode( 'DebugSpecific' )
+        debugNode.showWireframe( True )
+        self._child.attachNewNode( self.__debugNode )
+        self._debug_node_path = self._child.attachNewNode( self.__debugNode )
+        self._debug_node_path.setZ( self._debug_node_path.getZ() + 10 )
+        self._debug_node_path.setColor( Color.BLACK.value )
+        self._debug_node_path.show()
         self.__rigid_body_node.setPythonTag( 'raytest_target', self )
 
     def show( self, world ):
-        self.__debug_np.show()
+        self._debug_node_path.show()
 
 def create_convex_hull_rigid_body( vertices_list: list ) -> BulletRigidBodyNode:
     shape = BulletConvexHullShape()
