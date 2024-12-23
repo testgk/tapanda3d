@@ -14,7 +14,7 @@ class TerrainCollision:
 		for child in root.getChildren():
 			terrainHeight = self.get_terrain_height( child.getX(), child.getY() )
 			if isinstance( child.node(), GeomNode ):
-				customCollisionPolygon = CustomCollisionPolygon( child, terrainHeight )
+				customCollisionPolygon = CustomCollisionPolygon( child )
 				customCollisionPolygon.attachCollisionNodeToTerrain()
 		CustomCollisionPolygon.acquireAllNeighbors()
 

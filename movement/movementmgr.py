@@ -77,7 +77,7 @@ class MovementManager:
                 hit_node = hit.getNode()
                 if self.__mover.selfHit( hit_node ):
                     continue
-                #hit_node.getPythonTag( 'raytest_target' ).show( self.__world )
+                hit_node.getPythonTag( 'raytest_target' ).show( self.__world )
                 print( f"Hit at: { hit_pos }, Normal: { hit_normal }, Node: { hit_node }" )
         #self.__obstacles.put( item = hit_node )
         return task.cont
