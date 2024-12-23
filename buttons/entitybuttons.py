@@ -16,7 +16,6 @@ class EntityButtons:
 		self.__loader = loader
 		self.__taskMgr = taskMgr
 		self.create_entity_button()
-		self.create_velocity_button()
 
 	def create_entity_button( self ):
 		entityButton = DirectButton(
@@ -26,24 +25,6 @@ class EntityButtons:
 				text_scale = 0.5,
 				scale = 0.1
 		)
-
-	def create_velocity_button( self ):
-		alignButton = DirectButton(
-				text = "Velocity",
-				command = self.__applyVelocity,
-				pos = (0, -0.7, -0.7),
-				text_scale = 0.5,
-				scale = 0.1
-		)
-
-
-
-	def __applyVelocity( self ):
-			#self.__taskMgr.add( self.__selector.selectedMover.track_target_angle, "track velocity", extraArgs = [  90 ], appendTask = True )
-			target = self.__selector.selectedMover.selectTargets.get()
-			target.handleMoveTo()
-			self.__taskMgr.add( self.__selector.selectedMover.maintain_velocity,
-			                    "track entity" )
 
 	def __createEntity( self ):
 		engine = BasicEngine()
