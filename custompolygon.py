@@ -1,7 +1,7 @@
 import math
 
 from panda3d.core import GeomVertexReader, GeomNode, NodePath, GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geom, \
-	GeomTriangles, CollisionPolygon, GeomLines, Vec3
+	GeomTriangles, CollisionPolygon, GeomLines, Vec3, LVecBase3f
 
 from enums.colors import Color
 
@@ -32,28 +32,7 @@ def getVertices( geom: GeomNode ) -> list:
 		all_vertices.append( vertices )
 	return all_vertices
 
-def createDebugNode( dNode ):
-	debug_geom_node = GeomNode( 'debug_geom' )
-	vertex_format = GeomVertexFormat.getV3()
-	vertex_data = GeomVertexData( 'vertices', vertex_format, Geom.UHDynamic )
-	vertex_writer = GeomVertexWriter( vertex_data, 'vertex' )
-	geom = Geom( vertex_data )
-	tris = GeomTriangles( Geom.UHDynamic )
 
-	vertex_count = 0
-	for i in range( dNode.getNumSolids() ):
-		poly = dNode.getSolid( i )
-		num_points = poly.getNumPoints()
-		for j in range( num_points ):
-			point = poly.getPoint( j )
-			vertex_writer.addData3f( point )
-			tris.addVertex( vertex_count )
-			vertex_count += 1
-		tris.closePrimitive()
-
-	geom.addPrimitive( tris )
-	debug_geom_node.addGeom( geom )
-	return debug_geom_node
 
 def calculate_angle( vertex, reference_plane_normal = Vec3( 0, 0, 1 ) ):
 	edge1 = vertex[ 1 ] - vertex[ 0 ]
@@ -104,6 +83,32 @@ def createWireNode( customNode ):
 	wire_geom_node.addGeom( wire_geom )
 	return wire_geom_node
 
+
+def createDebugNode( vertices ):
+	debug_geom_node = GeomNode( 'debug_geom' )
+	vertex_format = GeomVertexFormat.getV3()  # Position only
+	vertex_data = GeomVertexData( 'vertices', vertex_format, Geom.UHDynamic )
+	vertex_writer = GeomVertexWriter( vertex_data, 'vertex' )
+	geom = Geom( vertex_data )
+
+	vertex_count = 0
+	tris = GeomTriangles( Geom.UHDynamic )
+
+	# Iterate through the list of lists of LVecBase3f
+	for triangle in vertices:
+		for vertex in triangle:
+			# Each `vertex` is an LVecBase3f, so we access its components
+			vertex_writer.addData3f( vertex.x, vertex.y, vertex.z )
+			tris.addVertex( vertex_count )
+			vertex_count += 1
+
+		# Close the triangle primitive after 3 vertices
+		tris.closePrimitive()
+
+	geom.addPrimitive( tris )
+	debug_geom_node.addGeom( geom )
+	return debug_geom_node
+
 class CustomPolygon:
 	def __init__( self, child: NodePath ):
 		self._child = child
@@ -129,14 +134,15 @@ class CustomPolygon:
 		return self._col
 
 	def __str__( self ):
-		return (f'{ self._name }, row: { self._row }, column: { self._col }, '
-		        f'area: { self._area }, angle: { self._angle }')
+		return ( f'{ self._name }, row: { self._row }, column: { self._col }, '
+		        f'area: { self._area }, angle: { self._angle }' )
 
-	def _generateDebugNodePath( self, customNode, height_offset ):
-		debug_geom_node = createDebugNode( customNode )
+	def _generateDebugNodePath( self, height_offset ):
+		debug_geom_node =  self.createDebugNode()
 		self._debug_node_path = self._child.attachNewNode( debug_geom_node )
 		self._debug_node_path.setZ( self._debug_node_path.getZ() + height_offset )
-		self._debug_node_path.hide()
+		#self._debug_node_path.hide()
+		return self._debug_node_path
 
 	def _generateWireNodePath( self, customNode, height_offset ):
 		wire_geom_node = createWireNode( customNode )
@@ -145,3 +151,18 @@ class CustomPolygon:
 		self._wire_node_path.setColor( Color.CYAN.value )
 		self._wire_node_path.setRenderModeWireframe()
 		self._wire_node_path.hide()
+
+	def _attachDebugNode( self, customNode, height_offset = 0.1 ):
+		self._generateDebugNodePath( height_offset )
+		self._generateWireNodePath( customNode, height_offset )
+
+	def _showDebugNode( self ):
+		self._visible = True
+		self._debug_node_path.show()
+
+	def _colorDebugNode( self, color = Color.RED_TRANSPARENT.value ):
+		self._debug_node_path.setColor( color )  # Set the color to red
+		self._debug_node_path.setTransparency( True )
+
+	def createDebugNode( self ):
+		return createDebugNode( self._vertices )

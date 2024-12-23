@@ -1,16 +1,13 @@
-from typing import Any
-
-
-from panda3d.core import CollisionNode, CollisionPolygon,\
+from panda3d.core import CollisionNode, CollisionPolygon, \
 	NodePath, Vec3, GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geom, GeomNode, Vec4, Point3, \
-	GeomPoints
+	GeomPoints, GeomTriangles
 
-from custompolygon import CustomPolygon, calculate_angle, triangle_area
-from custompolygonpool import CustomPolygonPool
 from enums.colors import Color
-from enums.directions import Direction, mapDirections
+from enums.directions import Direction
 from selectionitem import SelectionItem
+from custompolygon import CustomPolygon
 from selectionmodes import SelectionModes
+from custompolygonpool import CustomPolygonPool
 
 
 def getPointGeomNode( point ):
@@ -32,17 +29,16 @@ currentFrame = [ ]
 
 
 class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
-	def __init__( self, child: NodePath, height, *args, **kwargs ):
+	def __init__( self, child: NodePath ):
 		super().__init__( child )
 		SelectionItem.__init__( self )
 		self.__polygonPool = CustomPolygonPool.Instance()
 		self._child = child
 		self._isTerrain = True
 		self.__edges = { }
-		self.__visible = None
+		self._visible = None
 		self.__neighbors = None
 		self.__collision_node_path = None
-		self.__height = height
 		self.__collision_node = CollisionNode( f'terrain_{ self._child.getName() }' )
 		self.__createCollisionNode( self._vertices )
 		self.__assignEdges( self._vertices )
@@ -75,20 +71,19 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 		row_diff = abs( self._row - startRow )
 		col_diff = abs( self._col - startCol )
 
-		if self.__visible or abs( row_diff ) > level or abs( col_diff ) > level:
+		if self._visible or abs( row_diff ) > level or abs( col_diff ) > level:
 			return
 
 		self.__displayFrameAndEdges( level, col_diff, row_diff, startCol, startRow )
-		self.__showDebugNode()
+		self._showDebugNode()
 		self._colorDebugNode()
-		self.__visible = True
+		self._visible = True
 		for neighbor in self.__neighbors.values():
 			neighbor.showNeighbors( startRow, startCol, level )
 
 	def __displayFrameAndEdges( self, level: int, col_diff: int, row_diff: int, startCol: int, startRow: int ):
 		if row_diff == level and col_diff == level:
 			self.__showFrame()
-			# Handle diagonal cases
 			if self._row > startRow and self._col < startCol:  # Down
 				self.__drawEdges( Direction.UP_LEFT, Direction.UP_RIGHT )
 			elif self._row < startRow and self._col > startCol:  # Up left
@@ -117,7 +112,7 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 		self._wire_node_path.show()
 
 	def hideNeighbors( self ):
-		if not self.__visible:
+		if not self._visible:
 			return
 
 		self.__hideDebugNode()
@@ -125,13 +120,11 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 			neighbor.hideNeighbors()
 
 	def __hideDebugNode( self ):
-		self.__visible = False
+		self._visible = False
 		self._debug_node_path.hide()
 		self._wire_node_path.hide()
 
-	def __showDebugNode( self ):
-		self.__visible = True
-		self._debug_node_path.show()
+
 
 	def __drawEdges( self, *args ):
 		for direction in args:
@@ -153,15 +146,8 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 
 	def attachCollisionNodeToTerrain( self ):
 		self.__collision_node_path = self._child.attachNewNode( self.__collision_node )
-		self.__attachDebugNode( self.__collision_node )
+		self._attachDebugNode( self.__collision_node )
 
-	def __attachDebugNode( self, collisionNode, height_offset = 0.1 ):
-		self._generateDebugNodePath( collisionNode, height_offset )
-		self._generateWireNodePath( collisionNode, height_offset )
-
-	def _colorDebugNode( self, color = Color.RED_TRANSPARENT.value ):
-		self._debug_node_path.setColor( color )  # Set the color to red
-		self._debug_node_path.setTransparency( True )
 
 	@classmethod
 	def acquireAllNeighbors( cls ):
@@ -196,5 +182,6 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 		currentFrame.clear()
 		self.hideNeighbors()
 		self.showNeighbors( self._row, self._col, level )
-		self.__showDebugNode()
+		self._showDebugNode()
 		self._colorDebugNode( color )
+
