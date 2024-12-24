@@ -25,14 +25,14 @@ def find_entity_parts( cls ) -> list[ Callable ]:
 class PartFactory:
     def __init__( self, entity: 'Entity' ):
         self.__entity = entity
-        self.__collisionBoxes = []
+        self.__collisionBox = None
         self.__rigidBodies = { }
         self.__modules = [ ]
         self.__partModels: dict[ Part, NodePath ] = { }
         self.__parts: list[ Part ] = [ ]
         self.__modelData = defaultdict( list )
         self.__rigidBodyNodes = []
-        self.__models = None
+        self.__models = []
 
     def addParts( self ):
         parts = find_entity_parts( self.__entity )
@@ -41,16 +41,12 @@ class PartFactory:
         return self.__parts
 
     @property
-    def collisionSystems( self ):
-        return self.__collisionBoxes
+    def collisionBox( self ):
+        return self.__collisionBox
 
     @property
     def partModels( self ):
         return self.__partModels
-
-    @property
-    def models( self ):
-        return self.__partModels.values()
 
     @property
     def rigidBodies( self ):
@@ -60,6 +56,9 @@ class PartFactory:
     def rigidBodyNodes( self ):
         return self.__rigidBodyNodes
 
+    @property
+    def models( self ):
+        return self.__models
 
     def build( self, loader ):
         self.addParts()
@@ -74,8 +73,8 @@ class PartFactory:
             try:
                 eggPath = self.__getPartEggPath( part )
                 model = self.__loadModel( eggPath, loader, part )
-                part.setModel( model )
-                self.__partModels[ part ] = model
+                self.__models.append( model )
+                part.model = model
             except Exception as e:
                 print( e )
 
@@ -83,7 +82,6 @@ class PartFactory:
         model = loader.loadModel( eggPath )
         model.setScale( 1 )
         model.setColor( part.color )
-        part.setModel( model )
         model.setPythonTag( 'model_part', part )
         return model
 
@@ -99,9 +97,8 @@ class PartFactory:
             return eggPath
 
     def createCollisionBox( self ):
-        #for part in self.__parts:
-        collision_box_node = create_combined_collision_box( self.models )
-        self.__collisionBoxes.append( self.__parts[ 0 ].model.attachNewNode( collision_box_node ) )
+        self.dimensions, collision_box_node = create_combined_collision_box( self.__models )
+        self.__collisionBox = self.__parts[ 0 ].model.attachNewNode( collision_box_node )
 
     def createRigidBodies( self ) -> None:
         modelData = defaultdict( list )
@@ -174,7 +171,7 @@ def create_collision_box( model_np ):
     collision_node.addSolid( collision_box )
     return collision_node
 
-def create_combined_collision_box(model_nps):
+def create_combined_collision_box( model_nps ):
     if not model_nps:
         return None
 
@@ -216,7 +213,7 @@ def create_combined_collision_box(model_nps):
     collision_node = CollisionNode('combined_model_collision')
     collision_node.addSolid(collision_box)
 
-    return collision_node
+    return ( width, height, depth ), collision_node
 
 
 def add_model_to_bullet_mesh( mesh, model_np ):

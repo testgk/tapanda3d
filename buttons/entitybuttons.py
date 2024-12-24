@@ -11,7 +11,8 @@ from selector.selector import Selector
 
 class EntityButtons:
 
-	def __init__( self, selector: Selector, loader: EntityLoader, taskMgr: TaskManager ):
+	def __init__( self, selector: Selector, loader: EntityLoader, taskMgr: TaskManager, terrainSize ):
+		self.__terrainSize = terrainSize
 		self.__selector = selector
 		self.__loader = loader
 		self.__taskMgr = taskMgr
@@ -32,3 +33,4 @@ class EntityButtons:
 		chassis = BasicTracksChassis()
 		tank = Tank( engine = engine, turret = turret, chassis = chassis )
 		entity = self.__loader.loadEntity( entity = tank, entry = self.__selector.point )
+		entity.terrainSize = self.__terrainSize

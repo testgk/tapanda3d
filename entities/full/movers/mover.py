@@ -27,6 +27,7 @@ class Mover( Entity ):
         self._corePart = self.mobility()
         self._isMover = True
         self._currentTarget = None
+        self.__terrainSize = None
 
     @property
     def currentTarget( self ) -> SelectionItem:
@@ -60,6 +61,14 @@ class Mover( Entity ):
     def scheduleIdleMonitoringTask( self ):
         self.scheduleTask( self.monitorIdleState, "monitoring command" )
 
+    @property
+    def terrainSize( self ):
+        return self.__terrainSize
+
+    @terrainSize.setter
+    def terrainSize( self, terrainSize ):
+        self.__terrainSize = terrainSize
+
     def schedulePointToPointTask( self ):
         self._currentTarget = self.selectTargets.get()
         position = self._currentTarget.position
@@ -73,6 +82,12 @@ class Mover( Entity ):
             self._movementManager.track_target_angle,
             f"{ self.name }_monitor_angle",
             extraArgs = [ position ],
+            appendTask = True
+        )
+        self.scheduleTask(
+            self._movementManager.maintain_terrain_boundaries,
+            f"{ self.name }_maintain_boundaries",
+            extraArgs = [ self.__terrainSize ],
             appendTask = True
         )
         self.scheduleTask(
