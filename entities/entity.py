@@ -28,6 +28,7 @@ def entitymodule( func ):
 class Entity( SelectionItem ):
 	def __init__( self ):
 		super().__init__()
+		self._scale = 1
 		self._statesPool = None
 		self._taskMgr = None
 		self._stateMachine = None
@@ -42,11 +43,8 @@ class Entity( SelectionItem ):
 		self.__rigidBodies = None
 		self._corePart = None
 		self._coreBodyPath = None
+		self._isMover = False
 		self.initStatesPool()
-
-	@property
-	def collisionBox( self ):
-		return self.__collisionBox
 
 	@property
 	def rigidBodyNodes( self ) -> dict:
@@ -67,14 +65,14 @@ class Entity( SelectionItem ):
 		except IndexError:
 			return None
 
+	@property
+	def scale( self ):
+		return self._scale
+
 	def createStateMachine( self, taskManager: TaskManager ):
 		self._taskMgr = taskManager
 		self._stateMachine = StateMachine( self )
 		self.scheduleTask( self._stateMachine.stateMachineMainLoop, f"{ self.name}_state_machine_loop", appendTask = True  )
-
-	def setCoreBody( self, coreBodyPath: NodePath, bulletCoreBody: BulletRigidBodyNode ):
-		self._coreBodyPath = coreBodyPath
-		self._coreRigidBody = bulletCoreBody
 
 	@property
 	def position( self ):
@@ -101,12 +99,6 @@ class Entity( SelectionItem ):
 	def getStateFromEntityPool( self, stateName: str ):
 		return self._statesPool[ stateName ]
 
-	def receiveCommand( self, command: Command, serial: bool ):
-		self._commandManager.receiveCommand( command )
-
-	def pendingCommand( self ) -> Command | None:
-		return self._commandManager.pendingCommand()
-
 	def scheduleTask( self, method, name: str, extraArgs: list = None, appendTask = True ):
 		self._taskMgr.add( method, name = name, extraArgs = extraArgs, appendTask = appendTask )
 
@@ -117,9 +109,10 @@ class Entity( SelectionItem ):
 	def isSelected( self, mode: SelectionModes = None ) -> bool:
 		return self._selectionMode != SelectionModes.NONE
 
-	def handleSelection( self, mode: SelectionModes ):
+	def handleSelection( self, mode: SelectionModes = SelectionModes.ANY ):
 		if self.isSelected( mode ):
 			self.clearSelection()
+		print( f'{ self.name } is selected' )
 		self._selectionMode = SelectionModes.P2P
 		self.selectBox.show()
 
@@ -138,12 +131,20 @@ class Entity( SelectionItem ):
 			self.clearSelection()
 			return item
 		if item.isTerrain:
-			self._selectTargets.put( item )
-			item.handleSelection( SelectionModes.P2P )
-			return self
+			if self.isMover:
+				self._selectTargets.put( item )
+				item.handleSelection( SelectionModes.P2P )
+				return self
+			else:
+				self.clearSelection()
+				item.handleSelection( SelectionModes.CREATE )
+				return item
 		return None
 
 	def initStatesPool( self ):
 		self._statesPool = {
 			"idle" : IdleState,
 		}
+
+	def completeLoading( self, physicsWorld, taskMgr ):
+		pass

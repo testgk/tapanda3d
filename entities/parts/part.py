@@ -1,18 +1,19 @@
 from panda3d.core import BitMask32, LVector3
 
+from collsiongroups import CollisionGroup
 from enums.colors import Color
 
 
 class Part:
     def __init__( self, partData = None, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
         self._objectPath = ''
-        self.__rigidGroup = None
-        self.collideGroup = 0
+        self.__rigidGroup = self.__class__.__name__
+        self.collideGroup = CollisionGroup.MODEL
         self.__device = device
         self._external = external
         self.__partId = partId
         self.__isRendered = isRendered
-        self._color = Color.WHITE.value
+        self._color = Color.RED.value
         self.__friction = LVector3( 0.01, 10, 0.0 )
         self._mass = 50
         if partId and partData:

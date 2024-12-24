@@ -1,6 +1,7 @@
 from direct.task.Task import TaskManager
 from panda3d.core import Loader
 
+from entities.entity import Entity
 from entities.full.movers.mover import Mover
 
 
@@ -11,16 +12,13 @@ class EntityLoader:
 		self.__loader = loader
 		self.__taskMgr = taskMgr
 
-	def loadEntity( self, entity: Mover, entry ):
+	def loadEntity( self, entity: Entity, entry ):
 		entity.buildModels( loader = self.__loader )
 		for rigidGroup, rm in entity.rigidBodyNodes.items():
 			parts = rm[ "parts" ]
 			bulletNode = rm[ "rigidbody" ]
 			self.__renderModelsGroup( point = entry, parts = parts,  bulletNode = bulletNode )
-		entity.setDamping()
-		entity.connectModules( self.__physicsWorld )
-		entity.createStateMachine( self.__taskMgr )
-		entity.initMovementManager( self.__physicsWorld )
+		entity.completeLoading( self.__physicsWorld, self.__taskMgr )
 		return entity
 
 	def __renderModelsGroup( self, point, parts, bulletNode ):

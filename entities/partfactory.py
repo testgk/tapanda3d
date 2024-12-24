@@ -73,6 +73,7 @@ class PartFactory:
             try:
                 eggPath = self.__getPartEggPath( part )
                 model = self.__loadModel( eggPath, loader, part )
+                model.setScale( self.__entity.scale )
                 self.__models.append( model )
                 part.model = model
             except Exception as e:
@@ -80,7 +81,6 @@ class PartFactory:
 
     def __loadModel( self, eggPath: super, loader, part: 'Part' ) -> NodePath:
         model = loader.loadModel( eggPath )
-        model.setScale( 1 )
         model.setColor( part.color )
         model.setPythonTag( 'model_part', part )
         return model
@@ -108,6 +108,7 @@ class PartFactory:
         for rg, parts in modelData.items():
             models = [ p.model for p in parts ]
             body_node = self.__createSingleRigidBody( models )
+            body_node.setPythonTag( 'raytest_target', self.__entity )
             self.__rigidBodyNodes.append( body_node )
             self.__rigidBodies[ rg ] = { "rigidbody": body_node, "parts": parts }
 

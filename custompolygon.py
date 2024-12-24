@@ -110,8 +110,8 @@ class CustomPolygon:
 		return self._col
 
 	def __str__( self ):
-		return (f'{self._name}, row: {self._row}, column: {self._col}, '
-		        f'area: {self._area}, angle: {self._angle}')
+		return ( f'{ self._name }, row: { self._row }, column: { self._col }, '
+		        f'area: { self._area }, angle: { self._angle }')
 
 	def _generateDebugNodePath( self, height_offset ):
 		debug_geom_node = self.createDebugNode()
