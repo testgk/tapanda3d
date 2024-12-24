@@ -82,5 +82,20 @@ class MovementManager:
         #self.__obstacles.put( item = hit_node )
         return task.cont
 
+    def maintain_terrain_boundaries( self, terrainSize, task ):
+        current_pos = self.__mover.coreBodyPath.get_pos()
+        if current_pos.x <= 10:
+            self.__mover.coreBodyPath.setPos( Vec3( 11, current_pos.y, current_pos.z ) )
+            return task.cont
+        elif current_pos.x >= terrainSize - 10:
+            self.__mover.coreBodyPath.setPos( Vec3( terrainSize - 9, current_pos.y, current_pos.z ) )
+        if current_pos.y <= 10:
+            self.__mover.coreBodyPath.setPos( Vec3( current_pos.x, 11 , current_pos.z ) )
+            return task.cont
+        elif current_pos.y >= terrainSize - 10:
+            self.__mover.coreBodyPath.setPos( Vec3( current_pos.x, terrainSize - 9, current_pos.z ) )
+        return task.cont
+
+
     def handleObstacle( self ):
         pass

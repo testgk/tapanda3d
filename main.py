@@ -53,7 +53,7 @@ class MyApp( ShowBase ):
 				terrainCamera = self.terrainCamera,
 				render = self.render )
 		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader, taskMgr = self.taskMgr )
-		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, taskMgr = self.taskMgr )
+		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, taskMgr = self.taskMgr, terrainSize = self.terrainInfo.terrainSize )
 
 		self.task_duration = 0.2
 		self.accept( 'mouse1', self.on_map_click )
@@ -89,7 +89,7 @@ class MyApp( ShowBase ):
 	def __createCollisionForEntity( self, entity: Entity ):
 		self.collision_handler = CollisionHandlerQueue()
 		self.cTrav = CollisionTraverser()
-		for col in entity.collisionSystems:
+		for col in entity.collisionBox:
 			self.cTrav.addCollider( col, self.collision_handler )
 
 	def on_map_click( self ):

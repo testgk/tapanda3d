@@ -66,12 +66,9 @@ class Part:
     def model( self ):
         return self.__model
 
-    @property
-    def rigidBody( self ):
-        return self.__rigidBody
-
-    def setModel( self, model ):
-        self.__model = model
+    @model.setter
+    def model( self, value ):
+        self.__model = value
 
     def setRigidBodyProperties( self, rigidBody ):
         self.__rigidBody = rigidBody
@@ -94,3 +91,4 @@ class Part:
 
     def setCollideGroup( self, collideGroup ):
         self.collideGroup = collideGroup
+

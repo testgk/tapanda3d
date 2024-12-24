@@ -38,15 +38,15 @@ class Entity( SelectionItem ):
 		self.__models = [ ]
 		self._partBuilder = PartFactory( self )
 		self._commandManager = CommandManager()
-		self.__collisionSystems = [ ]
+		self.__collisionBox = None
 		self.__rigidBodies = None
 		self._corePart = None
 		self._coreBodyPath = None
 		self.initStatesPool()
 
 	@property
-	def collisionSystems( self ):
-		return self.__collisionSystems
+	def collisionBox( self ):
+		return self.__collisionBox
 
 	@property
 	def rigidBodyNodes( self ) -> dict:
@@ -63,7 +63,7 @@ class Entity( SelectionItem ):
 	@property
 	def selectBox( self ):
 		try:
-			return self.__collisionSystems[ 0 ]
+			return self.__collisionBox
 		except IndexError:
 			return None
 
@@ -88,10 +88,10 @@ class Entity( SelectionItem ):
 	def buildModels( self, loader ):
 		self._partBuilder.build( loader )
 		self.__models = self._partBuilder.models
-		self.__collisionSystems = self._partBuilder.collisionSystems
-		for collisionNode in self.__collisionSystems:
-			collisionNode.setPythonTag( 'collision_target', self )
+		self.__collisionBox = self._partBuilder.collisionBox
+		self.__collisionBox.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies
+
 
 	def connectModules( self, world ):
 		raise NotImplementedError
@@ -132,8 +132,7 @@ class Entity( SelectionItem ):
 		for model in self.__models:
 			part = model.node().getPythonTag( 'model_part' )
 			model.setColor( part.color )
-		for system in self.__collisionSystems:
-			system.hide()
+		self.__collisionBox.hide()
 
 	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
 		if item == self:
