@@ -68,8 +68,8 @@ class MovementManager:
         return task.cont
 
     def monitor_obstacles( self, target, task ):
-        direction = Vec3( target.x - self.__mover.position.x, target.y - self.__mover.position.y, 0 )
-        result = self.__world.rayTestAll( self.__mover.position, target + direction * 10 )
+        direction = Vec3( target.x - self.__mover.position.x, target.y - self.__mover.position.y, 10  )
+        result = self.__world.rayTestAll( self.__mover.position, target + direction * 5 )
         if result.hasHits():
             for hit in result.getHits():
                 hit_pos = hit.getHitPos()  # Position of the intersection

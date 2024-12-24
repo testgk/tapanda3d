@@ -27,8 +27,8 @@ class MyApp( ShowBase ):
 
 	def __init__( self ):
 		self.mapName = "heightmap1"
-		self.showTexture = False
-		if True:
+		self.showTexture = True
+		if False:
 			self.mapName = "heightmap_flat"
 			self.showTexture = False
 		ShowBase.__init__( self )
@@ -53,7 +53,7 @@ class MyApp( ShowBase ):
 				terrainCamera = self.terrainCamera,
 				render = self.render )
 		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader, taskMgr = self.taskMgr )
-		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, taskMgr = self.taskMgr, terrainSize = self.terrainInfo.terrainSize )
+		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, taskMgr = self.taskMgr )
 
 		self.task_duration = 0.2
 		self.accept( 'mouse1', self.on_map_click )
@@ -89,7 +89,7 @@ class MyApp( ShowBase ):
 	def __createCollisionForEntity( self, entity: Entity ):
 		self.collision_handler = CollisionHandlerQueue()
 		self.cTrav = CollisionTraverser()
-		for col in entity.collisionBox:
+		for col in entity.collisionSystems:
 			self.cTrav.addCollider( col, self.collision_handler )
 
 	def on_map_click( self ):

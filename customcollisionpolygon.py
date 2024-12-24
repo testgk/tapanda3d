@@ -158,7 +158,7 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 			return Color.RED
 		return Color.WHITE
 
-	def handleSelection( self, mode: SelectionModes ):
+	def handleSelection( self, mode: SelectionModes = SelectionModes.ANY ):
 		if self.isSelected( mode ):
 			return
 

@@ -13,127 +13,133 @@ from states.movementstate import MovementState
 
 
 class Mover( Entity ):
-    def __init__( self, engine, chassis: Chassis ):
-        super().__init__()
-        self._movementManager = None
-        self.__hpr = None
-        self.regularSpeed = 100
-        self.readyToMove = False
-        self._chassis = chassis
-        self._currentPosition = None
-        self._engine = engine
-        self._mobility = chassis.mobility()
-        self._hull = chassis.hull()
-        self._corePart = self.mobility()
-        self._isMover = True
-        self._currentTarget = None
-        self.__terrainSize = None
 
-    @property
-    def currentTarget( self ) -> SelectionItem:
-        return self._currentTarget
+	def __init__( self, engine, chassis: Chassis ):
+		super().__init__()
+		self._movementManager = None
+		self.__hpr = None
+		self.regularSpeed = 100
+		self.readyToMove = False
+		self._chassis = chassis
+		self._currentPosition = None
+		self._engine = engine
+		self._mobility = chassis.mobility()
+		self._hull = chassis.hull()
+		self._corePart = self.mobility()
+		self._isMover = True
+		self._currentTarget = None
+		self.__terrainSize = None
 
-    @property
-    def hpr( self ) -> Vec3:
-        if self.coreBodyPath:
-          return Vec3( self.coreBodyPath.getHpr() )
+	@property
+	def currentTarget( self ) -> SelectionItem:
+		return self._currentTarget
 
-    def monitorIdleState( self, task ):
-        if self.selectTargets.empty():
-            return task.cont
-        print( f'{ self.name } moving p2p to { self.selectTargets }' )
-        self.readyToMove = True
-        return task.done
+	@property
+	def hpr( self ) -> Vec3:
+		if self.coreBodyPath:
+			return Vec3( self.coreBodyPath  )
 
-    def initMovementManager( self, world ):
-        self._movementManager = MovementManager( self, world )
+	def monitorIdleState( self, task ):
+		if self.selectTargets.empty():
+			return task.cont
+		print( f'{self.name} moving p2p to {self.selectTargets}' )
+		self.readyToMove = True
+		return task.done
 
-    def decide( self, currentState: 'State' ) -> str:
-        if currentState == "MovementState":
-            return "idle"
+	def initMovementManager( self, world ):
+		self._movementManager = MovementManager( self, world )
 
-    def initStatesPool( self ):
-        self._statesPool = {
-            "idle": IdleState( self ),
-            "movement": MovementState( self ),
-        }
+	def decide( self, currentState: 'State' ) -> str:
+		if currentState == "MovementState":
+			return "idle"
 
-    def scheduleIdleMonitoringTask( self ):
-        self.scheduleTask( self.monitorIdleState, "monitoring command" )
+	def initStatesPool( self ):
+		self._statesPool = {
+				"idle": IdleState( self ),
+				"movement": MovementState( self ),
+		}
 
-    @property
-    def terrainSize( self ):
-        return self.__terrainSize
+	def scheduleIdleMonitoringTask( self ):
+		self.scheduleTask( self.monitorIdleState, "monitoring command" )
 
-    @terrainSize.setter
-    def terrainSize( self, terrainSize ):
-        self.__terrainSize = terrainSize
+	@property
+	def terrainSize( self ):
+		return self.__terrainSize
 
-    def schedulePointToPointTask( self ):
-        self._currentTarget = self.selectTargets.get()
-        position = self._currentTarget.position
-        self.scheduleTask(
-            self._movementManager.set_velocity_toward_point_with_stop,
-            f"{ self.name }_move_p2p",
-            extraArgs = [ position ],
-            appendTask = True
-        )
-        self.scheduleTask(
-            self._movementManager.track_target_angle,
-            f"{ self.name }_monitor_angle",
-            extraArgs = [ position ],
-            appendTask = True
-        )
-        self.scheduleTask(
-            self._movementManager.maintain_terrain_boundaries,
-            f"{ self.name }_maintain_boundaries",
-            extraArgs = [ self.__terrainSize ],
-            appendTask = True
-        )
-        self.scheduleTask(
-            self._movementManager.monitor_obstacles,
-            f"{ self.name }_monitor_obstacles",
-            extraArgs = [ position ],
-            appendTask = True
-        )
-        self._maintainTurretAngle( target = position )
+	@terrainSize.setter
+	def terrainSize( self, terrainSize ):
+		self.__terrainSize = terrainSize
 
-    def handleObstacleTask( self ):
-        position = self._currentTarget.position
-        self.scheduleTask(
-            self._movementManager.handleObstacleTask,
-            f"{ self.name }_move_p2p",
-            extraArgs = [ position ],
-            appendTask = True
-        )
+	def schedulePointToPointTask( self ):
+		self._currentTarget = self.selectTargets.get()
+		position = self._currentTarget.position
+		self.scheduleTask(
+				self._movementManager.set_velocity_toward_point_with_stop,
+				f"{self.name}_move_p2p",
+				extraArgs = [ position ],
+				appendTask = True
+		)
+		self.scheduleTask(
+				self._movementManager.track_target_angle,
+				f"{self.name}_monitor_angle",
+				extraArgs = [ position ],
+				appendTask = True
+		)
+		self.scheduleTask(
+				self._movementManager.maintain_terrain_boundaries,
+				f"{self.name}_maintain_boundaries",
+				extraArgs = [ self.__terrainSize ],
+				appendTask = True
+		)
+		self.scheduleTask(
+				self._movementManager.monitor_obstacles,
+				f"{self.name}_monitor_obstacles",
+				extraArgs = [ position ],
+				appendTask = True
+		)
+		self.scheduleTask(
+				self._movementManager.maintain_turret_angle,
+				f"{self.name}_maintain_turret_angle",
+				extraArgs = [ position ],
+				appendTask = True
+		)
 
-    def finishedMovement( self ):
-        if self._taskMgr.hasTaskNamed( f"{ self.name }_move_p2p" ):
-            return False
-        self.readyToMove = False
-        return True
+	def handleObstacleTask( self ):
+		position = self._currentTarget.position
+		self.scheduleTask(
+				self._movementManager.handleObstacleTask,
+				f"{self.name}_move_p2p",
+				extraArgs = [ position ],
+				appendTask = True
+		)
 
-    def obstacle( self ) -> bool:
-        return False
+	def finishedMovement( self ):
+		if self._taskMgr.hasTaskNamed( f"{self.name}_move_p2p" ):
+			return False
+		self.readyToMove = False
+		return True
 
-    @entitypart
-    def hull( self ) -> Part:
-        return self._hull
+	def obstacle( self ) -> bool:
+		return False
 
-    @entitypart
-    def mobility( self ) -> Part:
-        return self._mobility
+	@entitypart
+	def hull( self ) -> Part:
+		return self._hull
 
-    @entitymodule
-    def chassis( self ) -> Chassis:
-        return self._chassis
+	@entitypart
+	def mobility( self ) -> Part:
+		return self._mobility
 
- #   @entitypart
-    def engine( self ) -> Engine:
-        return self._engine
+	@entitymodule
+	def chassis( self ) -> Chassis:
+		return self._chassis
 
-    def _maintainTurretAngle( self, target ):
-        raise NotImplementedError
+	#   @entitypart
+	def engine( self ) -> Engine:
+		return self._engine
 
-    def selfHit( self, hit ):
-        return hit in self._partBuilder.rigidBodyNodes
+	def _maintainTurretAngle( self, target ):
+		raise NotImplementedError
+
+	def selfHit( self, hit ):
+		return hit in self._partBuilder.rigidBodyNodes

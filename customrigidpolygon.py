@@ -31,7 +31,17 @@ class CustomRigidPolygon( CustomPolygon ):
         self.__rigid_body_node.setMass( 0 )
         self.__rigid_body_node_path = self._child.attachNewNode( self.__rigid_body_node )
         self.__rigid_body_node.setPythonTag( 'raytest_target', self )
-        self._attachDebugNode( self.__rigid_body_node )
+
+    def _attachDebugNode( self, customNode, height_offset = 1 ):
+        self._generateDebugNodePath( height_offset )
+
+    def createAndRenderDebugNode( self, render, height_offset = 2 ):
+        debug_geom_node = self.createDebugNode()
+        self._debug_node_path = render.attachNewNode( debug_geom_node )
+        self._debug_node_path.setColor( Color.BLUE.value )
+        self._debug_node_path.set_pos( self._child.get_pos() )
+        self._debug_node_path.setZ(  height_offset + 0.5 )
+        self._debug_node_path.hide()
 
     def _createTempDebug( self ):
         debugNode = BulletDebugNode( 'DebugSpecific' )
@@ -43,21 +53,21 @@ class CustomRigidPolygon( CustomPolygon ):
         self._debug_node_path.show()
         self.__rigid_body_node.setPythonTag( 'raytest_target', self )
 
-    def _attachDebugNode( self, customNode, height_offset = 10 ):
-        self._generateDebugNodePath( height_offset )
-        self._colorDebugNode()
-        self._debug_node_path.show()
+    #def _attachDebugNode( self, customNode, height_offset = 10 ):
+    #    self._generateDebugNodePath( height_offset )
+    #    self._colorDebugNode()
+    #    self._debug_node_path.show()
 
     def show( self, world ):
         self._debug_node_path.show()
 
     def create_convex_hull_rigid_body( self, vertices_list: list ) -> BulletRigidBodyNode:
-        self.__shape = BulletConvexHullShape()
+        shape = BulletConvexHullShape()
         for triangle in vertices_list:
             for vertex in triangle:
-                self.__shape.addPoint( vertex )
+                shape.addPoint( vertex )
 
         rigid_body_node = BulletRigidBodyNode( 'ConvexHullRigidBody' )
-        rigid_body_node.addShape( self.__shape )
+        rigid_body_node.addShape( shape )
         rigid_body_node.setMass( 0 )  # Set a non-zero mass for dynamic objects
         return rigid_body_node
