@@ -1,103 +1,103 @@
 <CoordinateSystem> { Z-Up }
 
 <Comment> {
-  "obj2egg objects/cube.obj -o objects/cube.egg"
+  "obj2egg objects/parts/obstacles/cube.obj -o objects/parts/obstacles/cube.egg"
 }
 <VertexPool> vpool {
   <Vertex> 0 {
-    -5 5 5
+    -50 50 50
     <Normal> { 0 0 1 }
   }
   <Vertex> 1 {
-    5 -5 5
+    50 -50 50
     <Normal> { 0 0 1 }
   }
   <Vertex> 2 {
-    5 5 5
+    50 50 50
     <Normal> { 0 0 1 }
   }
   <Vertex> 3 {
-    -5 -5 5
+    -50 -50 50
     <Normal> { 0 0 1 }
   }
   <Vertex> 4 {
-    -5 -5 -5
+    -50 -50 -50
     <Normal> { 0 0 -1 }
   }
   <Vertex> 5 {
-    5 5 -5
+    50 50 -50
     <Normal> { 0 0 -1 }
   }
   <Vertex> 6 {
-    5 -5 -5
+    50 -50 -50
     <Normal> { 0 0 -1 }
   }
   <Vertex> 7 {
-    -5 5 -5
+    -50 50 -50
     <Normal> { 0 0 -1 }
   }
   <Vertex> 8 {
-    -5 -5 -5
+    -50 -50 -50
     <Normal> { 0 -1 0 }
   }
   <Vertex> 9 {
-    5 -5 5
+    50 -50 50
     <Normal> { 0 -1 0 }
   }
   <Vertex> 10 {
-    -5 -5 5
+    -50 -50 50
     <Normal> { 0 -1 0 }
   }
   <Vertex> 11 {
-    5 -5 -5
+    50 -50 -50
     <Normal> { 0 -1 0 }
   }
   <Vertex> 12 {
-    5 -5 5
+    50 -50 50
     <Normal> { 1 0 0 }
   }
   <Vertex> 13 {
-    5 5 -5
+    50 50 -50
     <Normal> { 1 0 0 }
   }
   <Vertex> 14 {
-    5 5 5
+    50 50 50
     <Normal> { 1 0 0 }
   }
   <Vertex> 15 {
-    5 -5 -5
+    50 -50 -50
     <Normal> { 1 0 0 }
   }
   <Vertex> 16 {
-    5 5 -5
+    50 50 -50
     <Normal> { 0 1 0 }
   }
   <Vertex> 17 {
-    -5 5 5
+    -50 50 50
     <Normal> { 0 1 0 }
   }
   <Vertex> 18 {
-    5 5 5
+    50 50 50
     <Normal> { 0 1 0 }
   }
   <Vertex> 19 {
-    -5 5 -5
+    -50 50 -50
     <Normal> { 0 1 0 }
   }
   <Vertex> 20 {
-    -5 -5 -5
+    -50 -50 -50
     <Normal> { -1 0 0 }
   }
   <Vertex> 21 {
-    -5 5 5
+    -50 50 50
     <Normal> { -1 0 0 }
   }
   <Vertex> 22 {
-    -5 5 -5
+    -50 50 -50
     <Normal> { -1 0 0 }
   }
   <Vertex> 23 {
-    -5 -5 5
+    -50 -50 50
     <Normal> { -1 0 0 }
   }
 }

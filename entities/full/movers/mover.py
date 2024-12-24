@@ -143,3 +143,9 @@ class Mover( Entity ):
 
 	def selfHit( self, hit ):
 		return hit in self._partBuilder.rigidBodyNodes
+
+	def completeLoading( self, physicsWorld, taskMgr ):
+		self.setDamping()
+		self.connectModules( physicsWorld )
+		self.createStateMachine( taskMgr )
+		self.initMovementManager( physicsWorld )

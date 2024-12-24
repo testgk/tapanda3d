@@ -4,7 +4,6 @@ from selectionmodes import SelectionModes
 
 
 class SelectionItem:
-
 	def __init__( self ):
 		self._isMover = False
 		self._isTerrain = False

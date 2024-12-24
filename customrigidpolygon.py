@@ -58,7 +58,7 @@ class CustomRigidPolygon( CustomPolygon ):
     #    self._colorDebugNode()
     #    self._debug_node_path.show()
 
-    def show( self, world ):
+    def show( self ):
         self._debug_node_path.show()
 
     def create_convex_hull_rigid_body( self, vertices_list: list ) -> BulletRigidBodyNode:
