@@ -6,10 +6,10 @@ from panda3d.core import GeomVertexReader, GeomNode, NodePath, GeomVertexFormat,
 from enums.colors import Color
 
 
-
 def getNodePosition( name ):
 	pos = name[ 3: ].split( 'x' )
 	return int( pos[ 0 ] ), int( pos[ 1 ] )
+
 
 def getVertices( geom: GeomNode ) -> list:
 	all_vertices = [ ]
@@ -31,7 +31,6 @@ def getVertices( geom: GeomNode ) -> list:
 			vertices.append( v )
 		all_vertices.append( vertices )
 	return all_vertices
-
 
 
 def calculate_angle( vertex, reference_plane_normal = Vec3( 0, 0, 1 ) ):
@@ -84,32 +83,9 @@ def createWireNode( customNode ):
 	return wire_geom_node
 
 
-def createDebugNode( vertices ):
-	debug_geom_node = GeomNode( 'debug_geom' )
-	vertex_format = GeomVertexFormat.getV3()  # Position only
-	vertex_data = GeomVertexData( 'vertices', vertex_format, Geom.UHDynamic )
-	vertex_writer = GeomVertexWriter( vertex_data, 'vertex' )
-	geom = Geom( vertex_data )
-
-	vertex_count = 0
-	tris = GeomTriangles( Geom.UHDynamic )
-
-	# Iterate through the list of lists of LVecBase3f
-	for triangle in vertices:
-		for vertex in triangle:
-			# Each `vertex` is an LVecBase3f, so we access its components
-			vertex_writer.addData3f( vertex.x, vertex.y, vertex.z )
-			tris.addVertex( vertex_count )
-			vertex_count += 1
-
-		# Close the triangle primitive after 3 vertices
-		tris.closePrimitive()
-
-	geom.addPrimitive( tris )
-	debug_geom_node.addGeom( geom )
-	return debug_geom_node
 
 class CustomPolygon:
+
 	def __init__( self, child: NodePath ):
 		self._child = child
 		self._name = self._child.getName()
@@ -134,14 +110,14 @@ class CustomPolygon:
 		return self._col
 
 	def __str__( self ):
-		return ( f'{ self._name }, row: { self._row }, column: { self._col }, '
-		        f'area: { self._area }, angle: { self._angle }' )
+		return (f'{self._name}, row: {self._row}, column: {self._col}, '
+		        f'area: {self._area}, angle: {self._angle}')
 
 	def _generateDebugNodePath( self, height_offset ):
-		debug_geom_node =  self.createDebugNode()
+		debug_geom_node = self.createDebugNode()
 		self._debug_node_path = self._child.attachNewNode( debug_geom_node )
 		self._debug_node_path.setZ( self._debug_node_path.getZ() + height_offset )
-		#self._debug_node_path.hide()
+		self._debug_node_path.hide()
 		return self._debug_node_path
 
 	def _generateWireNodePath( self, customNode, height_offset ):
@@ -153,7 +129,7 @@ class CustomPolygon:
 		self._wire_node_path.hide()
 
 	def _attachDebugNode( self, customNode, height_offset = 0.1 ):
-		self._generateDebugNodePath( height_offset )
+		g = self._generateDebugNodePath( height_offset )
 		self._generateWireNodePath( customNode, height_offset )
 
 	def _showDebugNode( self ):
@@ -165,4 +141,29 @@ class CustomPolygon:
 		self._debug_node_path.setTransparency( True )
 
 	def createDebugNode( self ):
-		return createDebugNode( self._vertices )
+		return self.createDebugNodeGeomNode( self._vertices )
+
+	def createDebugNodeGeomNode( self, vertices ):
+		debug_geom_node = GeomNode( 'debug_geom' )
+		vertex_format = GeomVertexFormat.getV3()  # Position only
+		vertex_data = GeomVertexData( 'vertices', vertex_format, Geom.UHDynamic )
+		vertex_writer = GeomVertexWriter( vertex_data, 'vertex' )
+		geom = Geom( vertex_data )
+
+		vertex_count = 0
+		tris = GeomTriangles( Geom.UHDynamic )
+
+		# Iterate through the list of lists of LVecBase3f
+		for triangle in vertices:
+			for vertex in triangle:
+				# Each `vertex` is an LVecBase3f, so we access its components
+				vertex_writer.addData3f( vertex.x, vertex.y, vertex.z )
+				tris.addVertex( vertex_count )
+				vertex_count += 1
+
+			# Close the triangle primitive after 3 vertices
+			tris.closePrimitive()
+
+		geom.addPrimitive( tris )
+		debug_geom_node.addGeom( geom )
+		return debug_geom_node

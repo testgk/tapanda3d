@@ -40,5 +40,6 @@ class Tank( Mover ):
             pivot_in_hull, axis_in_hull,
             pivot_in_turret, axis_in_turret,
         )
-        hinge.setLimit( 0, 180 )
+        hinge.setLimit( 0, 0 )
+        hinge.setBreakingThreshold( float( 'inf' ) )
         world.attachConstraint( hinge )

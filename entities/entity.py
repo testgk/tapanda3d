@@ -92,12 +92,8 @@ class Entity( SelectionItem ):
 		self.__collisionBox.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies
 
-
 	def connectModules( self, world ):
 		raise NotImplementedError
-
-	def isCoreBodyRigidGroup( self, rigidGroup: str ) -> bool:
-		return self._corePart.rigidGroup == rigidGroup
 
 	def decide( self, currentState: State ) -> str:
 		raise NotImplementedError
@@ -137,14 +133,10 @@ class Entity( SelectionItem ):
 	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
 		if item == self:
 			self.clearSelection()
-		#if item.isMover:
-		#	self.clearSelection()
-			#while not self._selectTargets.empty():
-			#	target = self._selectTargets.get()
-			#	target.clearSelection()
-			if item != self:
-				item.handleSelection( SelectionModes.P2P )
-				return item
+		if item != self and item.isMover:
+			item.handleSelection( SelectionModes.ANY )
+			self.clearSelection()
+			return item
 		if item.isTerrain:
 			self._selectTargets.put( item )
 			item.handleSelection( SelectionModes.P2P )

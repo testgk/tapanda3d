@@ -25,7 +25,7 @@ class SelectionItem:
 	def handleSelectItem( self, item: 'SelectionItem' ) -> None:
 		raise NotImplementedError
 
-	def handleSelection( self, mode: SelectionModes ):
+	def handleSelection( self, mode: SelectionModes = SelectionModes.ANY ):
 		raise NotImplementedError
 
 	def clearSelection( self ):

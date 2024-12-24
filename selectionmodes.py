@@ -3,6 +3,7 @@
 
 class SelectionModes:
 	NONE = 0
-	P2P = 1
-	ATTACK = 2
-	CREATE = 3
+	ANY = 1
+	P2P = 2
+	ATTACK = 3
+	CREATE = 4
