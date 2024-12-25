@@ -6,11 +6,11 @@ from entities.full.movers.mover import Mover
 
 
 class EntityLoader:
-	def __init__( self, render, physicsWorld, loader: Loader, taskMgr: TaskManager ):
+	def __init__( self, render, physicsWorld, loader: Loader ):
 		self.__render = render
 		self.__physicsWorld = physicsWorld
 		self.__loader = loader
-		self.__taskMgr = taskMgr
+
 
 	def loadEntity( self, entity: Entity, entry ):
 		entity.buildModels( loader = self.__loader )
@@ -18,7 +18,7 @@ class EntityLoader:
 			parts = rm[ "parts" ]
 			bulletNode = rm[ "rigidbody" ]
 			self.__renderModelsGroup( point = entry, parts = parts,  bulletNode = bulletNode )
-		entity.completeLoading( self.__physicsWorld, self.__taskMgr )
+		entity.completeLoading( self.__physicsWorld )
 		return entity
 
 	def __renderModelsGroup( self, point, parts, bulletNode ):

@@ -1,19 +1,14 @@
-from entities.parts.database import parts
-from entities.parts.part import Part
 from enums.colors import Color
+from entities.parts.part import Part
+from entities.parts.database import parts
 
 
 class Hull( Part ):
 	def __init__( self, partId ):
-		super().__init__( parts.HULLS, partId )
-		self._color = Color.GREEN.value
-
-	@property
-	def objectPath( self ) -> str:
-		return "hulls"
+		super().__init__( parts.HULLS, partId, color = Color.GREEN.value, path = "hulls" )
 
 	def _readPartData( self, part_data ):
-		self.armor = part_data[ "armor" ]
+		self.__armor = part_data[ "armor" ]
 
 
 class BasicHull( Hull ):

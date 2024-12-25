@@ -8,8 +8,8 @@ class Module:
 		self.__devices: list[ Part ] = []
 		self.__devices.extend( devices if isinstance( devices, list ) else [ devices ] )
 		for device in self.__devices:
-			device.setRigidGroup( self.__class__.__name__ )
-			device.setCollideGroup( self._collideGroup )
+			device.rigidGroup = self.__class__.__name__
+			device.collideGroup = self._collideGroup
 
 	@property
 	def devices( self ) -> list[ Part ]:

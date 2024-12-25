@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from statemachine.state import State
+
 
 if TYPE_CHECKING:
     from entities.full.movers.mover import Mover
@@ -13,5 +13,5 @@ class ObstacleState( MovementState ):
         self.mover.scheduleObstacleTask()
 
     def execute( self ):
-        if not self.mover.obstacle():
+        if not self.mover.hasObstacles():
             self._done = True

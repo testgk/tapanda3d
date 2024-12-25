@@ -1,6 +1,6 @@
-from entities.entity import Entity, entitypart
-from entities.parts.part import Part
 from enums.colors import Color
+from entities.parts.part import Part
+from entities.entity import Entity, entitypart
 
 
 class CubePart( Part ):

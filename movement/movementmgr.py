@@ -10,10 +10,15 @@ if TYPE_CHECKING:
 
 class MovementManager:
     def __init__( self, entity, world ):
+        self.__obstacle = None
         self.__obstacles = queue.Queue()
         self.__mover: Mover = entity
         self.__aligned = False
         self.__world = world
+
+    @property
+    def anyObstacles(self) -> bool:
+        return self.__obstacle is not None
 
     def set_velocity_toward_point_with_stop( self, target_pos, task ):
         speed = self.__mover.regularSpeed
@@ -69,15 +74,22 @@ class MovementManager:
     def monitor_obstacles( self, target, task ):
         direction = Vec3( target.x - self.__mover.position.x, target.y - self.__mover.position.y, 10  )
         result = self.__world.rayTestAll( self.__mover.position, target + direction * 5 )
+        obstacle = None
         if result.hasHits():
             for hit in result.getHits():
-                hit_pos = hit.getHitPos()  # Position of the intersection
-                hit_normal = hit.getHitNormal()  # Surface normal at the intersection
                 hit_node = hit.getNode()
                 if self.__mover.selfHit( hit_node ):
                     continue
-                hit_node.getPythonTag( 'raytest_target' ).show()
-                #print( f"Hit at: { hit_pos }, Normal: { hit_normal }, Node: { hit_node }" )
+                try:
+                    obstacle = hit_node.getPythonTag( 'raytest_target' )
+                except AttributeError:
+                    pass
+                if obstacle is None or not obstacle.isObstacle:
+                    return task.cont
+                self.__obstacle = obstacle
+                hit_pos = hit.getHitPos()
+                hit_normal = hit.getHitNormal()
+                print( f"Hit at: { hit_pos }, Normal: { hit_normal }, Node: { hit_node }" )
         #self.__obstacles.put( item = hit_node )
         return task.cont
 

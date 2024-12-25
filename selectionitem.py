@@ -18,7 +18,13 @@ class SelectionItem:
 	def isTerrain( self ) -> bool:
 		return self._isTerrain
 
-	def isSelected( self, mode: SelectionModes ) -> bool:
+	@property
+	def position( self ):
+		raise NotImplementedError
+
+	def isSelected( self, mode: SelectionModes = SelectionModes.ANY ) -> bool:
+		if mode == SelectionModes.ANY:
+			return self._selectionMode != SelectionModes.NONE
 		return self._selectionMode == mode
 
 	def handleSelectItem( self, item: 'SelectionItem' ) -> None:

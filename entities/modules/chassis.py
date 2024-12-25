@@ -1,7 +1,7 @@
+from entities.parts.part import Part
 from entities.modules.module import Module
 from entities.parts.hull import Hull, BasicHull
 from entities.parts.mobility import Mobility, BasicTracks, BasicWheels
-from entities.parts.part import Part
 
 
 class Chassis( Module ) :
@@ -16,9 +16,11 @@ class Chassis( Module ) :
 	def hull( self ) -> Part:
 		return self._hull
 
+
 class BasicTracksChassis( Chassis ):
 	def __init__( self ):
 		super().__init__( BasicHull(), BasicTracks() )
+
 
 class BasicWheelsChassis( Chassis ):
 	def __init__( self ) :

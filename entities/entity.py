@@ -2,6 +2,7 @@ import random
 from collections import defaultdict
 
 from direct.task.Task import TaskManager
+from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.core import NodePath
 
@@ -30,7 +31,6 @@ class Entity( SelectionItem ):
 		super().__init__()
 		self._scale = 1
 		self._statesPool = None
-		self._taskMgr = None
 		self._stateMachine = None
 		self.__pendingCommand = None
 		self._commands = [ ]
@@ -51,6 +51,10 @@ class Entity( SelectionItem ):
 		return self.__rigidBodies
 
 	@property
+	def isObstacle( self ):
+		return True
+
+	@property
 	def coreBodyPath( self ) -> NodePath:
 		return self._corePart.rigidBodyPath
 
@@ -69,10 +73,9 @@ class Entity( SelectionItem ):
 	def scale( self ):
 		return self._scale
 
-	def createStateMachine( self, taskManager: TaskManager ):
-		self._taskMgr = taskManager
+	def createStateMachine( self ):
 		self._stateMachine = StateMachine( self )
-		self.scheduleTask( self._stateMachine.stateMachineMainLoop, f"{ self.name}_state_machine_loop", appendTask = True  )
+		self.scheduleTask( self._stateMachine.stateMachineMainLoop, f"{ self.name }_state_machine_loop", appendTask = True  )
 
 	@property
 	def position( self ):
@@ -100,7 +103,7 @@ class Entity( SelectionItem ):
 		return self._statesPool[ stateName ]
 
 	def scheduleTask( self, method, name: str, extraArgs: list = None, appendTask = True ):
-		self._taskMgr.add( method, name = name, extraArgs = extraArgs, appendTask = appendTask )
+		taskMgr.add( method, name = name, extraArgs = extraArgs, appendTask = appendTask )
 
 	def setDamping( self ):
 		self.coreRigidBody.set_linear_damping( 0 )
@@ -146,5 +149,5 @@ class Entity( SelectionItem ):
 			"idle" : IdleState,
 		}
 
-	def completeLoading( self, physicsWorld, taskMgr ):
+	def completeLoading( self, physicsWorld ):
 		pass

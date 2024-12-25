@@ -102,6 +102,10 @@ class CustomPolygon:
 		return self._child.get_pos()
 
 	@property
+	def isObstacle( self ):
+		return False
+
+	@property
 	def row( self ):
 		return self._row
 

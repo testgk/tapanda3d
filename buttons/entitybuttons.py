@@ -1,23 +1,20 @@
 from direct.gui.DirectButton import DirectButton
-from direct.task.Task import TaskManager
-
 from entities.full.movers.tank import Tank
 from entities.modules.turret import CannonTurret
 from entities.modules.chassis import BasicTracksChassis
-from entities.obstacles.cube import Cube
 from entities.parts.engine import BasicEngine
+from entities.parts.obstacles.cube import Cube
 from entityloader import EntityLoader
 from selector.selector import Selector
 
 
 class EntityButtons:
 
-	def __init__( self, selector: Selector, loader: EntityLoader, taskMgr: TaskManager, terrainSize ):
+	def __init__( self, selector: Selector, loader: EntityLoader, terrainSize ):
 
 		self.__terrainSize = terrainSize
 		self.__selector = selector
 		self.__loader = loader
-		self.__taskMgr = taskMgr
 		self.create_entity_button()
 		self.create_obstacle_button()
 
