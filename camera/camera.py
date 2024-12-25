@@ -1,14 +1,17 @@
 import math
 from direct.task import Task
+from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.core import Point3
 from camera.cameracontroller import CameraController
-
+from selectionitem import SelectionItem
+from selectionmodes import SelectionModes
 
 
 class TerrainCamera:
     CLOSE_PROXIMITY = 400
 
     def __init__(self, camera, terrainCenter: Point3, terrainSize ):
+        self.__selectedItem: SelectionItem | None = None
         self.target = None
         self.__last_custom_collision_polygon = None
         self.__camera = camera
@@ -64,9 +67,11 @@ class TerrainCamera:
         self.__center = self.__terrainCenter
         print( f" center: { self.__terrainCenter }" )
 
-    def __updateCameraPosition( self ):
+    def __updateCameraPosition( self, ignoreSelectedItem: bool = False ):
+        if not ignoreSelectedItem and self.__selectedItem is not None and self.__selectedItem.isSelected():
+            self.__center = self.__selectedItem.position
         self.camera_controller.updateParameters(
-            self.__center,
+            center = self.__center,
             cameraRadius = self.__cameraRadius,
             cameraHeight = self.__cameraHeight,
             cameraAngle = self.__cameraAngle )
@@ -74,9 +79,12 @@ class TerrainCamera:
 
     def updateCameraTask( self, task ):
         self.__updateCameraPosition()
-        return Task.cont  # Continue the task
+        return task.cont  # Continue the task
 
     def setCenter( self, point ) :
         if ( point - self.__terrainCenter  ).length() > self.__terrainSize / 3 :
             return
         self.__center = point
+
+    def setSelectedItem( self, selectedItem: SelectionItem ):
+        self.__selectedItem = selectedItem

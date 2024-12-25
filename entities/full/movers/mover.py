@@ -1,3 +1,4 @@
+from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.core import Vec3
 
 from entities.modules.chassis import Chassis
@@ -113,14 +114,18 @@ class Mover( Entity ):
 				appendTask = True
 		)
 
+
+	def scheduleObstacleTask( self ):
+		pass
+
 	def finishedMovement( self ):
-		if self._taskMgr.hasTaskNamed( f"{self.name}_move_p2p" ):
+		if taskMgr.hasTaskNamed( f"{self.name}_move_p2p" ):
 			return False
 		self.readyToMove = False
 		return True
 
-	def obstacle( self ) -> bool:
-		return False
+	def hasObstacles( self ) -> bool:
+		return self._movementManager.anyObstacles
 
 	@entitypart
 	def hull( self ) -> Part:
@@ -144,8 +149,9 @@ class Mover( Entity ):
 	def selfHit( self, hit ):
 		return hit in self._partBuilder.rigidBodyNodes
 
-	def completeLoading( self, physicsWorld, taskMgr ):
+	def completeLoading( self, physicsWorld ):
 		self.setDamping()
 		self.connectModules( physicsWorld )
-		self.createStateMachine( taskMgr )
+		self.createStateMachine()
 		self.initMovementManager( physicsWorld )
+

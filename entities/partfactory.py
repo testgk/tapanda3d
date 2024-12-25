@@ -1,10 +1,10 @@
 import os
-from collections import defaultdict
 import random
-from typing import TYPE_CHECKING, Callable, Any
-
-from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
+from collections import defaultdict
+from typing import TYPE_CHECKING, Callable
 from panda3d.core import  NodePath, Vec3, CollisionBox, CollisionNode, Point3
+from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
+
 
 if TYPE_CHECKING:
     from entities.entity import Entity
@@ -24,40 +24,36 @@ def find_entity_parts( cls ) -> list[ Callable ]:
 
 class PartFactory:
     def __init__( self, entity: 'Entity' ):
+        self.__dimensions = None
         self.__entity = entity
+        self.__models = []
         self.__collisionBox = None
-        self.__rigidBodies = { }
-        self.__modules = [ ]
-        self.__partModels: dict[ Part, NodePath ] = { }
-        self.__parts: list[ Part ] = [ ]
+        self.__rigidBodiesInfo = { }
+        self.__parts: list[ 'Part' ] = [ ]
         self.__modelData = defaultdict( list )
         self.__rigidBodyNodes = []
-        self.__models = []
 
-    def addParts( self ):
+
+    def addParts( self ) -> list[ 'Part' ]:
         parts = find_entity_parts( self.__entity )
         for part in parts:
             self.__parts.append( part() )
         return self.__parts
 
     @property
-    def collisionBox( self ):
+    def collisionBox( self ) -> NodePath:
         return self.__collisionBox
 
     @property
-    def partModels( self ):
-        return self.__partModels
-
-    @property
-    def rigidBodies( self ):
-        return self.__rigidBodies
+    def rigidBodies( self ) -> dict:
+        return self.__rigidBodiesInfo
 
     @property
     def rigidBodyNodes( self ):
         return self.__rigidBodyNodes
 
     @property
-    def models( self ):
+    def models( self ) -> list[ NodePath ]:
         return self.__models
 
     def build( self, loader ):
@@ -68,8 +64,6 @@ class PartFactory:
 
     def createModels( self, loader ) -> None:
         for part in self.__parts:
-            if not part.isRendered:
-                continue
             try:
                 eggPath = self.__getPartEggPath( part )
                 model = self.__loadModel( eggPath, loader, part )
@@ -97,7 +91,7 @@ class PartFactory:
             return eggPath
 
     def createCollisionBox( self ):
-        self.dimensions, collision_box_node = create_combined_collision_box( self.__models )
+        self.__dimensions, collision_box_node = create_combined_collision_box( self.__models )
         self.__collisionBox = self.__parts[ 0 ].model.attachNewNode( collision_box_node )
 
     def createRigidBodies( self ) -> None:
@@ -110,7 +104,7 @@ class PartFactory:
             body_node = self.__createSingleRigidBody( models )
             body_node.setPythonTag( 'raytest_target', self.__entity )
             self.__rigidBodyNodes.append( body_node )
-            self.__rigidBodies[ rg ] = { "rigidbody": body_node, "parts": parts }
+            self.__rigidBodiesInfo[ rg ] = { "rigidbody": body_node, "parts": parts }
 
     def __createSingleRigidBody( self, models: list ) -> BulletRigidBodyNode:
         body_node = BulletRigidBodyNode( f'multi_shape_body_{random.randint(1,1000)}' )
@@ -123,14 +117,8 @@ class PartFactory:
             part.setRigidBodyProperties( body_node )
         return body_node
 
-    def __groupRigidModels( self ) -> defaultdict[ Any, list ]:
-        gr = defaultdict( list )
-        for part in self.__parts:
-            gr[ part.rigidGroup ].append( part.model )
-        return gr
 
-
-def get_model_dimensions( model_np ):
+def get_model_dimensions( model_np ) -> ( Vec3, Vec3 ):
     geom_node = model_np.find( "**/+GeomNode" ).node()
     if not geom_node:
         return None
@@ -149,28 +137,6 @@ def get_model_dimensions( model_np ):
         max_bounds.setZ( max( max_bounds.z, bounds.getMax().z ) )
     return min_bounds, max_bounds
 
-def create_collision_box( model_np ):
-    dimensions = get_model_dimensions( model_np )
-    if dimensions is None:
-        return None
-
-    min_bounds, max_bounds = dimensions
-    width = max_bounds.x - min_bounds.x
-    height = max_bounds.y - min_bounds.y
-    depth = max_bounds.z - min_bounds.z
-
-    center_x = (min_bounds.x + max_bounds.x) / 2
-    center_y = (min_bounds.y + max_bounds.y) / 2
-    center_z = (min_bounds.z + max_bounds.z) / 2
-
-    collision_box = CollisionBox(
-            Vec3( center_x, center_y, center_z ),  # Center of the box
-            width / 2, height / 2, depth / 2  # Half extents (dimensions divided by 2)
-    )
-
-    collision_node = CollisionNode( 'model_collision' )
-    collision_node.addSolid( collision_box )
-    return collision_node
 
 def create_combined_collision_box( model_nps ):
     if not model_nps:

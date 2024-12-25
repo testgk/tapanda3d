@@ -15,16 +15,16 @@ class CameraController:
         self.__transitionTime = transitionTime
 
     def updateCameraPosition( self ):
-        x = self.__center.getX() + ( self.__cameraRadius ) * math.sin( self.__cameraAngle )
-        y = self.__center.getY() + ( self.__cameraRadius ) * math.cos( self.__cameraAngle )
+        x = self.__center.getX() + self.__cameraRadius * math.sin( self.__cameraAngle )
+        y = self.__center.getY() + self.__cameraRadius * math.cos( self.__cameraAngle )
         z = self.__cameraHeight
-        self.targetPos = Vec3( x, y, z )
-        self.camera.setPos( self.targetPos  )
+        targetPos = Vec3( x, y, z )
+        self.camera.setPos( targetPos  )
         self.camera.lookAt( self.__center )
-        self.targetHpr = self.camera.getHpr()
-        self.camera.setHpr( self.targetHpr )
-        posInterval = LerpPosInterval( self.camera, self.__transitionTime, self.targetPos  )
-        hprInterval = LerpHprInterval( self.camera, self.__transitionTime, self.targetHpr )
+        targetHpr = self.camera.getHpr()
+        self.camera.setHpr( targetHpr )
+        posInterval = LerpPosInterval( self.camera, self.__transitionTime, targetPos )
+        hprInterval = LerpHprInterval( self.camera, self.__transitionTime, targetHpr )
 
         # Start the intervals
         posInterval.start()

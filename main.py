@@ -36,13 +36,12 @@ class MyApp( ShowBase ):
 		self.__terrainCollisionLayer = None
 		self.__createTerrain()
 		self.disableMouse()
-		# Set up Bullet physics world
 		self.physics_world = BulletWorld()
 		self.physics_world.setGravity( Vec3( 0, 0, -50.00 ) )
 		self.physics_world.setGroupCollisionFlag( 1, 1, False )
 		self.terrainCamera = TerrainCamera( self.camera, self.terrainInfo.terrainCenter, self.terrainInfo.terrainSize )
 		self.cameraButtons = CameraButtons( self.terrainCamera, debugNode = self.get_debug_visualization() )
-		self.lights = Lights( self.render )
+		self.__lights = Lights( self.render )
 		self.__createCollisionLayer( terrain = self.terrain )
 		self.__createPhysicsLayer( blockSize = 32 )
 
@@ -52,19 +51,16 @@ class MyApp( ShowBase ):
 				camNode = self.camNode,
 				terrainCamera = self.terrainCamera,
 				render = self.render )
-		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader, taskMgr = self.taskMgr )
-		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, taskMgr = self.taskMgr, terrainSize = self.terrainInfo.terrainSize )
+		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader )
+		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, terrainSize = self.terrainInfo.terrainSize )
 
 		self.task_duration = 0.2
 		self.accept( 'mouse1', self.on_map_click )
 		#self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
 		self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
-		#self.taskMgr.add( self.check_collisions, "check_collisions" )
 		self.taskMgr.add( self.update_physics, "update_physics" )
-		#self.taskMgr.doMethodLater( 0.02 ,self.check_collisions ,'check_collisions' )
 		self.taskMgr.doMethodLater( 0.02, self.update_physics, 'update_physics' )
 		self.terrainCamera.hoverAbove()
-		self.start_command_listener()
 
 	def __createTerrain( self ):
 		terrainProvider = TerrainProvider( self.loader )
@@ -73,32 +69,13 @@ class MyApp( ShowBase ):
 		self.terrain.getRoot().reparentTo( self.render )
 		self.terrain.setFocalPoint( self.camera )
 
-	def start_command_listener( self ):
-		threading.Thread( target = self.command_listener, daemon = True ).start()
-
-	def command_listener( self ):
-		while True:
-			command = input( "Enter a command: " ).strip()
-			if command.startswith( "rotate" ):
-				self.rotate_entity()
-
-	def rotate_entity( self,  degrees = 120 ):
-		self.__selector.selectedMover.rotate( degrees )
-		print( "Action triggered from terminal command!" )
-
-	def __createCollisionForEntity( self, entity: Entity ):
-		self.collision_handler = CollisionHandlerQueue()
-		self.cTrav = CollisionTraverser()
-		for col in entity.collisionSystems:
-			self.cTrav.addCollider( col, self.collision_handler )
-
 	def on_map_click( self ):
 		self.__selector.on_map_click()
 
 	def updateMouseTask( self, task ):
 		self.update_mouse_hover()
 		task.delayTime = self.task_duration
-		return Task.again
+		return task.again
 
 	def update_mouse_hover( self ):
 		self.__selector.on_map_hover()

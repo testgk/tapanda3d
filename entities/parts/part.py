@@ -1,27 +1,27 @@
+from enums.colors import Color
 from panda3d.core import BitMask32, LVector3
 
 from collsiongroups import CollisionGroup
-from enums.colors import Color
+
 
 
 class Part:
-    def __init__( self, partData = None, partId: str = None, external: bool = False, isRendered: bool = True, device = None, **kwargs ) :
-        self._objectPath = ''
+    def __init__( self, partData = None,
+                  partId: str = None,
+                  **kwargs ) :
         self.__rigidGroup = self.__class__.__name__
-        self.collideGroup = CollisionGroup.MODEL
-        self.__device = device
-        self._external = external
+        self.__collideGroup = CollisionGroup.MODEL
         self.__partId = partId
-        self.__isRendered = isRendered
-        self._color = Color.RED.value
-        self.__friction = LVector3( 0.01, 10, 0.0 )
-        self._mass = 50
-        if partId and partData:
-            part_data = partData.get( partId )
-            self._readPartData( part_data )
+        self.__mass = 50
         self.__model = None
         self.__rigidBody = None
         self.__rigidBodyPath = None
+        self._objectPath = kwargs.get( 'path', None ) or self.__class__.__name__.lower()
+        self._color = kwargs.get( 'color', None ) or Color.RED.value
+        if partId and partData:
+            part_data = partData.get( partId )
+            self._readPartData( part_data )
+        self.__friction = 0
 
     @property
     def objectPath( self ) -> str:
@@ -43,9 +43,6 @@ class Part:
     def rigidBody( self, path ) -> None:
         self.__rigidBody = path
 
-    @property
-    def isRendered( self ) -> bool:
-        return self.__isRendered
 
     @property
     def rigidGroup( self ) -> str:
@@ -57,7 +54,7 @@ class Part:
 
     @property
     def mass( self ):
-        return self._mass
+        return self.__mass
 
     @property
     def partId( self ) -> str:
@@ -66,6 +63,10 @@ class Part:
     @property
     def model( self ):
         return self.__model
+
+    @property
+    def collideGroup( self ):
+       return self.__collideGroup
 
     @model.setter
     def model( self, value ):
@@ -82,14 +83,17 @@ class Part:
     def _readPartData( self, part_data ) :
         self.__metal = part_data[ "metal" ]
         self.__energy = part_data[ "energy" ]
-        self._mass = part_data.get( "mass", self._mass )
-        if self._external:
-            self.__protection = part_data[ "protection" ]
-            self.__damage = part_data[ "damage" ]
+        self.__mass = part_data.get( "mass", self.__mass )
+        self.__protection = part_data.get( "protection", 0 )
+        self.__damage = part_data.get( "damage", 0 )
+        self.__friction = part_data.get( "friction", LVector3( 0.01, 10, 0.0 ) )
 
-    def setRigidGroup( self, group: str ):
-        self.__rigidGroup = group
+    @rigidGroup.setter
+    def rigidGroup( self, value ):
+        self.__rigidGroup = value
 
-    def setCollideGroup( self, collideGroup ):
-        self.collideGroup = collideGroup
+    @collideGroup.setter
+    def collideGroup( self, value ):
+        self.__collideGroup = value
+
 

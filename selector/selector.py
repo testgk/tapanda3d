@@ -45,7 +45,7 @@ class Selector:
 	def on_map_click( self ):
 		entry = self.__getNewEntry()
 		self.__point = entry.getSurfacePoint( self.__render )
-		print( f'point: { self.__point }')
+		print( f'point: { self.__point }' )
 		self.__terrainCamera.setCenter( self.__point )
 		picked_obj = entry.getIntoNodePath()
 		if picked_obj is None:
@@ -58,3 +58,4 @@ class Selector:
 			self.__selectedItem.handleSelection( SelectionModes.CREATE )
 		else:
 			self.__selectedItem = self.__selectedItem.handleSelectItem( picked_item )
+		self.__terrainCamera.setSelectedItem( self.__selectedItem )
