@@ -1,4 +1,6 @@
 from enum import Enum
+import random
+
 
 class Direction( Enum ):
     UP = 1
@@ -10,18 +12,25 @@ class Direction( Enum ):
     DOWN_LEFT = 7
     DOWN_RIGHT = 8
 
+    @classmethod
+    def get_random_direction( cls ):
+        return random.choice( list( Direction ) )
+
+
 def allDirections():
     for direction in Direction:
         yield direction
 
+
 mapDirections = {
-    Direction.UP: ( -1, 0 ),
-    Direction.DOWN: ( 1, 0 ),
-    Direction.LEFT: ( 0 ,1 ),
-    Direction.RIGHT: ( 0, -1 ),
-    Direction.UP_RIGHT: ( -1, -1 ),
-    Direction.DOWN_LEFT: ( 1, 1 ),
-    Direction.DOWN_RIGHT: ( -1, 1 ),
-    Direction.UP_LEFT: ( 1, -1 ),
+        Direction.UP: (-1, 0),
+        Direction.DOWN: (1, 0),
+        Direction.LEFT: (0, 1),
+        Direction.RIGHT: (0, -1),
+        Direction.UP_RIGHT: (-1, -1),
+        Direction.DOWN_LEFT: (1, 1),
+        Direction.DOWN_RIGHT: (-1, 1),
+        Direction.UP_LEFT: (1, -1),
 }
+
 

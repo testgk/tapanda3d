@@ -8,6 +8,7 @@ class CubePart( Part ):
 		super( CubePart, self ).__init__( partId = "cube" )
 		self._objectPath = "obstacles"
 		self._color = Color.GREEN.value
+		self._mass = 200
 
 
 class Cube( Entity ):

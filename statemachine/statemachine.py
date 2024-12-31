@@ -9,8 +9,8 @@ class StateMachine:
         self.__currentState.enter()
 
     def stateMachineMainLoop( self, task ):
-        if self.__entity.isSelected():
-            print( f"{ self.__entity.name } current state: { self.__currentState }" )
+        #if self.__entity.isSelected():
+        #    print( f"{ self.__entity.name } current state: { self.__currentState }" )
         if self.__currentState.done:
             self.changeState( self.__currentState.nextState )
         self.__currentState.execute()
@@ -19,7 +19,7 @@ class StateMachine:
     @property
     def nextState( self ) -> str:
         if self.__currentState.nextState is None:
-            self.__currentState.nextState =  self.__entity.decide( self.__currentState )
+            self.__currentState.nextState = self.__entity.decide( self.__currentState )
         return self.__currentState.nextState
 
     def changeState( self, state: str = None ):

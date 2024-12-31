@@ -11,6 +11,7 @@ from selectionmodes import SelectionModes
 from statemachine.state import State
 from states.idlestate import IdleState
 from states.movementstate import MovementState
+from states.obstaclestate import ObstacleState
 
 
 class Mover( Entity ):
@@ -30,6 +31,7 @@ class Mover( Entity ):
 		self._isMover = True
 		self._currentTarget = None
 		self.__terrainSize = None
+		self.obstacle = None
 
 	@property
 	def currentTarget( self ) -> SelectionItem:
@@ -43,7 +45,7 @@ class Mover( Entity ):
 	def monitorIdleState( self, task ):
 		if self.selectTargets.empty():
 			return task.cont
-		print( f'{self.name} moving p2p to {self.selectTargets}' )
+		print( f'{self.name} moving p2p' )
 		self.readyToMove = True
 		return task.done
 
@@ -58,6 +60,7 @@ class Mover( Entity ):
 		self._statesPool = {
 				"idle": IdleState( self ),
 				"movement": MovementState( self ),
+				"obstacle": ObstacleState( self )
 		}
 
 	def scheduleIdleMonitoringTask( self ):
@@ -72,7 +75,11 @@ class Mover( Entity ):
 		self.__terrainSize = terrainSize
 
 	def schedulePointToPointTask( self ):
+		if self.selectTargets.empty():
+			self.readyToMove = False
+			return
 		self._currentTarget = self.selectTargets.get()
+		print( f"current target: { self._currentTarget }" )
 		position = self._currentTarget.position
 		self.scheduleTask(
 				self._movementManager.set_velocity_toward_point_with_stop,
@@ -80,12 +87,12 @@ class Mover( Entity ):
 				extraArgs = [ position ],
 				appendTask = True
 		)
-		self.scheduleTask(
-				self._movementManager.track_target_angle,
-				f"{self.name}_monitor_angle",
-				extraArgs = [ position ],
-				appendTask = True
-		)
+		if not taskMgr.hasTaskNamed( f"{ self.name }_monitor_angle" ):
+			self.scheduleTask(
+					self._movementManager.track_target_angle,
+					f"{ self.name }_monitor_angle",
+					appendTask = True
+			)
 		self.scheduleTask(
 				self._movementManager.maintain_terrain_boundaries,
 				f"{self.name}_maintain_boundaries",
@@ -95,7 +102,6 @@ class Mover( Entity ):
 		self.scheduleTask(
 				self._movementManager.monitor_obstacles,
 				f"{self.name}_monitor_obstacles",
-				extraArgs = [ position ],
 				appendTask = True
 		)
 		self.scheduleTask(
@@ -105,27 +111,29 @@ class Mover( Entity ):
 				appendTask = True
 		)
 
-	def handleObstacleTask( self ):
-		position = self._currentTarget.position
+	def scheduleObstacleTasks( self ):
 		self.scheduleTask(
-				self._movementManager.handleObstacleTask,
-				f"{self.name}_move_p2p",
-				extraArgs = [ position ],
+				self._movementManager.monitor_obstacles_1,
+				f"{ self.name }monitor_obstacles_1",
+				appendTask = True
+		)
+		self.scheduleTask(
+				self._movementManager.alternative_target,
+				f"{ self.name }handle_obstacle2",
 				appendTask = True
 		)
 
 
-	def scheduleObstacleTask( self ):
-		pass
-
 	def finishedMovement( self ):
-		if taskMgr.hasTaskNamed( f"{self.name}_move_p2p" ):
+		if taskMgr.hasTaskNamed( f"{ self.name }_move_p2p" ):
 			return False
 		self.readyToMove = False
 		return True
 
 	def hasObstacles( self ) -> bool:
-		return self._movementManager.anyObstacles
+		if self.obstacle != None:
+			return True
+		return False
 
 	@entitypart
 	def hull( self ) -> Part:
@@ -154,4 +162,12 @@ class Mover( Entity ):
 		self.connectModules( physicsWorld )
 		self.createStateMachine()
 		self.initMovementManager( physicsWorld )
+
+	@currentTarget.setter
+	def currentTarget( self, value ):
+		self._currentTarget = value
+
+	def displayTargets( self ):
+		print( list( self._selectTargets.queue ))
+
 
