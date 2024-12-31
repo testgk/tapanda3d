@@ -12,6 +12,3 @@ class IdleState( State ):
         if self._entity.readyToMove:
             self.nextState = "movement"
             self._done = True
-
-    def exit( self ):
-        pass

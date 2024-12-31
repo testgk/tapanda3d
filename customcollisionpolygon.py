@@ -1,3 +1,4 @@
+import random
 from panda3d.core import CollisionNode, CollisionPolygon, \
 	NodePath, Vec3, GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geom, GeomNode, Vec4, Point3, \
 	GeomPoints, GeomTriangles
@@ -166,7 +167,7 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 		if mode == SelectionModes.CREATE:
 			self.__markArea( level = 0, color = Color.BLUE.value )
 		if mode == SelectionModes.P2P:
-			self.__markArea( level = 1, color = Color.YELLOW.value )
+			self.__markArea( level = 0, color = Color.YELLOW.value )
 
 	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
 		item.handleSelection( SelectionModes.CREATE )
@@ -175,7 +176,8 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 
 	def clearSelection( self ):
 		self._selectionMode = SelectionModes.NONE
-		self.hideNeighbors()
+		self.__hideDebugNode()
+		#self.hideNeighbors()
 
 	def __markArea( self, level = 0, color = None ):
 		self.__removeAllEdges()

@@ -12,7 +12,7 @@ class Part:
         self.__rigidGroup = self.__class__.__name__
         self.__collideGroup = CollisionGroup.MODEL
         self.__partId = partId
-        self.__mass = 50
+        self._mass = 50
         self.__model = None
         self.__rigidBody = None
         self.__rigidBodyPath = None
@@ -54,7 +54,7 @@ class Part:
 
     @property
     def mass( self ):
-        return self.__mass
+        return self._mass
 
     @property
     def partId( self ) -> str:
@@ -83,7 +83,7 @@ class Part:
     def _readPartData( self, part_data ) :
         self.__metal = part_data[ "metal" ]
         self.__energy = part_data[ "energy" ]
-        self.__mass = part_data.get( "mass", self.__mass )
+        self._mass = part_data.get( "mass", self._mass )
         self.__protection = part_data.get( "protection", 0 )
         self.__damage = part_data.get( "damage", 0 )
         self.__friction = part_data.get( "friction", LVector3( 0.01, 10, 0.0 ) )

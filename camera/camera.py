@@ -32,7 +32,7 @@ class TerrainCamera:
     def setCamera( self ):
         self.__cameraAngle = 0  # Initial __camera angle
         self.__cameraRadius = 1200  # Distance from the __center of the terrain
-        self.__cameraHeight = 400  # Height of the __camera
+        self.__cameraHeight = 800  # Height of the __camera
 
     def rotateCamera( self, direction = 1 ):
         self.__cameraAngle += math.radians( direction * 10 )  # Rotate by 10 degrees per click
