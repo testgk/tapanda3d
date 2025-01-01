@@ -1,6 +1,7 @@
 import math
 import queue
 import random
+from collections import deque
 
 from panda3d.core import Vec3
 
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 
 class MovementManager:
     def __init__( self, entity, world ):
-        self.__tempTargets = queue.LifoQueue()
+        self.__tempTargets = deque()
         self.__mover: Mover = entity
         self.__aligned = False
         self.__world = world
@@ -41,7 +42,7 @@ class MovementManager:
     def track_target_angle( self, task ):
         if self.__mover.currentTarget is None:
             return task.cont
-        h_diff, new_hpr = self.__getRelativeHpr( self.__mover.coreBodyPath, self.__mover.currentTarget.position,  tracking_speed = 20 )
+        h_diff, new_hpr = self.__getRelativeHpr( self.__mover.coreBodyPath, self.__mover.currentTarget.position,  tracking_speed = 50 )
         self.__mover.coreBodyPath.setHpr( new_hpr )
         if abs( h_diff ) <= 5:  # Small threshold for floating-point precision
             self.__aligned = True
@@ -72,33 +73,20 @@ class MovementManager:
         return task.cont
 
     def monitor_obstacles( self, task ):
-        if self.__mover.currentTarget == None:
+        if self.__mover.currentTarget is None:
             return task.done
-        target = self.__mover.currentTarget.position
-        direction = Vec3( target.x - self.__mover.position.x, target.y - self.__mover.position.y, 10  )
-        result = self.__world.rayTestAll( self.__mover.position, target + direction * 5 )
-        if result.hasHits():
-            for hit in result.getHits():
-                hit_node = hit.getNode()
-                if self.__mover.selfHit( hit_node ):
-                    continue
-                try:
-                    obstacle = hit_node.getPythonTag( 'raytest_target' )
-                except AttributeError:
-                    return task.cont
-                if obstacle is None:
-                    return task.cont
-                elif obstacle.isObstacle:
-                    self.__mover.obstacle = obstacle
-                    return task.done
-                else:
-                    continue
-                print( f'Hit at: { obstacle.name }')
-                hit_pos = hit.getHitPos()
-                hit_normal = hit.getHitNormal()
-        return task.cont
+        self.__mover.obstacle = self.__checkFoeObstacles()
+        if self.__mover.obstacle is None:
+            return task.cont
+        return task.done
 
     def monitor_obstacles_1( self, task ):
+        self.__mover.obstacle = self.__checkFoeObstacles()
+        if self.__mover.obstacle is None:
+                return task.done
+        return task.cont
+
+    def __checkFoeObstacles( self ):
         target = self.__mover.currentTarget.position
         direction = Vec3( target.x - self.__mover.position.x, target.y - self.__mover.position.y, 10 )
         result = self.__world.rayTestAll( self.__mover.position, target + direction * 5 )
@@ -110,28 +98,32 @@ class MovementManager:
                 try:
                     obstacle = hit_node.getPythonTag( 'raytest_target' )
                 except AttributeError:
-                    return task.cont
-                if obstacle is None:
-                    return task.cont
-                elif obstacle.isObstacle:
-                    self.__mover.obstacle = obstacle
-                    return task.cont
-                else:
                     continue
-        self.__mover.obstacle = None
-        print( f'{ self.__mover.name } obstacle removed' )
-        return task.done
+                if obstacle is None:
+                    continue
+                elif obstacle.isObstacle:
+                    return obstacle
+        return None
 
     def alternative_target( self, task ):
+        if self.__mover.currentTarget is None:
+            return task.done
         if not self.__mover.hasObstacles():
-            self.__mover.selectTargets.put( self.__mover.currentTarget )
-            while not self.__tempTargets.empty():
-                self.__mover.selectTargets.put( self.__tempTargets.get() )
+            for target in self.__mover.selectTargets:
+                target.clearSelection()
+            self.__mover.selectTargets.clear()
+            self.__mover.selectTargets.appendleft( self.__mover.currentTarget )
+            print( f'temp targets: { len(self.__tempTargets)} ')
+            if any( self.__tempTargets ):
+                self.__mover.selectTargets.appendleft( self.__tempTargets.pop() )
+            self.__tempTargets.clear()
             self.__mover.displayTargets()
             return task.done
 
-        self.__tempTargets.put( self.__mover.currentTarget )
-        self.__mover.currentTarget = self.__mover.currentTarget.neighbors[ Direction.DOWN_LEFT ]
+        self.__tempTargets.append( self.__mover.currentTarget )
+        print( f'adding : { self.__mover.currentTarget } ' )
+        newTarget = self.__mover.currentTarget.randomNeighbor()
+        self.__mover.currentTarget = newTarget
         self.__mover.currentTarget.handleSelection( SelectionModes.P2P )
         print( f'current target: { self.__mover.currentTarget }' )
         self.__aligned = False
