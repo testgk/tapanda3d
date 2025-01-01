@@ -1,5 +1,6 @@
 import queue
-
+from collections import deque
+from typing import   TYPE_CHECKING
 from selectionmodes import SelectionModes
 
 
@@ -8,7 +9,7 @@ class SelectionItem:
 		self._isMover = False
 		self._isTerrain = False
 		self._selectionMode = SelectionModes.NONE
-		self._selectTargets: queue.Queue = queue.Queue()
+		self._selectTargets: deque = deque( )
 		self._selectTargetPositions: queue.Queue = queue.Queue()
 
 	@property
@@ -42,5 +43,5 @@ class SelectionItem:
 		return self._selectTargetPositions
 
 	@property
-	def selectTargets( self ):
+	def selectTargets( self ) -> deque:
 		return self._selectTargets

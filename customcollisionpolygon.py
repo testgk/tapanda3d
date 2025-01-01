@@ -58,6 +58,9 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 	def neighbors( self ):
 		return self.__neighbors
 
+	def randomNeighbor( self ):
+		return random.choice( list( self.__neighbors.values() ) )
+
 	@neighbors.setter
 	def neighbors( self, neighbors ):
 		self.__neighbors = neighbors

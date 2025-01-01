@@ -43,7 +43,7 @@ class Mover( Entity ):
 			return Vec3( self.coreBodyPath  )
 
 	def monitorIdleState( self, task ):
-		if self.selectTargets.empty():
+		if not any( self.selectTargets ):
 			return task.cont
 		print( f'{self.name} moving p2p' )
 		self.readyToMove = True
@@ -75,15 +75,15 @@ class Mover( Entity ):
 		self.__terrainSize = terrainSize
 
 	def schedulePointToPointTask( self ):
-		if self.selectTargets.empty():
+		if not any( self.selectTargets ):
 			self.readyToMove = False
 			return
-		self._currentTarget = self.selectTargets.get()
+		self._currentTarget = self.selectTargets.popleft()
 		print( f"current target: { self._currentTarget }" )
 		position = self._currentTarget.position
 		self.scheduleTask(
 				self._movementManager.set_velocity_toward_point_with_stop,
-				f"{self.name}_move_p2p",
+				f"{ self.name }_move_p2p",
 				extraArgs = [ position ],
 				appendTask = True
 		)
@@ -168,6 +168,4 @@ class Mover( Entity ):
 		self._currentTarget = value
 
 	def displayTargets( self ):
-		print( list( self._selectTargets.queue ))
-
-
+		print( self._selectTargets )

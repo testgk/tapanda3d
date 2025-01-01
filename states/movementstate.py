@@ -6,7 +6,6 @@ if TYPE_CHECKING:
 
 
 class MovementState( State ):
-
 	def __init__( self, entity: 'Mover' ):
 		super().__init__( entity )
 
