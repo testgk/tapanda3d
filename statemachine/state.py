@@ -1,8 +1,10 @@
 from statemachine.eventmetaclass import EventMetaclass
+from typing import TYPE_CHECKING
+
 
 
 class State( metaclass = EventMetaclass ):
-    def __init__( self, entity ):
+    def __init__( self, entity):
         self._nextState = None
         self._entity = entity
         self._done = False

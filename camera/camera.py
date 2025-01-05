@@ -88,3 +88,6 @@ class TerrainCamera:
 
     def setSelectedItem( self, selectedItem: SelectionItem ):
         self.__selectedItem = selectedItem
+
+    def clearSelectedItem( self ):
+        self.__selectedItem = None

@@ -128,7 +128,7 @@ class CustomPolygon:
 		wire_geom_node = createWireNode( customNode )
 		self._wire_node_path = self._child.attachNewNode( wire_geom_node )
 		self._wire_node_path.setZ( self._debug_node_path.getZ() + height_offset )
-		self._wire_node_path.setColor( Color.CYAN.value )
+		self._wire_node_path.setColor( Color.CYAN)
 		self._wire_node_path.setRenderModeWireframe()
 		self._wire_node_path.hide()
 
@@ -140,7 +140,7 @@ class CustomPolygon:
 		self._visible = True
 		self._debug_node_path.show()
 
-	def _colorDebugNode( self, color = Color.RED_TRANSPARENT.value ):
+	def _colorDebugNode( self, color = Color.RED_TRANSPARENT):
 		self._debug_node_path.setColor( color )  # Set the color to red
 		self._debug_node_path.setTransparency( True )
 

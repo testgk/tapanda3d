@@ -38,7 +38,7 @@ class CustomRigidPolygon( CustomPolygon ):
     def createAndRenderDebugNode( self, render, height_offset = 2 ):
         debug_geom_node = self.createDebugNode()
         self._debug_node_path = render.attachNewNode( debug_geom_node )
-        self._debug_node_path.setColor( Color.BLUE.value )
+        self._debug_node_path.setColor( Color.BLUE)
         self._debug_node_path.set_pos( self._child.get_pos() )
         self._debug_node_path.setZ(  height_offset + 0.5 )
         self._debug_node_path.hide()
@@ -49,7 +49,7 @@ class CustomRigidPolygon( CustomPolygon ):
         self._child.attachNewNode( self.__debugNode )
         self._debug_node_path = self._child.attachNewNode( self.__debugNode )
         self._debug_node_path.setZ( self._debug_node_path.getZ() + 10 )
-        self._debug_node_path.setColor( Color.BLACK.value )
+        self._debug_node_path.setColor( Color.BLACK)
         self._debug_node_path.show()
         self.__rigid_body_node.setPythonTag( 'raytest_target', self )
 

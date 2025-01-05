@@ -7,3 +7,4 @@ class SelectionModes:
 	P2P = 2
 	ATTACK = 3
 	CREATE = 4
+	CHECK = 5

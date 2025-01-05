@@ -5,7 +5,7 @@ from entities.parts.database import parts
 
 class Hull( Part ):
 	def __init__( self, partId ):
-		super().__init__( parts.HULLS, partId, color = Color.GREEN.value, path = "hulls" )
+		super().__init__( parts.HULLS, partId, color = Color.GREEN, path = "hulls" )
 
 	def _readPartData( self, part_data ):
 		self.__armor = part_data[ "armor" ]
