@@ -45,6 +45,7 @@ class Entity( SelectionItem ):
 		self._coreBodyPath = None
 		self._isMover = False
 		self.initStatesPool()
+		self.render = None
 
 	@property
 	def rigidBodyNodes( self ) -> dict:
@@ -81,6 +82,7 @@ class Entity( SelectionItem ):
 	def position( self ):
 		if self.coreBodyPath:
 			return self.coreBodyPath.get_pos()
+
 
 	@property
 	def models( self ):
@@ -124,7 +126,8 @@ class Entity( SelectionItem ):
 		for model in self.__models:
 			part = model.node().getPythonTag( 'model_part' )
 			model.setColor( part.color )
-		self.__collisionBox.hide()
+		if self.__collisionBox:
+			self.__collisionBox.hide()
 
 	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
 		if item == self:

@@ -10,13 +10,14 @@ from selector.selector import Selector
 
 class EntityButtons:
 
-	def __init__( self, selector: Selector, loader: EntityLoader, terrainSize ):
+	def __init__( self, selector: Selector, loader: EntityLoader, terrainSize, render ):
 
 		self.__terrainSize = terrainSize
 		self.__selector = selector
 		self.__loader = loader
 		self.create_entity_button()
 		self.create_obstacle_button()
+		self.__render = render
 
 	def create_entity_button( self ):
 		entityButton = DirectButton(
@@ -42,6 +43,7 @@ class EntityButtons:
 		tank = Tank( engine = engine, turret = turret, chassis = chassis )
 		entity = self.__loader.loadEntity( entity = tank, entry = self.__selector.point )
 		entity.terrainSize = self.__terrainSize
+		entity.render = self.__render
 
 	def __createObstacle( self ):
 		cube = Cube()

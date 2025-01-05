@@ -7,7 +7,7 @@ from enums.colors import Color
 class Mobility( Part ) :
 	def __init__( self, partId ):
 		super().__init__( parts.MOBILITY, partId, external = True )
-		self._color = Color.YELLOW.value
+		self._color = Color.YELLOW
 
 	@property
 	def objectPath( self ) -> str:

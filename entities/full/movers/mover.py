@@ -5,9 +5,11 @@ from entities.modules.chassis import Chassis
 from entities.parts.engine import Engine
 from entities.entity import Entity, entitypart, entitymodule
 from entities.parts.part import Part
+from enums.colors import Color
 from movement.movementmgr import MovementManager
 from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
+from sphere import create_sphere
 from statemachine.state import State
 from states.idlestate import IdleState
 from states.movementstate import MovementState
@@ -18,6 +20,10 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.detector = None
+		self._height = None
+		self._width = None
+		self.edge = None
 		self._movementManager = None
 		self.__hpr = None
 		self.regularSpeed = 100
@@ -40,13 +46,27 @@ class Mover( Entity ):
 	@property
 	def hpr( self ) -> Vec3:
 		if self.coreBodyPath:
-			return Vec3( self.coreBodyPath  )
+			return Vec3( self.coreBodyPath )
+
+	@property
+	def width( self ):
+		return self._width
+
+	@property
+	def height( self ):
+		return self._height
+
+	def edgePos( self ):
+		return  self.edge.get_pos( self.render )
+
+	@property
+	def collisionBox( self ):
+		return self._partBuilder.collisionBox
 
 	def monitorIdleState( self, task ):
 		if not any( self.selectTargets ):
 			return task.cont
 		print( f'{self.name} moving p2p' )
-		self.readyToMove = True
 		return task.done
 
 	def initMovementManager( self, world ):
@@ -64,8 +84,9 @@ class Mover( Entity ):
 		}
 
 	def scheduleIdleMonitoringTask( self ):
-		self.scheduleTask( self.monitorIdleState, "monitoring command" )
+		pass
 
+	#self.scheduleTask( self.monitorIdleState, "monitoring command" )
 	@property
 	def terrainSize( self ):
 		return self.__terrainSize
@@ -75,22 +96,19 @@ class Mover( Entity ):
 		self.__terrainSize = terrainSize
 
 	def schedulePointToPointTask( self ):
-		if not any( self.selectTargets ):
-			self.readyToMove = False
-			return
 		self._currentTarget = self.selectTargets.popleft()
-		print( f"current target: { self._currentTarget }" )
+		print( f"current target: {self._currentTarget}" )
 		position = self._currentTarget.position
 		self.scheduleTask(
 				self._movementManager.set_velocity_toward_point_with_stop,
-				f"{ self.name }_move_p2p",
+				f"{self.name}_move_p2p",
 				extraArgs = [ position ],
 				appendTask = True
 		)
-		if not taskMgr.hasTaskNamed( f"{ self.name }_monitor_angle" ):
+		if not taskMgr.hasTaskNamed( f"{self.name}_monitor_angle" ):
 			self.scheduleTask(
 					self._movementManager.track_target_angle,
-					f"{ self.name }_monitor_angle",
+					f"{self.name}_monitor_angle",
 					appendTask = True
 			)
 		self.scheduleTask(
@@ -113,21 +131,19 @@ class Mover( Entity ):
 
 	def scheduleObstacleTasks( self ):
 		self.scheduleTask(
-				self._movementManager.monitor_obstacles_1,
-				f"{ self.name }monitor_obstacles_1",
+				self._movementManager.monitor_handle_obstacles,
+				f"{self.name}monitor_obstacles_1",
 				appendTask = True
 		)
 		self.scheduleTask(
 				self._movementManager.alternative_target,
-				f"{ self.name }handle_obstacle2",
+				f"{self.name}handle_obstacle2",
 				appendTask = True
 		)
 
-
 	def finishedMovement( self ):
-		if taskMgr.hasTaskNamed( f"{ self.name }_move_p2p" ):
+		if taskMgr.hasTaskNamed( f"{self.name}_move_p2p" ):
 			return False
-		self.readyToMove = False
 		return True
 
 	def hasObstacles( self ) -> bool:
@@ -160,6 +176,7 @@ class Mover( Entity ):
 	def completeLoading( self, physicsWorld ):
 		self.setDamping()
 		self.connectModules( physicsWorld )
+		self.createEdges()
 		self.createStateMachine()
 		self.initMovementManager( physicsWorld )
 
@@ -169,3 +186,16 @@ class Mover( Entity ):
 
 	def displayTargets( self ):
 		print( self._selectTargets )
+
+	def createEdges( self ):
+		self.edge = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
+		modelBounds = self.coreBodyPath.getTightBounds()
+		self._width = ( modelBounds[ 1 ].y - modelBounds[ 0 ].y )
+		self._height = ( modelBounds[ 1 ].x - modelBounds[ 0 ].x )
+		self.edge.reparentTo( self.coreBodyPath )
+		self.edge.setColor( Color.CYAN)
+		self.edge.setPos( Vec3( ( modelBounds[ 1 ].x - modelBounds[ 0 ].x) / 2, 0, 50 ) )
+		self.detector = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
+		self.detector.reparentTo( self.coreBodyPath )
+		self.detector.setColor( Color.BLUE )
+		self.detector.setPos( (modelBounds[ 1 ].x - modelBounds[ 0 ].x), (modelBounds[ 1 ].y - modelBounds[ 0 ].y) / 2, 50 )
