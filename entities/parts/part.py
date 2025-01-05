@@ -1,5 +1,5 @@
 from enums.colors import Color
-from panda3d.core import BitMask32, LVector3
+from panda3d.core import BitMask32, LVector3, NodePath
 
 from collsiongroups import CollisionGroup
 
@@ -12,12 +12,12 @@ class Part:
         self.__rigidGroup = self.__class__.__name__
         self.__collideGroup = CollisionGroup.MODEL
         self.__partId = partId
-        self._mass = 50
         self.__model = None
         self.__rigidBody = None
         self.__rigidBodyPath = None
         self._objectPath = kwargs.get( 'path', None ) or self.__class__.__name__.lower()
-        self._color = kwargs.get( 'color', None ) or Color.RED.value
+        self._color = kwargs.get( 'color', None ) or Color.RED
+        self._mass = kwargs.get( 'mass', None ) or 50
         if partId and partData:
             part_data = partData.get( partId )
             self._readPartData( part_data )
@@ -61,7 +61,7 @@ class Part:
         return self.__partId
 
     @property
-    def model( self ):
+    def model( self ) -> NodePath:
         return self.__model
 
     @property

@@ -145,7 +145,7 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 		__point_node_path = self._child.attachNewNode( geom_node )
 		__point_node_path.setZ( __point_node_path.getZ() + 0.02 )
 		__point_node_path.set_render_mode_thickness( 5 )
-		__point_node_path.setColor( color.value )
+		__point_node_path.setColor( color)
 		currentFrame.append( __point_node_path )
 
 	def attachCollisionNodeToTerrain( self ):
@@ -168,9 +168,11 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 
 		self._selectionMode = mode
 		if mode == SelectionModes.CREATE:
-			self.__markArea( level = 0, color = Color.BLUE.value )
+			self.__markArea( level = 0, color = Color.BLUE)
 		if mode == SelectionModes.P2P:
-			self.__markArea( level = 0, color = Color.YELLOW.value )
+			self.__markArea( level = 0, color = Color.YELLOW)
+		if mode == SelectionModes.CHECK:
+			self.__markArea( level = 0, color = Color.RED)
 
 	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
 		item.handleSelection( SelectionModes.CREATE )

@@ -28,7 +28,7 @@ class CannonTurret( Turret ):
 class TurretBase( Part ):
     def __init__( self ):
         super().__init__( partId = "turret_base" )
-        self._color = Color.RED.value
+        self._color = Color.RED
 
     @property
     def objectPath( self ) -> str:

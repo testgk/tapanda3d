@@ -56,6 +56,10 @@ class PartFactory:
     def models( self ) -> list[ NodePath ]:
         return self.__models
 
+    @property
+    def dimensions( self ) -> tuple[ int, int, int ]:
+        return self.__dimensions
+
     def build( self, loader ):
         self.addParts()
         self.createModels( loader )
@@ -180,7 +184,7 @@ def create_combined_collision_box( model_nps ):
     collision_node = CollisionNode('combined_model_collision')
     collision_node.addSolid(collision_box)
 
-    return ( width, height, depth ), collision_node
+    return ( 2 * width, 2 * height, 2 * depth ), collision_node
 
 
 def add_model_to_bullet_mesh( mesh, model_np ):

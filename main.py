@@ -52,10 +52,11 @@ class MyApp( ShowBase ):
 				terrainCamera = self.terrainCamera,
 				render = self.render )
 		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader )
-		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, terrainSize = self.terrainInfo.terrainSize )
+		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, terrainSize = self.terrainInfo.terrainSize, render = self.render )
 
 		self.task_duration = 0.2
 		self.accept( 'mouse1', self.on_map_click )
+		self.accept( 'mouse3', self.on_map_rightclick )
 		#self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
 		self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
 		self.taskMgr.add( self.update_physics, "update_physics" )
@@ -72,6 +73,10 @@ class MyApp( ShowBase ):
 	def on_map_click( self ):
 		self.__selector.on_map_click()
 
+	def on_map_rightclick( self ):
+		self.__selector.on_map_click( button = 'right' )
+
+
 	def updateMouseTask( self, task ):
 		self.update_mouse_hover()
 		task.delayTime = self.task_duration
@@ -85,7 +90,7 @@ class MyApp( ShowBase ):
 		debug_node.showWireframe( True )
 		debug_node.showBoundingBoxes( True )
 		debug_np = self.render.attachNewNode( debug_node )
-		debug_np.setColor( Color.RED.value )
+		debug_np.setColor( Color.RED )
 		self.physics_world.setDebugNode( debug_np.node() )
 		return debug_np
 

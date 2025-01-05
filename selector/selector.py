@@ -42,20 +42,29 @@ class Selector:
 				entry = self.__generalPicker.pickerQueue.getEntry( 0 )
 				return entry
 
-	def on_map_click( self ):
-		entry = self.__getNewEntry()
-		self.__point = entry.getSurfacePoint( self.__render )
-		print( f'point: { self.__point }' )
-		self.__terrainCamera.setCenter( self.__point )
-		picked_obj = entry.getIntoNodePath()
-		if picked_obj is None:
+	def on_map_click( self, button: str = 'left' ):
+		picked_item = self.__getPickedItem( button )
+		if picked_item is None:
+			self.__terrainCamera.clearSelectedItem()
 			return
-		print( f"Clicked node: { picked_obj }" )
-		picked_item = picked_obj.node().getPythonTag( 'collision_target' )
-		print( f"Clicked entity: { picked_item }" )
 		if self.__selectedItem is None:
 			self.__selectedItem = picked_item
 			self.__selectedItem.handleSelection( SelectionModes.CREATE )
 		else:
 			self.__selectedItem = self.__selectedItem.handleSelectItem( picked_item )
 		self.__terrainCamera.setSelectedItem( self.__selectedItem )
+
+	def __getPickedItem( self, button ):
+		entry = self.__getNewEntry()
+		self.__point = entry.getSurfacePoint( self.__render )
+		print( f'point: {self.__point}' )
+		self.__terrainCamera.setCenter( self.__point )
+		if button == 'right':
+			return None
+		picked_obj = entry.getIntoNodePath()
+		if picked_obj is None:
+			return None
+		print( f"Clicked node: { picked_obj }" )
+		picked_item = picked_obj.node().getPythonTag( 'collision_target' )
+		print( f"Clicked entity: { picked_item }" )
+		return picked_item
