@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 class MovementManager:
     def __init__( self, entity, world ):
-        self.__tempTargets = None
+        self.__tempTarget = None
         self.__mover: Mover = entity
         self.__aligned = False
         self.__world = world
@@ -104,12 +104,8 @@ class MovementManager:
             self.__mover.obstacle = obstacle
 
     def __checkForObstacles( self ):
-        target = self.__mover.currentTarget.position
-        direction = self.__getRandomDirection( target )
-        if self.__ray:
-            self.__ray.remove_node()
-        self.__ray = self.visualize_ray( start = self.__mover.edgePos(), end = self.__mover.edgePos() + direction * 25 )
-        result = self.__world.rayTestAll(  self.__mover.edgePos(), target + direction * 25 )
+        target = self.__tempTarget or self.__mover.currentTarget
+        result = self.__getRandomDirection( target.position )
         if result.hasHits():
             for hit in result.getHits():
                 hit_node = hit.getNode()
@@ -127,41 +123,36 @@ class MovementManager:
         return None
 
     def __getRandomDirection( self, target ):
-        direction = None
-        option = random.randint( 0, 2 )
+        global edge
+        if self.__ray:
+            self.__ray.remove_node()
+        detector = None
+        option = random.randint( 2,2  )
         if option == 0:
-            direction = self.__mover.getLeftDetectorDirection()
+            edge, detector = self.__mover.getRightDetectorDirection()
         elif option == 1:
-            direction = self.__mover.getRightDetectorDirection()
+            edge, detector = self.__mover.getLeftDetectorDirection()
         elif option == 2:
-            direction = Vec3( target.x - self.__mover.edgePos().x, target.y - self.__mover.edgePos().y, 0 )
-        return direction
+            edge = self.__mover.edgePos()
+            detector = target
+            detector.z = edge.getZ()
+        direction = Vec3( detector - edge )
+        self.__ray = self.visualize_ray( start = edge, end = edge + direction * 10 )
+        result = self.__world.rayTestAll( edge, edge + direction * 10 )
+        return result
 
     def alternative_target( self, task ):
         if self.__mover.currentTarget is None:
             return task.done
         if not self.__mover.hasObstacles():
-            for target in self.__mover.selectTargets:
-                target.clearSelection()
-            #for target in self.__tempTargets:
-            #self.__tempTargets.clearSelection()
-            self.__mover.__tempTargets.clear()
-            self.__mover.selectTargets.appendleft( self.__mover.currentTarget )
-            self.__mover.currentTarget.handleSelection( SelectionModes.P2P )
-            #print( f'temp targets: { len(self.__tempTargets)} ')
-            #if self.__tempTargets is not None:
-            #    self.__mover.selectTargets.appendleft( self.__tempTargets )
-            #self.__tempTargets = None
-            #self.__mover.displayTargets()
+            self.__tempTarget = None
             return task.done
 
-        #self.__tempTargets = self.__mover.currentTarget
-        print( f'adding : { self.__mover.currentTarget } ' )
-        self.__tempTargets.append( self.__mover.currentTarget )
-        self.__mover.currentTarget.clearSelection()
-        self.__mover.currentTarget = self.__mover.currentTarget.randomNeighbor()
-        self.__mover.currentTarget.handleSelection( SelectionModes.CHECK )
-        print( f'current target: { self.__mover.currentTarget }' )
+        target = self.__tempTarget or self.__mover.currentTarget
+        randomTarget = target.randomNeighbor()
+        self.__tempTarget = randomTarget
+        self.__mover.bpTarget = self.__tempTarget
+        print( f'current random target: { randomTarget }' )
         self.__aligned = False
         return task.cont
 

@@ -1,3 +1,5 @@
+from collections import deque
+
 from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.core import Vec3
 
@@ -25,7 +27,7 @@ class Mover( Entity ):
 		self.__rightDetector = None
 		self._height = None
 		self._width = None
-		self.__edge = None
+		self.__leftEdge = None
 		self._movementManager = None
 		self.__hpr = None
 		self.regularSpeed = 100
@@ -39,6 +41,15 @@ class Mover( Entity ):
 		self._currentTarget = None
 		self.__terrainSize = None
 		self.__obstacle = None
+		self.__bpTarget = None
+
+	@property
+	def bpTarget( self ):
+		return self.__bpTarget
+
+	@bpTarget.setter
+	def bpTarget( self, target ):
+		self.__bpTarget = target
 
 	@property
 	def obstacle( self ):
@@ -68,24 +79,24 @@ class Mover( Entity ):
 	def edgePos( self ):
 		return self.__edge.get_pos( self.render )
 
-	def getLeftDetectorDirection( self ) -> Vec3:
+	def getLeftDetectorDirection( self ):
 		leftPos = self.__leftDetector.get_pos( self.render )
-		edgePos = self.__edge.get_pos( self.render )
-		return Vec3( leftPos.x - edgePos.x, leftPos.y - edgePos.y, 0 )
+		edgePos = self.__leftEdge.get_pos( self.render )
+		return edgePos, leftPos
 
-	def getRightDetectorDirection( self ) -> Vec3:
+	def getRightDetectorDirection( self ):
 		rightPos = self.__rightDetector.get_pos( self.render )
-		edgePos = self.__edge.get_pos( self.render )
-		return Vec3( rightPos.x - edgePos.x, rightPos.y - edgePos.y, 0 )
+		edgePos = self.__rightEdge.get_pos( self.render )
+		return edgePos, rightPos
 
 	@property
 	def collisionBox( self ):
 		return self._partBuilder.collisionBox
 
 	def monitorIdleState( self, task ):
-		if not any( self.selectTargets ):
+		if not any( self.selectTargets ) and not self.bpTarget:
 			return task.cont
-		print( f'{ self.name } new targets' )
+		print( f'{self.name} new targets' )
 		return task.done
 
 	def initMovementManager( self, world ):
@@ -115,8 +126,14 @@ class Mover( Entity ):
 		self.__terrainSize = terrainSize
 
 	def schedulePointToPointTask( self ):
-		self._currentTarget = self.selectTargets.popleft()
+		if self.__bpTarget:
+			self.selectTargets.appendleft( self._currentTarget )
+			self._currentTarget = self.__bpTarget
+			self.__bpTarget = None
+		elif any( self.selectTargets ):
+			self._currentTarget = self.selectTargets.popleft()
 		print( f"current target: {self._currentTarget}" )
+		self._currentTarget.handleSelection( mode = SelectionModes.TARGET )
 		position = self._currentTarget.position
 		self.scheduleTask(
 				self._movementManager.set_velocity_toward_point_with_stop,
@@ -166,7 +183,7 @@ class Mover( Entity ):
 		return True
 
 	def hasObstacles( self ) -> bool:
-		if self.obstacle != None:
+		if self.__obstacle != None:
 			return True
 		return False
 
@@ -207,23 +224,31 @@ class Mover( Entity ):
 		print( self._selectTargets )
 
 	def createEdges( self ):
-		self.__edge = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
 		self.__modelBounds = self.coreBodyPath.getTightBounds()
-		self._width = ( self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y )
-		self._height = ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x )
-		self.__edge.reparentTo( self.coreBodyPath )
-		self.__edge.setColor( Color.CYAN )
-		self.__edge.setPos( Vec3( ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x ) / 2, 0, 0 ) )
-		self.__leftDetector = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
-		self.__leftDetector.reparentTo( self.coreBodyPath )
-		self.__leftDetector.setColor( Color.BLUE )
-		self.__leftDetector.setPos( ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x ), ( self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y ) / 4, 0 )
-		self.__rightDetector = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
-		self.__rightDetector.reparentTo( self.coreBodyPath )
-		self.__rightDetector.setColor( Color.BLUE )
-		self.__rightDetector.setPos( ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x ),  ( self.__modelBounds[ 0 ].y - self.__modelBounds[ 1 ].y ) / 4, 0 )
+		self._width = (self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y)
+		self._height = (self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x)
 
-	def relocateDetectors( self, denominator: int = 4 ):
-		for detector in [ self.__leftDetector, self.__rightDetector ]:
-			self.__rightDetector.setPos( ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x ),
-			                             ( self.__modelBounds[ 0 ].y - self.__modelBounds[ 1 ].y) / denominator, 0 )
+		self.__edge = create_and_setup_sphere(
+				self.coreBodyPath, Color.RED, Vec3( self._height / 2, 0, 0 )
+		)
+
+		self.__leftEdge = create_and_setup_sphere(
+				self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, self._width / 2, 0 )
+		)
+		self.__rightEdge = create_and_setup_sphere(
+				self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, - self._width / 2, 0 )
+		)
+		self.__leftDetector = create_and_setup_sphere(
+				self.coreBodyPath, Color.BLUE, Vec3( self._height, self._width / 2, 0 )
+		)
+		self.__rightDetector = create_and_setup_sphere(
+				self.coreBodyPath, Color.BLUE, Vec3( self._height, - self._width / 2, 0 )
+		)
+
+
+def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
+	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks )
+	sphere.reparentTo( parent )
+	sphere.setColor( color )
+	sphere.setPos( position )
+	return sphere

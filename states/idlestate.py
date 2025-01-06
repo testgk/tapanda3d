@@ -17,6 +17,6 @@ class IdleState( State ):
         self._entity.scheduleIdleMonitoringTask()
 
     def execute( self ):
-        if any( self.mover.selectTargets ):
+        if any( self.mover.selectTargets ) or self.mover.bpTarget:
             self.nextState = "movement"
             self._done = True
