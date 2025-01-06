@@ -98,14 +98,14 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 				self.__drawEdges( Direction.UP_RIGHT, Direction.DOWN_RIGHT )
 
 		elif row_diff == level and col_diff < level:
-			# Handle vertical edge cases
+			# Handle vertical __edge cases
 			if self._row > startRow:
 				self.__drawEdges( Direction.UP_LEFT )
 			elif self._row < startRow:
 				self.__drawEdges( Direction.DOWN_RIGHT )
 
 		elif row_diff < level and col_diff == level:
-			# Handle horizontal edge cases
+			# Handle horizontal __edge cases
 			if self._col > startCol:
 				self.__drawEdges( Direction.DOWN_LEFT )
 			elif self._col < startCol:
