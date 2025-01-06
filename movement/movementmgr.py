@@ -20,9 +20,7 @@ class MovementManager:
         self.__mover: Mover = entity
         self.__aligned = False
         self.__world = world
-        self.__ray1 = None
-        self.__ray2 = None
-        self.__ray3 = None
+        self.__ray = None
 
     def set_velocity_toward_point_with_stop( self, target_pos, task ):
         speed = self.__mover.regularSpeed
@@ -36,6 +34,8 @@ class MovementManager:
         distance = direction.length()
         if distance < stop_threshold:
             self.__mover.coreRigidBody.set_linear_velocity( Vec3( 0, 0, 0 ) )
+            if self.__ray:
+                self.__ray.remove_node()
             return task.done
         direction.normalize()
         velocity = direction * speed
@@ -105,40 +105,37 @@ class MovementManager:
 
     def __checkForObstacles( self ):
         target = self.__mover.currentTarget.position
-        position = self.__mover.position
-        direction = Vec3( target.x -  self.__mover.edgePos().x, target.y -  self.__mover.edgePos().y, 10 )
-        # Calculate the angle in radians using atan2
-        angle_radians = math.atan2( self.__mover.width,  self.__mover.height )
-        # Now create the direction vector based on the angle
-        direction = Vec3( math.cos( angle_radians ), math.sin( angle_radians ), 10 )
-        if self.__ray1:
-            self.__ray1.remove_node()
-        if self.__ray2:
-            self.__ray2.remove_node()
-        if self.__ray3:
-            self.__ray3.remove_node()
-        #self.__ray1 = self.visualize_ray( start = self.__mover.position + self.__mover.offset, end = target + self.__mover.offset + direction * 10  )
-        #self.__ray2 = self.visualize_ray( start = self.__mover.position - self.__mover.offset, end = target - self.__mover.offset + direction * 10 )
-        self.__ray3 = self.visualize_ray( start = self.__mover.edgePos() , end = self.__mover.edgePos() + direction * 10 )
-        #result1 = self.__world.rayTestAll( positionWithOffsetLeft(), target + direction * 10 )
-        #result2 = self.__world.rayTestAll( positionWithOffsetRight(), target + direction * 10 )
-        result3 = self.__world.rayTestAll(  self.__mover.edgePos(), target + direction * 10 )
-        for result in [ result3 ]:
-            if result.hasHits():
-                for hit in result.getHits():
-                    hit_node = hit.getNode()
-                    if self.__mover.selfHit( hit_node ):
-                        continue
-                    try:
-                        obstacle = hit_node.getPythonTag( 'raytest_target' )
-                    except AttributeError:
-                        continue
-                    if obstacle is None:
-                        continue
-                    elif obstacle.isObstacle:
-                        obstacle.handleSelection()
-                        return obstacle
+        direction = self.__getRandomDirection( target )
+        if self.__ray:
+            self.__ray.remove_node()
+        self.__ray = self.visualize_ray( start = self.__mover.edgePos(), end = self.__mover.edgePos() + direction * 25 )
+        result = self.__world.rayTestAll(  self.__mover.edgePos(), target + direction * 25 )
+        if result.hasHits():
+            for hit in result.getHits():
+                hit_node = hit.getNode()
+                if self.__mover.selfHit( hit_node ):
+                    continue
+                try:
+                    obstacle = hit_node.getPythonTag( 'raytest_target' )
+                except AttributeError:
+                    continue
+                if obstacle is None:
+                    continue
+                elif obstacle.isObstacle:
+                    obstacle.handleSelection()
+                    return obstacle
         return None
+
+    def __getRandomDirection( self, target ):
+        direction = None
+        option = random.randint( 0, 2 )
+        if option == 0:
+            direction = self.__mover.getLeftDetectorDirection()
+        elif option == 1:
+            direction = self.__mover.getRightDetectorDirection()
+        elif option == 2:
+            direction = Vec3( target.x - self.__mover.edgePos().x, target.y - self.__mover.edgePos().y, 0 )
+        return direction
 
     def alternative_target( self, task ):
         if self.__mover.currentTarget is None:
@@ -148,7 +145,7 @@ class MovementManager:
                 target.clearSelection()
             #for target in self.__tempTargets:
             #self.__tempTargets.clearSelection()
-            #self.__mover.selectTargets.clear()
+            self.__mover.__tempTargets.clear()
             self.__mover.selectTargets.appendleft( self.__mover.currentTarget )
             self.__mover.currentTarget.handleSelection( SelectionModes.P2P )
             #print( f'temp targets: { len(self.__tempTargets)} ')
@@ -160,6 +157,7 @@ class MovementManager:
 
         #self.__tempTargets = self.__mover.currentTarget
         print( f'adding : { self.__mover.currentTarget } ' )
+        self.__tempTargets.append( self.__mover.currentTarget )
         self.__mover.currentTarget.clearSelection()
         self.__mover.currentTarget = self.__mover.currentTarget.randomNeighbor()
         self.__mover.currentTarget.handleSelection( SelectionModes.CHECK )
@@ -190,33 +188,3 @@ class MovementManager:
         line_node = NodePath( line.create() )
         line_node.reparent_to( self.__mover.render )
         return line_node
-
-    def __getFrontEdges( self ):
-        x = self.__mover.collisionBox.get_tight_bounds()
-        min_point, max_point = self.__mover.collisionBox.get_tight_bounds()
-        bottom_front_left = Vec3( min_point.x, min_point.y, min_point.z )
-        bottom_front_right = Vec3( max_point.x, min_point.y, min_point.z )
-        return ( bottom_front_left, bottom_front_right )
-
-    def __getOffsets( self ):
-        position = self.__mover.position
-        pointA = position + self.__mover.offset
-        pointB = position - self.__mover.offset
-        distance = ( pointB - pointA ).length()
-        if distance >= self.__mover.width:
-            return  self.__mover.offset, self.__mover.offset
-
-
-    def get_edge_positions( width, heading ):
-        # Calculate half-width
-        half_width = se / 2.0
-
-        # Convert heading to radians
-        heading_rad = math.radians( heading )
-
-        # Calculate offsets
-        left_offset = Vec3( -half_width * math.cos( heading_rad ), -half_width * math.sin( heading_rad ), 0 )
-        right_offset = Vec3( half_width * math.cos( heading_rad ), half_width * math.sin( heading_rad ), 0 )
-        return left_offset, right_offset
-
-
