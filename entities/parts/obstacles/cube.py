@@ -28,4 +28,4 @@ class Cube( Entity, SelectionItem ):
 		print( f'{ self.name} hit')
 
 	def handleSelection( self, mode: SelectionModes = SelectionModes.ANY ):
-		self.cubePart().model.setColor( Color.MAGENTA)
+		self.cubePart().model.setColor( Color.MAGENTA )

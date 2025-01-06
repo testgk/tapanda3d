@@ -61,6 +61,9 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 	def randomNeighbor( self ):
 		return random.choice( list( self.__neighbors.values() ) )
 
+	def randomCloserrNeighbor( self, position ):
+		pass
+
 	@neighbors.setter
 	def neighbors( self, neighbors ):
 		self.__neighbors = neighbors
@@ -98,14 +101,14 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 				self.__drawEdges( Direction.UP_RIGHT, Direction.DOWN_RIGHT )
 
 		elif row_diff == level and col_diff < level:
-			# Handle vertical __edge cases
+			# Handle vertical __leftEdge cases
 			if self._row > startRow:
 				self.__drawEdges( Direction.UP_LEFT )
 			elif self._row < startRow:
 				self.__drawEdges( Direction.DOWN_RIGHT )
 
 		elif row_diff < level and col_diff == level:
-			# Handle horizontal __edge cases
+			# Handle horizontal __leftEdge cases
 			if self._col > startCol:
 				self.__drawEdges( Direction.DOWN_LEFT )
 			elif self._col < startCol:
@@ -167,12 +170,7 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 			return
 
 		self._selectionMode = mode
-		if mode == SelectionModes.CREATE:
-			self.__markArea( level = 0, color = Color.BLUE)
-		if mode == SelectionModes.P2P:
-			self.__markArea( level = 0, color = Color.YELLOW)
-		if mode == SelectionModes.CHECK:
-			self.__markArea( level = 0, color = Color.RED)
+		self.__markArea( level = 0, color = SelectionModes.selectionColors( mode ) )
 
 	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
 		item.handleSelection( SelectionModes.CREATE )
