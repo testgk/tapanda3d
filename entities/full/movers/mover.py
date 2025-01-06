@@ -20,14 +20,15 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
-		self.detector = None
+		self.__modelBounds = None
+		self.__leftDetector = None
+		self.__rightDetector = None
 		self._height = None
 		self._width = None
-		self.edge = None
+		self.__edge = None
 		self._movementManager = None
 		self.__hpr = None
 		self.regularSpeed = 100
-		self.readyToMove = False
 		self._chassis = chassis
 		self._currentPosition = None
 		self._engine = engine
@@ -37,7 +38,15 @@ class Mover( Entity ):
 		self._isMover = True
 		self._currentTarget = None
 		self.__terrainSize = None
-		self.obstacle = None
+		self.__obstacle = None
+
+	@property
+	def obstacle( self ):
+		return self.__obstacle
+
+	@obstacle.setter
+	def obstacle( self, obstacle ):
+		self.__obstacle = obstacle
 
 	@property
 	def currentTarget( self ) -> SelectionItem:
@@ -57,7 +66,17 @@ class Mover( Entity ):
 		return self._height
 
 	def edgePos( self ):
-		return  self.edge.get_pos( self.render )
+		return self.__edge.get_pos( self.render )
+
+	def getLeftDetectorDirection( self ) -> Vec3:
+		leftPos = self.__leftDetector.get_pos( self.render )
+		edgePos = self.__edge.get_pos( self.render )
+		return Vec3( leftPos.x - edgePos.x, leftPos.y - edgePos.y, 0 )
+
+	def getRightDetectorDirection( self ) -> Vec3:
+		rightPos = self.__rightDetector.get_pos( self.render )
+		edgePos = self.__edge.get_pos( self.render )
+		return Vec3( rightPos.x - edgePos.x, rightPos.y - edgePos.y, 0 )
 
 	@property
 	def collisionBox( self ):
@@ -66,7 +85,7 @@ class Mover( Entity ):
 	def monitorIdleState( self, task ):
 		if not any( self.selectTargets ):
 			return task.cont
-		print( f'{self.name} moving p2p' )
+		print( f'{ self.name } new targets' )
 		return task.done
 
 	def initMovementManager( self, world ):
@@ -188,14 +207,23 @@ class Mover( Entity ):
 		print( self._selectTargets )
 
 	def createEdges( self ):
-		self.edge = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
-		modelBounds = self.coreBodyPath.getTightBounds()
-		self._width = ( modelBounds[ 1 ].y - modelBounds[ 0 ].y )
-		self._height = ( modelBounds[ 1 ].x - modelBounds[ 0 ].x )
-		self.edge.reparentTo( self.coreBodyPath )
-		self.edge.setColor( Color.CYAN)
-		self.edge.setPos( Vec3( ( modelBounds[ 1 ].x - modelBounds[ 0 ].x) / 2, 0, 50 ) )
-		self.detector = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
-		self.detector.reparentTo( self.coreBodyPath )
-		self.detector.setColor( Color.BLUE )
-		self.detector.setPos( (modelBounds[ 1 ].x - modelBounds[ 0 ].x), (modelBounds[ 1 ].y - modelBounds[ 0 ].y) / 2, 50 )
+		self.__edge = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
+		self.__modelBounds = self.coreBodyPath.getTightBounds()
+		self._width = ( self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y )
+		self._height = ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x )
+		self.__edge.reparentTo( self.coreBodyPath )
+		self.__edge.setColor( Color.CYAN )
+		self.__edge.setPos( Vec3( ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x ) / 2, 0, 0 ) )
+		self.__leftDetector = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
+		self.__leftDetector.reparentTo( self.coreBodyPath )
+		self.__leftDetector.setColor( Color.BLUE )
+		self.__leftDetector.setPos( ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x ), ( self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y ) / 4, 0 )
+		self.__rightDetector = create_sphere( radius = 5.0, slices = 16, stacks = 8 )
+		self.__rightDetector.reparentTo( self.coreBodyPath )
+		self.__rightDetector.setColor( Color.BLUE )
+		self.__rightDetector.setPos( ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x ),  ( self.__modelBounds[ 0 ].y - self.__modelBounds[ 1 ].y ) / 4, 0 )
+
+	def relocateDetectors( self, denominator: int = 4 ):
+		for detector in [ self.__leftDetector, self.__rightDetector ]:
+			self.__rightDetector.setPos( ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x ),
+			                             ( self.__modelBounds[ 0 ].y - self.__modelBounds[ 1 ].y) / denominator, 0 )
