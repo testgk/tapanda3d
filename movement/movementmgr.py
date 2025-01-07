@@ -23,11 +23,12 @@ class MovementManager:
         self.__ray = None
 
     def set_velocity_toward_point_with_stop( self, target_pos, task ):
-        speed = self.__mover.regularSpeed
+        speed = 30
         stop_threshold = 20
         if not self.__aligned:
             return task.cont
         if self.__mover.hasObstacles():
+            self.__mover.currentTarget.clearSelection()
             return task.done
         current_pos = self.__mover.position
         direction = Vec3( target_pos.x - current_pos.x, target_pos.y - current_pos.y, 0 )
@@ -80,7 +81,7 @@ class MovementManager:
             return task.done
         if not self.__aligned:
             return task.cont
-        obstacle = self.__checkForObstacles()
+        obstacle = self.__checkForObstacles( self.__tempTarget or self.__mover.currentTarget )
         try:
             if obstacle is None:
                 if self.__mover.obstacle is not None:
@@ -92,7 +93,7 @@ class MovementManager:
             self.__mover.obstacle = obstacle
 
     def monitor_handle_obstacles( self, task ):
-        obstacle = self.__checkForObstacles()
+        obstacle = self.__checkForObstacles( self.__tempTarget or self.__mover.currentTarget )
         try:
             if obstacle is None:
                 if self.__mover.obstacle is not None:
@@ -103,8 +104,15 @@ class MovementManager:
         finally:
             self.__mover.obstacle = obstacle
 
-    def __checkForObstacles( self ):
-        target = self.__tempTarget or self.__mover.currentTarget
+    def monitor_temp_obstacles( self, task ):
+        if self.__mover.currentTarget is None:
+            return task.done
+        if not self.__aligned:
+            return task.cont
+        self.__mover.targetObstacle = self.__checkForObstacles( self.__tempTarget )
+
+
+    def __checkForObstacles( self, target ):
         result = self.__getRandomDirection( target.position )
         if result.hasHits():
             for hit in result.getHits():
@@ -122,17 +130,21 @@ class MovementManager:
                     return obstacle
         return None
 
-    def __getRandomDirection( self, target ):
+    def __getRandomDirection( self, target, targetOnly = False ):
         global edge
         if self.__ray:
             self.__ray.remove_node()
         detector = None
-        option = random.randint( 2,2  )
+        option = 2 if targetOnly else random.randint( 0,2  )
         if option == 0:
             edge, detector = self.__mover.getRightDetectorDirection()
         elif option == 1:
             edge, detector = self.__mover.getLeftDetectorDirection()
         elif option == 2:
+            edge = self.__mover.edgePos()
+            detector = target
+            detector.z = edge.getZ()
+        elif option == 3:
             edge = self.__mover.edgePos()
             detector = target
             detector.z = edge.getZ()
@@ -145,14 +157,18 @@ class MovementManager:
         if self.__mover.currentTarget is None:
             return task.done
         if not self.__mover.hasObstacles():
+            self.__mover.bpTarget = self.__tempTarget
+            print( f'current random target: {self.__tempTarget}' )
             self.__tempTarget = None
             return task.done
 
         target = self.__tempTarget or self.__mover.currentTarget
         randomTarget = target.randomNeighbor()
+        if ( randomTarget.position - self.__mover.position).length() > (
+                self.__mover.currentTarget.position - self.__mover.position ).length():
+            return task.cont
+
         self.__tempTarget = randomTarget
-        self.__mover.bpTarget = self.__tempTarget
-        print( f'current random target: { randomTarget }' )
         self.__aligned = False
         return task.cont
 

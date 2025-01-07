@@ -13,6 +13,7 @@ from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
 from sphere import create_sphere
 from statemachine.state import State
+from states.bypassstate import BypassState
 from states.idlestate import IdleState
 from states.movementstate import MovementState
 from states.obstaclestate import ObstacleState
@@ -110,7 +111,8 @@ class Mover( Entity ):
 		self._statesPool = {
 				"idle": IdleState( self ),
 				"movement": MovementState( self ),
-				"obstacle": ObstacleState( self )
+				"obstacle": ObstacleState( self ),
+				"bypass": BypassState( self )
 		}
 
 	def scheduleIdleMonitoringTask( self ):
