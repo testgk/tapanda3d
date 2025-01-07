@@ -14,6 +14,7 @@ class MovementState( State ):
 		return self._entity
 
 	def enter( self ):
+		self.mover.speed = 50
 		self.mover.schedulePointToPointTask()
 
 	def execute( self ):
