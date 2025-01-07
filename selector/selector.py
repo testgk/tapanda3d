@@ -34,13 +34,8 @@ class Selector:
 	def __getNewEntry( self ):
 		if self.__mouseWatcherNode.hasMouse():
 			mousePosition = self.__mouseWatcherNode.getMouse()
-			self.__generalPicker.pickerRay.setFromLens( self.__camNode, mousePosition.getX(), mousePosition.getY() )
-			self.__generalPicker.picker.traverse( self.__render )
-			numEntries = self.__generalPicker.pickerQueue.getNumEntries()
-			if numEntries > 0:
-				self.__generalPicker.pickerQueue.sortEntries()
-				entry = self.__generalPicker.pickerQueue.getEntry( 0 )
-				return entry
+			return self.getEntry( mousePosition.getX(), mousePosition.getY() )
+
 
 	def on_map_click( self, button: str = 'left' ):
 		picked_item = self.__getPickedItem( button )
@@ -68,3 +63,12 @@ class Selector:
 		picked_item = picked_obj.node().getPythonTag( 'collision_target' )
 		print( f"Clicked entity: { picked_item }" )
 		return picked_item
+
+	def getEntry( self, x, y ):
+		self.__generalPicker.pickerRay.setFromLens( self.__camNode, x, y )
+		self.__generalPicker.picker.traverse( self.__render )
+		numEntries = self.__generalPicker.pickerQueue.getNumEntries()
+		if numEntries > 0:
+			self.__generalPicker.pickerQueue.sortEntries()
+			entry = self.__generalPicker.pickerQueue.getEntry( 0 )
+			return entry
