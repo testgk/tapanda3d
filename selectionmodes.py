@@ -16,7 +16,7 @@ class SelectionModes:
 		CHECK: Color.RED,
 		P2P: Color.YELLOW,
 		TARGET: Color.ORANGE,
-		TEMP: Color.CYAN,
+		TEMP: Color.MAGENTA,
 	}
 
 	@staticmethod

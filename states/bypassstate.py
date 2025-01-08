@@ -12,4 +12,11 @@ class BypassState( MovementState ):
 
 	def enter( self ):
 		self.mover.speed = 10
-		self.mover.schedulePointToPointTask()
+		self.mover.schedulePointToPointTasks()
+
+	def execute( self ):
+		if self.mover.bpTarget is not None:
+			if self.mover.isMidRangeFromObstacle() or self.mover.isTargetVisible():
+				self._done = True
+				self.nextState = "movement"
+
