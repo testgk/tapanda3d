@@ -9,7 +9,7 @@ class SelectionItem:
 		self._isMover = False
 		self._isTerrain = False
 		self._selectionMode = SelectionModes.NONE
-		self._selectTargets: deque = deque( )
+		self._moveTargets: deque = deque()
 		self._selectTargetPositions: queue.Queue = queue.Queue()
 
 	@property
@@ -41,7 +41,3 @@ class SelectionItem:
 	@property
 	def selectTargetPositions( self ) -> queue.Queue:
 		return self._selectTargetPositions
-
-	@property
-	def selectTargets( self ) -> deque:
-		return self._selectTargets

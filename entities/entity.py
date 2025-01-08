@@ -1,5 +1,5 @@
 import random
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from direct.task.Task import TaskManager
 from direct.task.TaskManagerGlobal import taskMgr
@@ -29,6 +29,7 @@ def entitymodule( func ):
 class Entity( SelectionItem ):
 	def __init__( self ):
 		super().__init__()
+		self._selectedTargets: deque = deque()
 		self._scale = 1
 		self._statesPool = None
 		self._stateMachine = None
@@ -46,6 +47,8 @@ class Entity( SelectionItem ):
 		self._isMover = False
 		self.initStatesPool()
 		self.render = None
+		self._height = None
+		self._width = None
 
 	@property
 	def rigidBodyNodes( self ) -> dict:
@@ -76,7 +79,7 @@ class Entity( SelectionItem ):
 
 	def createStateMachine( self ):
 		self._stateMachine = StateMachine( self )
-		self.scheduleTask( self._stateMachine.stateMachineMainLoop, f"{ self.name }_state_machine_loop", appendTask = True  )
+		self.scheduleTask( self._stateMachine.stateMachineMainLoop, appendTask = True  )
 
 	@property
 	def position( self ):
@@ -104,8 +107,12 @@ class Entity( SelectionItem ):
 	def getStateFromEntityPool( self, stateName: str ):
 		return self._statesPool[ stateName ]
 
-	def scheduleTask( self, method, name: str, extraArgs: list = None, appendTask = True ):
-		taskMgr.add( method, name = name, extraArgs = extraArgs, appendTask = appendTask )
+	def scheduleTask( self, method, extraArgs: list = None, appendTask = True, checkExisting = False ):
+		name = f'{ self.name }_{ method.__name__ }'
+		if checkExisting:
+			if taskMgr.hasTaskNamed( name ):
+				return
+		taskMgr.add( method, name = f'{ self.name }_{ method.__name__ }', extraArgs = extraArgs, appendTask = appendTask )
 
 	def setDamping( self ):
 		self.coreRigidBody.set_linear_damping( 0 )
@@ -138,7 +145,8 @@ class Entity( SelectionItem ):
 			return item
 		if item.isTerrain:
 			if self.isMover:
-				self._selectTargets.append( item )
+				self._selectedTargets.append( item )
+				self._moveTargets.append( item )
 				item.handleSelection( SelectionModes.P2P )
 				return self
 			else:

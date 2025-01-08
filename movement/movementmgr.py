@@ -2,6 +2,7 @@ import math
 import queue
 import random
 from collections import deque
+from email.encoders import encode_base64
 
 from panda3d.core import LineSegs, NodePath, Vec3
 
@@ -37,6 +38,7 @@ class MovementManager:
             self.__mover.coreRigidBody.set_linear_velocity( Vec3( 0, 0, 0 ) )
             if self.__ray:
                 self.__ray.remove_node()
+            self.__mover.clearCurrentTarget()
             return task.done
         direction.normalize()
         velocity = direction * speed
@@ -78,10 +80,10 @@ class MovementManager:
 
     def monitor_obstacles( self, task ):
         if self.__mover.currentTarget is None:
-            return task.done
+            return task.cont
         if not self.__aligned:
             return task.cont
-        obstacle = self.__checkForObstacles( self.__tempTarget or self.__mover.currentTarget )
+        obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
         try:
             if obstacle is None:
                 if self.__mover.obstacle is not None:
@@ -93,7 +95,7 @@ class MovementManager:
             self.__mover.obstacle = obstacle
 
     def monitor_handle_obstacles( self, task ):
-        obstacle = self.__checkForObstacles( self.__tempTarget or self.__mover.currentTarget )
+        obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
         try:
             if obstacle is None:
                 if self.__mover.obstacle is not None:
@@ -162,7 +164,7 @@ class MovementManager:
             self.__tempTarget = None
             return task.done
 
-        target = self.__tempTarget or self.__mover.currentTarget
+        target = self.__getCurrentTarget()
         randomTarget = target.randomNeighbor()
         if ( randomTarget.position - self.__mover.position).length() > (
                 self.__mover.currentTarget.position - self.__mover.position ).length():
@@ -171,6 +173,9 @@ class MovementManager:
         self.__tempTarget = randomTarget
         self.__aligned = False
         return task.cont
+
+    def __getCurrentTarget( self ):
+        return self.__tempTarget or self.__mover.currentTarget
 
     def maintain_terrain_boundaries( self, terrainSize, task ):
         current_pos = self.__mover.coreBodyPath.get_pos()
