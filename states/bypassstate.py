@@ -11,12 +11,18 @@ class BypassState( MovementState ):
 		super().__init__( entity )
 
 	def enter( self ):
+		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 10
 		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):
-		if self.mover.bpTarget is not None:
-			if self.mover.isMidRangeFromObstacle() or self.mover.isTargetVisible():
-				self._done = True
-				self.nextState = "movement"
-
+		if self.mover.hasObstacles() or self.mover.currentTarget != self._currentTarget:
+			self._done = True
+			print( f'{self._entity.name} finished moving' )
+			if self.mover.hasObstacles():
+				self.nextState = "obstacle"
+			else:
+				self.nextState = "idle"
+		elif self.mover.isMidRangeFromObstacle():
+			self._done = True
+			self.nextState = "movement"
