@@ -24,7 +24,7 @@ class MovementManager:
         self.__ray = None
 
     def set_velocity_toward_point_with_stop( self, target_pos, task ):
-        speed = 30
+        speed = self.__mover.speed
         stop_threshold = 20
         if not self.__aligned:
             return task.cont
@@ -115,6 +115,8 @@ class MovementManager:
 
 
     def __checkForObstacles( self, target ):
+        if target is None:
+            return None
         result = self.__getRandomDirection( target.position )
         if result.hasHits():
             for hit in result.getHits():

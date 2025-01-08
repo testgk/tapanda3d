@@ -16,4 +16,4 @@ class ObstacleState( MovementState ):
     def execute( self ):
         if not self.mover.hasObstacles():
             self._done = True
-            self.nextState = "movement"
+            self.nextState = "bypass"

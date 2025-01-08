@@ -23,6 +23,7 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.__speed = None
 		self.__targetVisible = False
 		self.__edge = None
 		self.__rightEdge = None
@@ -42,12 +43,21 @@ class Mover( Entity ):
 		self._isMover = True
 		self._currentTarget = None
 		self.__terrainSize = None
-		self.__obstacle = None
+		self.__obstacle: 'Entity' | None = None
+		self.__lastObstacle: 'Entity' = None
 		self.__bypassTarget = None
 
 	@property
 	def bpTarget( self ):
 		return self.__bypassTarget
+
+	@property
+	def speed( self ) -> float:
+		return self.__speed
+
+	@speed.setter
+	def speed( self, value ):
+		self.__speed = value
 
 	@bpTarget.setter
 	def bpTarget( self, target ):
@@ -63,6 +73,8 @@ class Mover( Entity ):
 
 	@obstacle.setter
 	def obstacle( self, obstacle ):
+		if obstacle is not None:
+			self.__lastObstacle = obstacle
 		self.__obstacle = obstacle
 
 	@property
@@ -135,10 +147,9 @@ class Mover( Entity ):
 			return task.cont
 		elif any( self.moveTargets ):
 			self._currentTarget = self.moveTargets.popleft()
-		print( f"current target: { self._currentTarget }" )
+			print( f"current target: {self._currentTarget}" )
 		return task.cont
 
-	#self.scheduleTask( self.monitorIdleState, "monitoring command" )
 	@property
 	def terrainSize( self ):
 		return self.__terrainSize
@@ -219,10 +230,10 @@ class Mover( Entity ):
 		self.__rightDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3( self._height, - self._width / 2, 0 ) )
 
 	def isMidRangeFromObstacle( self ):
-		if self.__obstacle is None:
+		if self.__lastObstacle is None:
 			return True
-		distance = ( self.position - self._currentTarget.position ).length()
-		if  6000 > distance > 1000:
+		distance = ( self.__lastObstacle.position - self.position ).length()
+		if  distance > 100:
 			return True
 		return False
 
