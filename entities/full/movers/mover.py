@@ -23,11 +23,12 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.__targetVisible = False
+		self.__edge = None
+		self.__rightEdge = None
 		self.__modelBounds = None
 		self.__leftDetector = None
 		self.__rightDetector = None
-		self._height = None
-		self._width = None
 		self.__leftEdge = None
 		self._movementManager = None
 		self.__hpr = None
@@ -42,15 +43,19 @@ class Mover( Entity ):
 		self._currentTarget = None
 		self.__terrainSize = None
 		self.__obstacle = None
-		self.__bpTarget = None
+		self.__bypassTarget = None
 
 	@property
 	def bpTarget( self ):
-		return self.__bpTarget
+		return self.__bypassTarget
 
 	@bpTarget.setter
 	def bpTarget( self, target ):
-		self.__bpTarget = target
+		self.__bypassTarget = target
+
+	@property
+	def moveTargets( self ) -> deque:
+		return self._moveTargets
 
 	@property
 	def obstacle( self ):
@@ -95,7 +100,7 @@ class Mover( Entity ):
 		return self._partBuilder.collisionBox
 
 	def monitorIdleState( self, task ):
-		if not any( self.selectTargets ) and not self.bpTarget:
+		if not any( self.moveTargets ) and not self.bpTarget:
 			return task.cont
 		print( f'{self.name} new targets' )
 		return task.done
@@ -115,8 +120,23 @@ class Mover( Entity ):
 				"bypass": BypassState( self )
 		}
 
-	def scheduleIdleMonitoringTask( self ):
-		pass
+	def scheduleTargetMonitoringTask( self ):
+		if not taskMgr.hasTaskNamed( f"{ self.name }_target_monitor" ):
+			self.scheduleTask( self.targetMonitoringTask )
+
+	def targetMonitoringTask( self, task ):
+		if self.__bypassTarget:
+			if self._currentTarget in self._selectedTargets:
+				self.moveTargets.appendleft( self._currentTarget )
+				self._currentTarget.handleSelection( mode = SelectionModes.TEMP )
+			self._currentTarget = self.__bypassTarget
+			self.__bypassTarget = None
+		if self._currentTarget is not None:
+			return task.cont
+		elif any( self.moveTargets ):
+			self._currentTarget = self.moveTargets.popleft()
+		print( f"current target: { self._currentTarget }" )
+		return task.cont
 
 	#self.scheduleTask( self.monitorIdleState, "monitoring command" )
 	@property
@@ -127,65 +147,27 @@ class Mover( Entity ):
 	def terrainSize( self, terrainSize ):
 		self.__terrainSize = terrainSize
 
-	def schedulePointToPointTask( self ):
-		if self.__bpTarget:
-			self.selectTargets.appendleft( self._currentTarget )
-			self._currentTarget = self.__bpTarget
-			self.__bpTarget = None
-		elif any( self.selectTargets ):
-			self._currentTarget = self.selectTargets.popleft()
-		print( f"current target: {self._currentTarget}" )
+	def schedulePointToPointTasks( self ):
 		self._currentTarget.handleSelection( mode = SelectionModes.TARGET )
 		position = self._currentTarget.position
-		self.scheduleTask(
-				self._movementManager.set_velocity_toward_point_with_stop,
-				f"{self.name}_move_p2p",
-				extraArgs = [ position ],
-				appendTask = True
-		)
-		if not taskMgr.hasTaskNamed( f"{self.name}_monitor_angle" ):
-			self.scheduleTask(
-					self._movementManager.track_target_angle,
-					f"{self.name}_monitor_angle",
-					appendTask = True
-			)
-		self.scheduleTask(
-				self._movementManager.maintain_terrain_boundaries,
-				f"{self.name}_maintain_boundaries",
-				extraArgs = [ self.__terrainSize ],
-				appendTask = True
-		)
-		self.scheduleTask(
-				self._movementManager.monitor_obstacles,
-				f"{self.name}_monitor_obstacles",
-				appendTask = True
-		)
-		self.scheduleTask(
-				self._movementManager.maintain_turret_angle,
-				f"{self.name}_maintain_turret_angle",
-				extraArgs = [ position ],
-				appendTask = True
-		)
+		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, extraArgs = [ position ] )
+		self.scheduleTask( self._movementManager.track_target_angle, checkExisting = True )
+		self.scheduleTask( self._movementManager.maintain_terrain_boundaries, extraArgs = [ self.__terrainSize ] )
+		self.scheduleTask( self._movementManager.monitor_obstacles )
+		self.scheduleTask( self._movementManager.maintain_turret_angle, extraArgs = [ position ] )
 
 	def scheduleObstacleTasks( self ):
-		self.scheduleTask(
-				self._movementManager.monitor_handle_obstacles,
-				f"{self.name}monitor_obstacles_1",
-				appendTask = True
-		)
-		self.scheduleTask(
-				self._movementManager.alternative_target,
-				f"{self.name}handle_obstacle2",
-				appendTask = True
-		)
+		self.scheduleTask( self._movementManager.monitor_handle_obstacles )
+		self.scheduleTask( self._movementManager.alternative_target )
 
 	def finishedMovement( self ):
-		if taskMgr.hasTaskNamed( f"{self.name}_move_p2p" ):
-			return False
-		return True
+		return self._currentTarget is None
+		#if taskMgr.hasTaskNamed( f"{self.name}_move_p2p" ):
+		#	return False
+		#return True
 
 	def hasObstacles( self ) -> bool:
-		if self.__obstacle != None:
+		if self.__obstacle is not None:
 			return True
 		return False
 
@@ -218,34 +200,34 @@ class Mover( Entity ):
 		self.createStateMachine()
 		self.initMovementManager( physicsWorld )
 
-	@currentTarget.setter
-	def currentTarget( self, value ):
-		self._currentTarget = value
-
-	def displayTargets( self ):
-		print( self._selectTargets )
+	def clearCurrentTarget( self ):
+		if not self._currentTarget:
+			return
+		self._currentTarget.clearSelection()
+		self._currentTarget = None
+		if self._currentTarget in self._selectedTargets:
+			self._selectedTargets.remove( self._currentTarget )
 
 	def createEdges( self ):
 		self.__modelBounds = self.coreBodyPath.getTightBounds()
 		self._width = (self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y)
 		self._height = (self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x)
+		self.__edge = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._height / 2, 0, 0 ) )
+		self.__leftEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, self._width / 2, 0 ) )
+		self.__rightEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, - self._width / 2, 0 ) )
+		self.__leftDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._height, self._width / 2, 0 ) )
+		self.__rightDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3( self._height, - self._width / 2, 0 ) )
 
-		self.__edge = create_and_setup_sphere(
-				self.coreBodyPath, Color.RED, Vec3( self._height / 2, 0, 0 )
-		)
+	def isMidRangeFromObstacle( self ):
+		if self.__obstacle is None:
+			return True
+		distance = ( self.position - self._currentTarget.position ).length()
+		if  6000 > distance > 1000:
+			return True
+		return False
 
-		self.__leftEdge = create_and_setup_sphere(
-				self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, self._width / 2, 0 )
-		)
-		self.__rightEdge = create_and_setup_sphere(
-				self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, - self._width / 2, 0 )
-		)
-		self.__leftDetector = create_and_setup_sphere(
-				self.coreBodyPath, Color.BLUE, Vec3( self._height, self._width / 2, 0 )
-		)
-		self.__rightDetector = create_and_setup_sphere(
-				self.coreBodyPath, Color.BLUE, Vec3( self._height, - self._width / 2, 0 )
-		)
+	def isTargetVisible( self ):
+		return self.__targetVisible
 
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):

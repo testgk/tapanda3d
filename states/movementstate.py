@@ -8,21 +8,23 @@ if TYPE_CHECKING:
 class MovementState( State ):
 	def __init__( self, entity: 'Mover' ):
 		super().__init__( entity )
+		self.__currentTarget = None
 
 	@property
 	def mover( self ) -> 'Mover':
 		return self._entity
 
 	def enter( self ):
+		self.__currentTarget = self.mover.currentTarget
 		self.mover.speed = 50
-		self.mover.schedulePointToPointTask()
+		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):
-		if self.mover.finishedMovement():
+		if self.mover.hasObstacles() or self.mover.currentTarget != self.__currentTarget:
 			self._done = True
 			print( f'{self._entity.name} finished moving' )
 			if self.mover.hasObstacles():
 				self.nextState = "obstacle"
 			else:
-				self.mover.currentTarget.clearSelection()
-				self.mover.currentTarget = None
+				self.nextState = "idle"
+		#self.__currentTarget = None

@@ -50,7 +50,7 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 			poly = CollisionPolygon( vertex[ 0 ], vertex[ 1 ], vertex[ 2 ] )
 			self.__collision_node.addSolid( poly )
 			triangleCount += 1
-			print( self )
+			#print( self )
 		self.__collision_node.setPythonTag( 'collision_target', self )
 		self.__polygonPool.addPolygonToPool( self._name, self )
 
