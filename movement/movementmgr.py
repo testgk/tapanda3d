@@ -72,7 +72,7 @@ class MovementManager:
 
     def maintain_turret_angle( self, target, task ):
         if self.__mover.finishedMovement():
-            print( f'{ self.__mover.name } finished angle tracking' )
+            #print( f'{ self.__mover.name } finished angle tracking' )
             return task.done
         h_diff, new_hpr = self.__getRelativeHpr( self.__mover.turretBase().rigidBodyPath, target, tracking_speed = 25 )
         self.__mover.turretBase().rigidBodyPath.setHpr( new_hpr )
@@ -129,9 +129,12 @@ class MovementManager:
                     continue
                 if obstacle is None:
                     continue
-                elif obstacle.isObstacle:
-                    obstacle.handleSelection()
-                    return obstacle
+                if not obstacle.isObstacle:
+                    continue
+                if self.__isCloser( target, obstacle ):
+                    continue
+                obstacle.handleSelection()
+                return obstacle
         return None
 
     def __getRandomDirection( self, target, targetOnly = False ):
@@ -202,3 +205,6 @@ class MovementManager:
         line_node = NodePath( line.create() )
         line_node.reparent_to( self.__mover.render )
         return line_node
+
+    def __isCloser( self, target1, target2 ):
+        return ( self.__mover.position - target1.position ).length() < ( self.__mover.position - target2.position ).length()
