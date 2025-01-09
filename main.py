@@ -29,8 +29,8 @@ class MyApp( ShowBase ):
 		self.mapName = "heightmap1"
 		self.showTexture = True
 		if True:
-			self.mapName = "heightmap_flat"
-			self.showTexture = False
+			self.mapName = "heightmap_big"
+			self.showTexture = True
 		ShowBase.__init__( self )
 		self.__terrainPhysicsLayer = None
 		self.__terrainCollisionLayer = None
@@ -43,7 +43,7 @@ class MyApp( ShowBase ):
 		self.cameraButtons = CameraButtons( self.terrainCamera, debugNode = self.get_debug_visualization() )
 		self.__lights = Lights( self.render )
 		self.__createCollisionLayer( terrain = self.terrain )
-		self.__createPhysicsLayer( blockSize = 32 )
+		self.__createPhysicsLayer( blockSize = 128 )
 
 		self.__selector = Selector(
 				picker = Picker( self.camera ),

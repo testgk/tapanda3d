@@ -23,6 +23,7 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.targetOnly = False
 		self.__speed = None
 		self.__targetVisible = False
 		self.__edge = None
@@ -141,6 +142,8 @@ class Mover( Entity ):
 			if self._currentTarget in self._selectedTargets:
 				self.moveTargets.appendleft( self._currentTarget )
 				self._currentTarget.handleSelection( mode = SelectionModes.TEMP )
+			else:
+				self._currentTarget.clearSelection()
 			self._currentTarget = self.__bypassTarget
 			self.__bypassTarget = None
 		if self._currentTarget is not None:
@@ -161,21 +164,21 @@ class Mover( Entity ):
 	def schedulePointToPointTasks( self ):
 		self._currentTarget.handleSelection( mode = SelectionModes.TARGET )
 		position = self._currentTarget.position
+		print( f"new position: { position }" )
 		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, extraArgs = [ position ] )
 		self.scheduleTask( self._movementManager.track_target_angle, checkExisting = True )
 		self.scheduleTask( self._movementManager.maintain_terrain_boundaries, extraArgs = [ self.__terrainSize ] )
 		self.scheduleTask( self._movementManager.monitor_obstacles )
-		self.scheduleTask( self._movementManager.maintain_turret_angle, extraArgs = [ position ] )
+		self.scheduleTask( self._movementManager.maintain_turret_angle )
 
 	def scheduleObstacleTasks( self ):
 		self.scheduleTask( self._movementManager.monitor_handle_obstacles )
 		self.scheduleTask( self._movementManager.alternative_target )
 
+	#def scheduleStuckTasks( self ):
+
 	def finishedMovement( self ):
 		return self._currentTarget is None
-		#if taskMgr.hasTaskNamed( f"{self.name}_move_p2p" ):
-		#	return False
-		#return True
 
 	def hasObstacles( self ) -> bool:
 		if self.__obstacle is not None:
@@ -205,9 +208,10 @@ class Mover( Entity ):
 		return hit in self._partBuilder.rigidBodyNodes
 
 	def completeLoading( self, physicsWorld ):
-		self.setDamping()
+		#self.setDamping()
 		self.connectModules( physicsWorld )
 		self.createEdges()
+		self.createRearEdges()
 		self.createStateMachine()
 		self.initMovementManager( physicsWorld )
 
@@ -228,6 +232,13 @@ class Mover( Entity ):
 		self.__rightEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, - self._width / 2, 0 ) )
 		self.__leftDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._height, self._width / 2, 0 ) )
 		self.__rightDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3( self._height, - self._width / 2, 0 ) )
+
+	def createRearEdges( self ):
+		self.__leftRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3(  -self._height / 2, self._width / 2, 0 ) )
+		self.__rightRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( -self._height / 2, - self._width / 2, 0 ) )
+		self.__leftRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3(  -self._height, self._width / 2, 0 ) )
+		self.__rightRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3(  -self._height, - self._width / 2, 0 ) )
+
 
 	def isMidRangeFromObstacle( self ):
 		if self.__lastObstacle is None:

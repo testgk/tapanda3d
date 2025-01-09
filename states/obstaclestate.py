@@ -11,9 +11,11 @@ class ObstacleState( MovementState ):
         super().__init__( mover )
 
     def enter( self ):
+        self.mover.targetOnly = True
         self.mover.scheduleObstacleTasks()
 
     def execute( self ):
         if not self.mover.hasObstacles():
             self._done = True
+            self.mover.targetOnly = False
             self.nextState = "bypass"
