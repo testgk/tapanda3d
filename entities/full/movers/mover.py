@@ -233,7 +233,7 @@ class Mover( Entity ):
 		if self.__lastObstacle is None:
 			return True
 		distance = ( self.__lastObstacle.position - self.position ).length()
-		if  distance > 100:
+		if distance > 100:
 			return True
 		return False
 
