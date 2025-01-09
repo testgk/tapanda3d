@@ -20,14 +20,6 @@ class Tank( Mover ):
     def cannon( self ):
         return self.__turret.turretCannon
 
-    def _maintainTurretAngle( self, target ):
-        self.scheduleTask(
-            self._movementManager.maintain_turret_angle,
-            f"{ self.name }_maintain_turret_angle",
-            extraArgs = [ target ],
-            appendTask = True
-        )
-
     def connectModules( self, world ):
         pivot_in_hull = Vec3( 0, 0, 1 )
         axis_in_hull = Vec3( 0, 0, 1 )

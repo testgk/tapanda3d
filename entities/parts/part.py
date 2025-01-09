@@ -74,8 +74,8 @@ class Part:
 
     def setRigidBodyProperties( self, rigidBody ):
         self.__rigidBody = rigidBody
-        if self.__friction is not None:
-            self.__rigidBody.setAnisotropicFriction( self.__friction )
+        #if self.__friction is not None:
+            #self.__rigidBody.setAnisotropicFriction( self.__friction )
         self.__rigidBody.setIntoCollideMask( BitMask32.allOff() )
         self.__rigidBody.setIntoCollideMask( self.collideGroup )
         self.__rigidBody.setMass( self.__rigidBody.mass + self.mass )

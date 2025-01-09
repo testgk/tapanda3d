@@ -36,7 +36,6 @@ class Selector:
 			mousePosition = self.__mouseWatcherNode.getMouse()
 			return self.getEntry( mousePosition.getX(), mousePosition.getY() )
 
-
 	def on_map_click( self, button: str = 'left' ):
 		picked_item = self.__getPickedItem( button )
 		if picked_item is None:
