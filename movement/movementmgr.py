@@ -1,13 +1,10 @@
 import math
-import queue
 import random
-from collections import deque
-from email.encoders import encode_base64
 
 from panda3d.core import LineSegs, NodePath, Vec3
 
+from entities.LocatorMode import LocatorMode
 from enums.colors import Color
-from enums.directions import Direction
 from phyisics import globalClock
 from typing import TYPE_CHECKING
 
@@ -82,30 +79,32 @@ class MovementManager:
 		return task.cont
 
 	def monitor_obstacles( self, task ):
+		task.delayTime = 0.5
 		if self.__mover.currentTarget is None:
-			return task.cont
+			return task.again
 		if not self.__aligned:
-			return task.cont
+			return task.again
 		obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
 		try:
 			if obstacle is None:
 				if self.__mover.obstacle is not None:
 					self.__mover.obstacle.clearSelection()
 					self.__mover.obstacle = obstacle
-				return task.cont
+				return task.again
 			return task.done
 		finally:
 			self.__mover.obstacle = obstacle
 
 	def monitor_handle_obstacles( self, task ):
+		task.delayTime = 0.2
 		obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
 		try:
 			if obstacle is None:
 				if self.__mover.obstacle is not None:
 					self.__mover.obstacle.clearSelection()
 					self.__mover.obstacle = obstacle
-					return task.done
-			return task.cont
+					return task.again
+			return task.again
 		finally:
 			self.__mover.obstacle = obstacle
 
@@ -119,7 +118,7 @@ class MovementManager:
 	def __checkForObstacles( self, target ):
 		if target is None:
 			return None
-		result = self.__getRandomDetection( target.position, targetOnly = self.__mover.targetOnly )
+		result = self.__getRandomDetection( target.position )
 		if result.hasHits():
 			for hit in result.getHits():
 				hit_node = hit.getNode()
@@ -139,12 +138,12 @@ class MovementManager:
 				return obstacle
 		return None
 
-	def __getRandomDetection( self, target, targetOnly = False ):
+	def __getRandomDetection( self, target ):
 		global edge
 		if self.__ray:
 			self.__ray.remove_node()
 		detector = None
-		option = 2 if targetOnly else random.randint( 0, 2 )
+		option = random.choice ( LocatorMode.All.value )
 		if option == 0:
 			edge, detector = self.__mover.getRightDetectorDirection()
 		elif option == 1:
@@ -176,8 +175,32 @@ class MovementManager:
 		if self.__isCloser( self.__mover, randomTarget, self.__mover.obstacle ):
 			return task.cont
 
-		if self.__isCloser( self.__mover, target, randomTarget ):
+		#if self.__isCloser( self.__mover, target, randomTarget ):
+		#	return task.cont
+
+		if ( self.__mover.obstacle.position - randomTarget.position ).length() < self.__mover.width:
 			return task.cont
+
+		self.__tempTarget = randomTarget
+		self.__aligned = False
+		return task.cont
+
+	def alternative_target2( self, task ):
+		if self.__mover.currentTarget is None:
+			return task.done
+		if not self.__mover.hasObstacles():
+			self.__mover.bpTarget = self.__tempTarget
+			print( f'current random target: {self.__tempTarget}' )
+			self.__tempTarget = None
+			return task.done
+
+		target = self.__getCurrentTarget()
+		randomTarget = self.__locateAlternativeTarget()
+		if self.__isCloser( self.__mover, randomTarget, self.__mover.obstacle ):
+			return task.cont
+
+		#if self.__isCloser( self.__mover, target, randomTarget ):
+		#	return task.cont
 
 		if ( self.__mover.obstacle.position - randomTarget.position ).length() < self.__mover.width:
 			return task.cont
@@ -219,3 +242,6 @@ class MovementManager:
 
 	def __isCloser( self, origin,  target1, target2 ):
 		return ( origin.position - target1.position ).length() < ( origin.position - target2.position).length()
+
+	def __locateAlternativeTarget( self ):
+		self.__checkForObstacles( self.__getCurrentTarget() )

@@ -9,12 +9,13 @@ class StateMachine:
         self.__currentState.enter()
 
     def stateMachineMainLoop( self, task ):
+        task.delayTime = 0.5
         #if self.__entity.isSelected():
         #    print( f"{ self.__entity.name } current state: { self.__currentState }" )
         if self.__currentState.done:
             self.changeState( self.__currentState.nextState )
         self.__currentState.execute()
-        return task.cont
+        return task.again
 
     @property
     def nextState( self ) -> str:
