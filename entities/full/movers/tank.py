@@ -2,12 +2,13 @@ from panda3d.bullet import BulletHingeConstraint
 from panda3d.core import Vec3
 
 from entities.entity import entitypart
+from entities.full.attacker import Attacker
 from entities.full.movers.mover import Mover
 from entities.modules.chassis import Chassis
 from entities.modules.turret import Turret
 
 
-class Tank( Mover ):
+class Tank( Mover, Attacker ):
     def __init__( self, engine, chassis: Chassis, turret: Turret ):
         super().__init__( chassis = chassis, engine = engine )
         self.__turret = turret
