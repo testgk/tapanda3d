@@ -1,5 +1,7 @@
 from collections import deque
+from math import cos, sin, radians
 
+from direct import task
 from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.core import Vec3
 
@@ -23,7 +25,10 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.angle = 0
+		self.__dynamicDetector = None
 		self.targetOnly = False
+		self.edgesOnly = False
 		self.__speed = None
 		self.__targetVisible = False
 		self.__edge = None
@@ -232,6 +237,8 @@ class Mover( Entity ):
 		self.__rightEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, - self._width / 2, 0 ) )
 		self.__leftDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._height, self._width / 2, 0 ) )
 		self.__rightDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3( self._height, - self._width / 2, 0 ) )
+		self.__dynamicDetector = create_and_setup_sphere( self.coreBodyPath, Color.YELLOW, Vec3( 0, 0, 0 ) )
+		taskMgr.add( self.moveDynamicDetector, "CircularMotionTask" )
 
 	def createRearEdges( self ):
 		self.__leftRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3(  -self._height / 2, self._width / 2, 0 ) )
@@ -239,6 +246,17 @@ class Mover( Entity ):
 		self.__leftRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3(  -self._height, self._width / 2, 0 ) )
 		self.__rightRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3(  -self._height, - self._width / 2, 0 ) )
 
+	def moveDynamicDetector( self, task ):
+		task.delayTime = 1
+		self.angle += 1
+		if self.angle >= 360:
+			self.angle = 0
+		radians_angle = radians( self.angle )
+		x = self._width * cos( radians_angle )
+		y = self._width * sin( radians_angle )
+		z = 10
+		self.__dynamicDetector.setPos(x, y, z )
+		return task.cont
 
 	def isMidRangeFromObstacle( self ):
 		if self.__lastObstacle is None:
