@@ -47,8 +47,9 @@ class Entity( SelectionItem ):
 		self._isMover = False
 		self.initStatesPool()
 		self.render = None
-		self._height = None
+		self._length = None
 		self._width = None
+		self._height = None
 
 	@property
 	def rigidBodyNodes( self ) -> dict:

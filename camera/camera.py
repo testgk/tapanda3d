@@ -54,7 +54,7 @@ class TerrainCamera:
     def hoverAbove( self ):
         self.__cameraAngle = 0
         self.__cameraRadius = 500
-        self.__cameraHeight = 2000
+        self.__cameraHeight = 3200
         self.__updateCameraPositionAndCenter()
 
     def hoverDistance( self ):

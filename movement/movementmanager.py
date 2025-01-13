@@ -1,27 +1,23 @@
 import math
-import random
 
-from panda3d.core import LineSegs, NodePath, Vec3
 
-from entities.LocatorMode import LocatorMode
-from enums.colors import Color
+from panda3d.core import Vec3
+
+from movement.detection import Detection
 from phyisics import globalClock
 from typing import TYPE_CHECKING
 
-from selectionmodes import SelectionModes
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
 
 
 class MovementManager:
-
 	def __init__( self, entity, world ):
+		self.__detection = Detection( entity, world )
 		self.__tempTarget = None
 		self.__mover: Mover = entity
 		self.__aligned = False
-		self.__world = world
-		self.__ray = None
 
 	def set_velocity_toward_point_with_stop( self, target_pos, task ):
 		speed = self.__mover.speed
@@ -36,8 +32,6 @@ class MovementManager:
 		distance = direction.length()
 		if distance < stop_threshold:
 			self.__mover.coreRigidBody.set_linear_velocity( Vec3( 0, 0, 0 ) )
-			if self.__ray:
-				self.__ray.remove_node()
 			self.__mover.clearCurrentTarget()
 			return task.done
 		direction.normalize()
@@ -79,7 +73,7 @@ class MovementManager:
 		return task.cont
 
 	def monitor_obstacles( self, task ):
-		task.delayTime = 0.5
+		#task.delayTime = 0.5
 		if self.__mover.currentTarget is None:
 			return task.again
 		if not self.__aligned:
@@ -108,58 +102,8 @@ class MovementManager:
 		finally:
 			self.__mover.obstacle = obstacle
 
-	def monitor_temp_obstacles( self, task ):
-		if self.__mover.currentTarget is None:
-			return task.done
-		if not self.__aligned:
-			return task.cont
-		self.__mover.targetObstacle = self.__checkForObstacles( self.__tempTarget )
-
 	def __checkForObstacles( self, target ):
-		if target is None:
-			return None
-		result = self.__getRandomDetection( target.position )
-		if result.hasHits():
-			for hit in result.getHits():
-				hit_node = hit.getNode()
-				if self.__mover.selfHit( hit_node ):
-					continue
-				try:
-					obstacle = hit_node.getPythonTag( 'raytest_target' )
-				except AttributeError:
-					continue
-				if obstacle is None:
-					continue
-				if not obstacle.isObstacle:
-					continue
-				if self.__isCloser( self.__mover, target, obstacle ):
-					continue
-				obstacle.handleSelection()
-				return obstacle
-		return None
-
-	def __getRandomDetection( self, target ):
-		global edge
-		if self.__ray:
-			self.__ray.remove_node()
-		detector = None
-		option = random.choice ( LocatorMode.All.value )
-		if option == 0:
-			edge, detector = self.__mover.getRightDetectorDirection()
-		elif option == 1:
-			edge, detector = self.__mover.getLeftDetectorDirection()
-		elif option == 2:
-			edge = self.__mover.edgePos()
-			detector = target
-			detector.z = edge.getZ()
-		elif option == 3:
-			edge = self.__mover.edgePos()
-			detector = target
-			detector.z = edge.getZ()
-		direction = Vec3( detector - edge )
-		self.__ray = self.visualize_ray( start = edge, end = edge + direction * 10 )
-		result = self.__world.rayTestAll( edge, edge + direction * 10 )
-		return result
+		return self.__detection.detectItems( target, artifactType = "obstacle" )
 
 	def alternative_target( self, task ):
 		if self.__mover.currentTarget is None:
@@ -172,12 +116,10 @@ class MovementManager:
 
 		target = self.__getCurrentTarget()
 		randomTarget = target.randomNeighbor()
-		if self.__isCloser( self.__mover, randomTarget, self.__mover.obstacle ):
+		if self.__detection.isCloser( self.__mover, randomTarget, self.__mover.obstacle ):
 			return task.cont
-
 		#if self.__isCloser( self.__mover, target, randomTarget ):
 		#	return task.cont
-
 		if ( self.__mover.obstacle.position - randomTarget.position ).length() < self.__mover.width:
 			return task.cont
 
@@ -190,20 +132,17 @@ class MovementManager:
 			return task.done
 		if not self.__mover.hasObstacles():
 			self.__mover.bpTarget = self.__tempTarget
-			print( f'current random target: {self.__tempTarget}' )
+			print( f'current random target: { self.__tempTarget }' )
 			self.__tempTarget = None
 			return task.done
-
-		target = self.__getCurrentTarget()
 		randomTarget = self.__locateAlternativeTarget()
-		if self.__isCloser( self.__mover, randomTarget, self.__mover.obstacle ):
-			return task.cont
-
+		#if self.__detection.isCloser( self.__mover, randomTarget, self.__mover.obstacle ):
+		#	return task.cont
 		#if self.__isCloser( self.__mover, target, randomTarget ):
 		#	return task.cont
 
-		if ( self.__mover.obstacle.position - randomTarget.position ).length() < self.__mover.width:
-			return task.cont
+		#if ( self.__mover.obstacle.position - randomTarget.position ).length() < self.__mover.width:
+		#	return task.cont
 
 		self.__tempTarget = randomTarget
 		self.__aligned = False
@@ -226,22 +165,5 @@ class MovementManager:
 			self.__mover.coreBodyPath.setPos( Vec3( current_pos.x, terrainSize - 9, current_pos.z ) )
 		return task.cont
 
-	def visualize_ray( self, start, end, color = Color.GREEN, thickness = 2.0 ):
-		if self.__mover.targetOnly:
-			color = Color.BLUE
-		if self.__mover.hasObstacles():
-			color = Color.RED
-		line = LineSegs()
-		line.set_thickness( thickness )
-		line.set_color( *color )  # RGBA
-		line.move_to( start )
-		line.draw_to( end )
-		line_node = NodePath( line.create() )
-		line_node.reparent_to( self.__mover.render )
-		return line_node
-
-	def __isCloser( self, origin,  target1, target2 ):
-		return ( origin.position - target1.position ).length() < ( origin.position - target2.position).length()
-
 	def __locateAlternativeTarget( self ):
-		self.__checkForObstacles( self.__getCurrentTarget() )
+		return self.__detection.detectItems( self.__getCurrentTarget() , artifactType = "terrain" )
