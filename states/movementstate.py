@@ -1,4 +1,6 @@
 from typing import TYPE_CHECKING
+
+from entities.locatorMode import LocatorModes
 from statemachine.state import State
 
 if TYPE_CHECKING:
@@ -17,6 +19,7 @@ class MovementState( State ):
 	def enter( self ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
+		self.mover.locatorMode = LocatorModes.TargetOnly
 		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):

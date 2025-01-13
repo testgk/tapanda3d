@@ -1,16 +1,15 @@
 from collections import deque
 from math import cos, sin, radians
-
-from direct import task
 from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.core import Vec3
 
+from entities.locatorMode import LocatorModes
 from entities.modules.chassis import Chassis
 from entities.parts.engine import Engine
 from entities.entity import Entity, entitypart, entitymodule
 from entities.parts.part import Part
 from enums.colors import Color
-from movement.movementmgr import MovementManager
+from movement.movementmanager import MovementManager
 from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
 from sphere import create_sphere
@@ -25,10 +24,11 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.locatorMode: LocatorModes = LocatorModes.All
+		self.angle_increment = 1
 		self.angle = 0
 		self.__dynamicDetector = None
 		self.targetOnly = False
-		self.edgesOnly = False
 		self.__speed = None
 		self.__targetVisible = False
 		self.__edge = None
@@ -98,7 +98,7 @@ class Mover( Entity ):
 
 	@property
 	def height( self ):
-		return self._height
+		return self._length
 
 	def edgePos( self ):
 		return self.__edge.get_pos( self.render )
@@ -112,6 +112,11 @@ class Mover( Entity ):
 		rightPos = self.__rightDetector.get_pos( self.render )
 		edgePos = self.__rightEdge.get_pos( self.render )
 		return edgePos, rightPos
+
+	def getDynamicDetectorDirection( self ):
+		dynamicPos = self.__dynamicDetector.get_pos( self.render )
+		edgePos = self.edgePos()
+		return edgePos, dynamicPos
 
 	@property
 	def collisionBox( self ):
@@ -215,10 +220,11 @@ class Mover( Entity ):
 	def completeLoading( self, physicsWorld ):
 		#self.setDamping()
 		self.connectModules( physicsWorld )
-		self.createEdges()
-		self.createRearEdges()
-		self.createStateMachine()
+		self.__createModelBounds()
+		self.__createEdges()
+		self.__createRearEdges()
 		self.initMovementManager( physicsWorld )
+		self.createStateMachine()
 
 	def clearCurrentTarget( self ):
 		if not self._currentTarget:
@@ -228,34 +234,37 @@ class Mover( Entity ):
 		if self._currentTarget in self._selectedTargets:
 			self._selectedTargets.remove( self._currentTarget )
 
-	def createEdges( self ):
-		self.__modelBounds = self.coreBodyPath.getTightBounds()
-		self._width = (self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y)
-		self._height = (self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x)
-		self.__edge = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._height / 2, 0, 0 ) )
-		self.__leftEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, self._width / 2, 0 ) )
-		self.__rightEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._height / 2, - self._width / 2, 0 ) )
-		self.__leftDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._height, self._width / 2, 0 ) )
-		self.__rightDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3( self._height, - self._width / 2, 0 ) )
+	def __createEdges( self ):
+		self.__edge = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._length / 2, 0, 0 ) )
+		self.__leftEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._length / 2, self._width / 2, 0 ) )
+		self.__rightEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._length / 2, - self._width / 2, 0 ) )
+		self.__leftDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._length, self._width / 2, 0 ) )
+		self.__rightDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3( self._length, - self._width / 2, 0 ) )
 		self.__dynamicDetector = create_and_setup_sphere( self.coreBodyPath, Color.YELLOW, Vec3( 0, 0, 0 ) )
 		taskMgr.add( self.moveDynamicDetector, "CircularMotionTask" )
 
-	def createRearEdges( self ):
-		self.__leftRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3(  -self._height / 2, self._width / 2, 0 ) )
-		self.__rightRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( -self._height / 2, - self._width / 2, 0 ) )
-		self.__leftRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3(  -self._height, self._width / 2, 0 ) )
-		self.__rightRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3(  -self._height, - self._width / 2, 0 ) )
+	def __createModelBounds( self ):
+		self.__modelBounds = self.coreBodyPath.getTightBounds()
+		self._width = (self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y)
+		self._length = (self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x)
+		self._height = (self.__modelBounds[ 1 ].z - self.__modelBounds[ 0 ].z)
+
+	def __createRearEdges( self ):
+		self.__leftRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( -self._length / 2, self._width / 2, 0 ) )
+		self.__rightRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( -self._length / 2, - self._width / 2, 0 ) )
+		self.__leftRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( -self._length, self._width / 2, 0 ) )
+		self.__rightRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3( -self._length, - self._width / 2, 0 ) )
 
 	def moveDynamicDetector( self, task ):
 		task.delayTime = 1
-		self.angle += 1
-		if self.angle >= 360:
-			self.angle = 0
+		self.angle += self.angle_increment
+		if self.angle >= 90 or self.angle <= -90:
+			self.angle_increment *= -1
 		radians_angle = radians( self.angle )
-		x = self._width * cos( radians_angle )
+		x = self._length / 2 + self._width * cos( radians_angle )
 		y = self._width * sin( radians_angle )
-		z = 10
-		self.__dynamicDetector.setPos(x, y, z )
+		z = -1
+		self.__dynamicDetector.setPos( x, y, z )
 		return task.cont
 
 	def isMidRangeFromObstacle( self ):
