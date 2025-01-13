@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from entities.locatorMode import LocatorModes
 from states.movementstate import MovementState
 
 
@@ -11,7 +12,7 @@ class ObstacleState( MovementState ):
         super().__init__( mover )
 
     def enter( self ):
-        self.mover.targetOnly = True
+        self.mover.locatorMode = LocatorModes.DynamicOnly
         self.mover.scheduleObstacleTasks()
 
     def execute( self ):
