@@ -14,17 +14,13 @@ class BackupState( MovementState ):
 		super().__init__( entity )
 
 	def enter( self ):
-		self._currentTarget = self.mover.currentTarget
-		self.mover.speed = 75
-		self.mover.locatorMode = LocatorModes.All
-		print( f'current target: { self._currentTarget} ' )
-		self.mover.schedulePointToPointTasks()
+		self.mover.speed = -50
+		self.mover.locatorMode = LocatorModes.NONE
+		print( f'current target: { self._currentTarget } ' )
+		self.mover.scheduleBackupTasks()
 
 	def execute( self ):
-		if self.mover.hasObstacles() or self.mover.currentTarget != self._currentTarget:
+		if not self.mover.closeToObstacle():
 			self._done = True
-			print( f'{ self._entity.name } finished moving' )
-			if self.mover.hasObstacles():
-				self.nextState = States.OBSTACLE
-			else:
-				self.nextState = States.IDLE
+			print( f'{ self._entity.name } finished backup' )
+			self.nextState = States.OBSTACLE

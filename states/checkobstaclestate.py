@@ -21,7 +21,6 @@ class CheckObstacle( MovementState ):
 	def execute( self ):
 		if self.mover.hasObstacles() or self.mover.aligned:
 			self._done = True
-			print( f'{ self._entity.name } finished moving' )
 			if self.mover.hasObstacles():
 				self.nextState = States.OBSTACLE
 			else:

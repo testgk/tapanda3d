@@ -1,7 +1,8 @@
 import math
 from distutils.command.sdist import sdist
 
-from panda3d.core import Vec3
+from direct import task
+from panda3d.core import Vec3, NurbsCurveEvaluator
 
 from movement.detection import Detection
 from phyisics import globalClock
@@ -39,6 +40,24 @@ class MovementManager:
 		self.__mover.coreRigidBody.set_linear_velocity( velocity )
 		return task.cont
 
+	def set_velocity_backwards_direction( self, task ):
+		if not self.__mover.hasObstacles():
+			return task.done
+
+		direction = Vec3( self.__mover.obstacle.position - self.__mover.position )
+		direction.normalize()
+		self.__mover.coreRigidBody.set_linear_velocity( direction * self.__mover.speed )
+		return task.cont
+
+	def moveCurvedPath( self ):
+		curve_evaluator = NurbsCurveEvaluator()
+		curve = curve_evaluator.add_curve()
+		curve.push_back( self.__mover.bpTarget.position )  # Start point
+		curve.push_back( self.__mover.currentTarget.position )  # Control point 1
+
+	def distance_from_obstacle( self ):
+		return ( self.__mover.obstacle.position - self.__mover.position ).length()
+
 	def track_target_coreBody_angle( self, task ):
 		if self.__mover.currentTarget is None:
 			return task.cont
@@ -51,14 +70,6 @@ class MovementManager:
 			self.aligned = False
 		return task.cont
 
-	def track_target_detectors_angle( self, task ):
-		if self.__mover.currentTarget is None:
-			return task.cont
-		h_diff, new_hpr = self.__getRelativeHpr( self.__mover.rightDetector, self.__mover.currentTarget.position,
-		                                         tracking_speed = 80 )
-		self.__mover.rightDetector.setHpr( new_hpr )
-		return task.cont
-
 	def __getRelativeHpr( self, bodyPart, target_position, tracking_speed = 100 ):
 		current_pos = bodyPart.getPos()
 		current_hpr = Vec3( bodyPart.getHpr() )
@@ -66,7 +77,7 @@ class MovementManager:
 		target_heading = math.degrees( math.atan2( direction_vector.y, direction_vector.x ) )
 		target_hpr = Vec3( target_heading, 0, 0 )
 		h_diff = target_hpr.x - current_hpr.x
-		h_diff = (h_diff + 180) % 360 - 180
+		h_diff = ( h_diff + 180 ) % 360 - 180
 		h_adjust = max( -tracking_speed * globalClock.getDt(), min( h_diff, tracking_speed * globalClock.getDt() ) )
 		new_hpr = current_hpr + Vec3( h_adjust, 0, 0 )
 		return h_diff, new_hpr
@@ -124,40 +135,16 @@ class MovementManager:
 	def __checkForObstacles( self, target ):
 		return self.__detection.detectObstacle( target )
 
-	def alternative_target( self, task ):
-		if self.__mover.currentTarget is None:
-			return task.done
-		if not self.__mover.hasObstacles():
-			self.__mover.bpTarget = self.__tempTarget
-			print( f'current random target: {self.__tempTarget}' )
-			self.__tempTarget = None
-			return task.done
-
-		target = self.__getCurrentTarget()
-		randomTarget = target.randomNeighbor()
-		if self.__detection.isCloser( self.__mover, randomTarget, self.__mover.obstacle ):
-			return task.cont
-		#if self.__isCloser( self.__mover, target, randomTarget ):
-		#	return task.cont
-		if ( self.__mover.obstacle.position - randomTarget.position ).length() < self.__mover.width:
-			return task.cont
-
-		self.__tempTarget = randomTarget
-		self.aligned = False
-		return task.cont
-
-	def alternative_target2( self, task ):
+	def target_detection( self, task ):
 		if not self.__mover.hasObstacles():
 			self.__mover.bpTarget = self.__tempTarget
 			print( f'current random target: { self.__tempTarget }' )
 			self.__tempTarget = None
 			return task.done
-		randomTarget = self.__detection.detectPosition( target = self.__getCurrentTarget() )
-		self.__tempTarget = randomTarget
+		self.__tempTarget = self.__detection.detectPosition( target = self.__getCurrentTarget() )
 		if self.__tempTarget:
 			self.__mover.obstacle.clearSelection()
 			self.__mover.obstacle = None
-		self.aligned = False
 		return task.cont
 
 	def __getCurrentTarget( self ):
