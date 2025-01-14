@@ -30,6 +30,7 @@ class Mover( Entity ):
 		self.angle_increment = 1
 		self.angle = 0
 		self.__dynamicDetector = None
+		self.elasticLocator = False
 		self.targetOnly = False
 		self.__speed = None
 		self.__targetVisible = False
@@ -120,6 +121,10 @@ class Mover( Entity ):
 		edgePos = self.edgePos()
 		return edgePos, dynamicPos
 
+	@property
+	def rightDetector( self ):
+		return self.__rightDetector
+
 	def __initMovementManager( self, world ):
 		self._movementManager = MovementManager( self, world )
 
@@ -169,7 +174,8 @@ class Mover( Entity ):
 		position = self._currentTarget.position
 		print( f"new position: { position }" )
 		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, extraArgs = [ position ] )
-		self.scheduleTask( self._movementManager.track_target_angle, checkExisting = True )
+		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
+		#self.scheduleTask( self._movementManager.track_target_detectors_angle, checkExisting = True )
 		self.scheduleTask( self._movementManager.maintain_terrain_boundaries, extraArgs = [ self.__terrainSize ] )
 		self.scheduleTask( self._movementManager.monitor_obstacles )
 		self.scheduleTask( self._movementManager.maintain_turret_angle )
@@ -247,7 +253,7 @@ class Mover( Entity ):
 		radians_angle = radians( self.angle )
 		x = self._length / 2 + self._width * cos( radians_angle )
 		y = self._width * sin( radians_angle )
-		z = -1
+		z = -5
 		self.__dynamicDetector.setPos( x, y, z )
 		return task.cont
 
