@@ -31,7 +31,7 @@ class Entity( SelectionItem ):
 		super().__init__()
 		self._selectedTargets: deque = deque()
 		self._scale = 1
-		self._statesPool = None
+		self._statesPool: dict = {}
 		self._stateMachine = None
 		self.__pendingCommand = None
 		self._commands = [ ]
@@ -78,7 +78,7 @@ class Entity( SelectionItem ):
 	def scale( self ):
 		return self._scale
 
-	def createStateMachine( self ):
+	def _createStateMachine( self ):
 		self._stateMachine = StateMachine( self )
 		self.scheduleTask( self._stateMachine.stateMachineMainLoop, appendTask = True  )
 
@@ -99,7 +99,7 @@ class Entity( SelectionItem ):
 		self.__collisionBox.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies
 
-	def connectModules( self, world ):
+	def _connectModules( self, world ):
 		raise NotImplementedError
 
 	def decide( self, currentState: State ) -> str:
@@ -115,7 +115,7 @@ class Entity( SelectionItem ):
 				return
 		taskMgr.add( method, name = f'{ self.name }_{ method.__name__ }', extraArgs = extraArgs, appendTask = appendTask )
 
-	def setDamping( self ):
+	def _setDamping( self ):
 		self.coreRigidBody.set_linear_damping( 0 )
 		self.coreRigidBody.set_angular_damping( 0 )
 
@@ -160,6 +160,9 @@ class Entity( SelectionItem ):
 		self._statesPool = {
 			"idle" : IdleState,
 		}
+
+	def isValidState( self, stateName ) -> bool:
+		return stateName in self._statesPool
 
 	def completeLoading( self, physicsWorld ):
 		pass

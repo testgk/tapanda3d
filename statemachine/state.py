@@ -1,5 +1,5 @@
 from statemachine.eventmetaclass import EventMetaclass
-from typing import TYPE_CHECKING
+
 
 
 
@@ -23,6 +23,8 @@ class State( metaclass = EventMetaclass ):
 
     @nextState.setter
     def nextState( self, state ) -> None:
+        if not self._entity.isValidState( state ):
+            raise Exception( f"Invalid state { state }" )
         self._nextState = state
 
     def initialize( self ):
