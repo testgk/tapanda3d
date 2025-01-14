@@ -6,4 +6,5 @@ class States:
 	IDLE = "idle"
 	OBSTACLE = "obstacle"
 	BYPASS = "bypass"
+	BACKUP = "backup"
 	ROAM = "roam"

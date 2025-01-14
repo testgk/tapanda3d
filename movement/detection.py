@@ -43,8 +43,8 @@ class Detection:
 					continue
 				if self.isCloser( self.__mover, target, item ):
 					continue
-				if self.isCloser( item, target, self.__mover ):
-					continue
+				#if self.isCloser( item, target, self.__mover ):
+				#	continue
 				item.handleSelection()
 				return item
 		return None
@@ -76,7 +76,8 @@ class Detection:
 		global edge
 		if self.__ray:
 			self.__ray.remove_node()
-		#print( f"locator mode: {self.__mover.locatorMode.value}" )
+		if  self.__mover.locatorMode == Locators.NONE:
+			return None
 		option = locatorMode or random.choice( self.__mover.locatorMode.value )
 		if option == Locators.Target:
 			edge = self.__mover.edgePos()
