@@ -25,7 +25,16 @@ class RoamState( MovementState ):
 			self._done = True
 			print( f'{self._entity.name} finished moving' )
 			if self.mover.hasObstacles():
+<<<<<<<< HEAD:states/roamstate.py
 				self.nextState = States.MOVEMENT
 			else:
 				self.nextState = States.IDLE
 		#self.__currentTarget = None
+========
+				self.nextState = States.OBSTACLE
+			else:
+				self.nextState = States.IDLE
+		elif self.mover.isMidRangeFromObstacle():
+			self._done = True
+			self.nextState = States.MOVEMENT
+>>>>>>>> 9a3a487 (target):states/bypassstate.py
