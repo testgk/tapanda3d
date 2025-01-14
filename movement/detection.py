@@ -41,10 +41,10 @@ class Detection:
 					continue
 				if not item.isObstacle:
 					continue
-				if self.isCloser( self.__mover, target, item ):
-					continue
-				if self.isCloser( item, target, self.__mover ):
-					continue
+				#if self.isCloser( self.__mover, target, item ):
+				#	continue
+				#if self.isCloser( item, target, self.__mover ):
+				#	continue
 				item.handleSelection()
 				return item
 		return None

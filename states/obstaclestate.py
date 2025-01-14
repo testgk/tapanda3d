@@ -13,7 +13,7 @@ class ObstacleState( MovementState ):
         super().__init__( mover )
 
     def enter( self ):
-        self.mover.locatorMode = LocatorModes.TargetOnly
+        self.mover.locatorMode = LocatorModes.All
         self.mover.scheduleObstacleTasks()
 
     def execute( self ):

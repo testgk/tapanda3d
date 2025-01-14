@@ -9,10 +9,13 @@ class Locators( Enum ):
 	Left = 1
 	Target = 2
 	Dynamic = 3
+	TargetRight = 4
+	TargetLeft = 5
 
 class LocatorModes( Enum ):
 	All = ( Locators.Right, Locators.Left, Locators.Target )
 	Edges = ( Locators.Left, Locators.Right )
+	TargetEdges = ( Locators.TargetLeft, Locators.TargetRight )
 	TargetOnly = ( Locators.Target, Locators.Target )
 	DynamicOnly = ( Locators.Dynamic, Locators.Dynamic )
 
