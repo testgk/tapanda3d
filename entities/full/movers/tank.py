@@ -21,7 +21,7 @@ class Tank( Mover, Attacker ):
     def cannon( self ):
         return self.__turret.turretCannon
 
-    def connectModules( self, world ):
+    def _connectModules( self, world ):
         pivot_in_hull = Vec3( 0, 0, 1 )
         axis_in_hull = Vec3( 0, 0, 1 )
         pivot_in_turret = Vec3( 0, 0, 0 )

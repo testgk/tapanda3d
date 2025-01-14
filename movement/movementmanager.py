@@ -1,5 +1,5 @@
 import math
-
+from distutils.command.sdist import sdist
 
 from panda3d.core import Vec3
 
@@ -39,18 +39,28 @@ class MovementManager:
 		self.__mover.coreRigidBody.set_linear_velocity( velocity )
 		return task.cont
 
-	def track_target_angle( self, task ):
+	def track_target_coreBody_angle( self, task ):
 		if self.__mover.currentTarget is None:
 			return task.cont
 		h_diff, new_hpr = self.__getRelativeHpr( self.__mover.coreBodyPath, self.__mover.currentTarget.position,
 		                                         tracking_speed = 50 )
 		self.__mover.coreBodyPath.setHpr( new_hpr )
-		if abs( h_diff ) <= 5:  # Small threshold for floating-point precision
+		if abs( h_diff ) <= 5:
 			self.__aligned = True
-			#print( f'{self.__mover.name} is aligned' )
 		else:
 			self.__aligned = False
-			#print( f'{ self.__mover.name } is not aligned' )
+		return task.cont
+
+	def track_target_detectors_angle( self, task ):
+		if self.__mover.currentTarget is None:
+			return task.cont
+		h_diff, new_hpr = self.__getRelativeHpr( self.__mover.rightDetector, self.__mover.currentTarget.position,
+		                                         tracking_speed = 80 )
+		self.__mover.rightDetector.setHpr( new_hpr )
+		if abs( h_diff ) <= 5:
+			self.__aligned = True
+		else:
+			self.__aligned = False
 		return task.cont
 
 	def __getRelativeHpr( self, bodyPart, target_position, tracking_speed = 100 ):
@@ -72,6 +82,20 @@ class MovementManager:
 		self.__mover.turretBase().rigidBodyPath.setHpr( new_hpr )
 		return task.cont
 
+	def maintain_terrain_boundaries( self, terrainSize, task ):
+		current_pos = self.__mover.coreBodyPath.get_pos()
+		if current_pos.x <= 10:
+			self.__mover.coreBodyPath.setPos( Vec3( 11, current_pos.y, current_pos.z ) )
+			return task.cont
+		elif current_pos.x >= terrainSize - 10:
+			self.__mover.coreBodyPath.setPos( Vec3( terrainSize - 9, current_pos.y, current_pos.z ) )
+		if current_pos.y <= 10:
+			self.__mover.coreBodyPath.setPos( Vec3( current_pos.x, 11, current_pos.z ) )
+			return task.cont
+		elif current_pos.y >= terrainSize - 10:
+			self.__mover.coreBodyPath.setPos( Vec3( current_pos.x, terrainSize - 9, current_pos.z ) )
+		return task.cont
+
 	def monitor_obstacles( self, task ):
 		#task.delayTime = 0.5
 		if self.__mover.currentTarget is None:
@@ -90,20 +114,21 @@ class MovementManager:
 			self.__mover.obstacle = obstacle
 
 	def monitor_handle_obstacles( self, task ):
-		task.delayTime = 0.2
+		#task.delayTime = 0.2
 		obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
 		try:
 			if obstacle is None:
 				if self.__mover.obstacle is not None:
 					self.__mover.obstacle.clearSelection()
 					self.__mover.obstacle = obstacle
-					return task.again
-			return task.again
+					return task.done
+			else:
+				return task.again
 		finally:
 			self.__mover.obstacle = obstacle
 
 	def __checkForObstacles( self, target ):
-		return self.__detection.detectItems( target, artifactType = "obstacle" )
+		return self.__detection.detectObstacle( target )
 
 	def alternative_target( self, task ):
 		if self.__mover.currentTarget is None:
@@ -128,42 +153,15 @@ class MovementManager:
 		return task.cont
 
 	def alternative_target2( self, task ):
-		if self.__mover.currentTarget is None:
-			return task.done
 		if not self.__mover.hasObstacles():
 			self.__mover.bpTarget = self.__tempTarget
 			print( f'current random target: { self.__tempTarget }' )
 			self.__tempTarget = None
 			return task.done
-		randomTarget = self.__locateAlternativeTarget()
-		#if self.__detection.isCloser( self.__mover, randomTarget, self.__mover.obstacle ):
-		#	return task.cont
-		#if self.__isCloser( self.__mover, target, randomTarget ):
-		#	return task.cont
-
-		#if ( self.__mover.obstacle.position - randomTarget.position ).length() < self.__mover.width:
-		#	return task.cont
-
+		randomTarget = self.__detection.detectPosition()
 		self.__tempTarget = randomTarget
 		self.__aligned = False
 		return task.cont
 
 	def __getCurrentTarget( self ):
 		return self.__tempTarget or self.__mover.currentTarget
-
-	def maintain_terrain_boundaries( self, terrainSize, task ):
-		current_pos = self.__mover.coreBodyPath.get_pos()
-		if current_pos.x <= 10:
-			self.__mover.coreBodyPath.setPos( Vec3( 11, current_pos.y, current_pos.z ) )
-			return task.cont
-		elif current_pos.x >= terrainSize - 10:
-			self.__mover.coreBodyPath.setPos( Vec3( terrainSize - 9, current_pos.y, current_pos.z ) )
-		if current_pos.y <= 10:
-			self.__mover.coreBodyPath.setPos( Vec3( current_pos.x, 11, current_pos.z ) )
-			return task.cont
-		elif current_pos.y >= terrainSize - 10:
-			self.__mover.coreBodyPath.setPos( Vec3( current_pos.x, terrainSize - 9, current_pos.z ) )
-		return task.cont
-
-	def __locateAlternativeTarget( self ):
-		return self.__detection.detectItems( self.__getCurrentTarget() , artifactType = "terrain" )

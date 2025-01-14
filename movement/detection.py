@@ -2,6 +2,9 @@ import random
 
 from panda3d.core import LineSegs, NodePath, Vec3
 
+from customcollisionpolygon import CustomCollisionPolygon
+from custompolygon import CustomPolygon
+from customrigidpolygon import CustomRigidPolygon
 from entities.locatorMode import Locators
 from enums.colors import Color
 from typing import TYPE_CHECKING
@@ -21,10 +24,10 @@ class Detection:
 			Locators.Dynamic: self.__mover.getDynamicDetectorDirection,
 		}
 
-	def detectItems( self, target, artifactType = None ):
+	def detectObstacle( self, target ):
 		if target is None:
 			return None
-		result = self.__getRandomDetection( target.position )
+		result = self.__getDetection( target.position )
 		if result.hasHits():
 			for hit in result.getHits():
 				hit_node = hit.getNode()
@@ -36,25 +39,43 @@ class Detection:
 					continue
 				if item is None:
 					continue
-				if artifactType == "obstacle":
-					if not item.isObstacle:
-						continue
-					if self.isCloser( self.__mover, target, item ):
-						continue
-				elif artifactType == "terrain":
-					if not item.isTerrain:
-						continue
+				if not item.isObstacle:
+					continue
+				#if self.isCloser( self.__mover, target, item ):
+				#	continue
+				#if self.isCloser( item, target, self.__mover ):
+				#	continue
 				item.handleSelection()
 				return item
 		return None
 
-	def __getRandomDetection( self, target ):
+	def detectPosition( self ):
+		result = self.__getDetection( locatorMode = Locators.Dynamic )
+		if result.hasHits():
+			for hit in result.getHits():
+				hit_node = hit.getNode()
+				if self.__mover.selfHit( hit_node ):
+					continue
+				try:
+					item = hit_node.getPythonTag( 'raytest_target' )
+				except AttributeError:
+					continue
+				if item is None:
+					continue
+				if not item.isTerrain:
+					continue
+#				item.handleSelection()
+				print( f'detect position: { item }' )
+				return item
+		return None
+
+
+	def __getDetection( self, target = None, locatorMode: Locators = None ):
 		global edge
 		if self.__ray:
 			self.__ray.remove_node()
-
-		print( f"locator mode: {self.__mover.locatorMode.value}" )
-		option = random.choice( self.__mover.locatorMode.value )
+		#print( f"locator mode: {self.__mover.locatorMode.value}" )
+		option = locatorMode or random.choice( self.__mover.locatorMode.value )
 		if option == Locators.Target:
 			edge = self.__mover.edgePos()
 			detector = target
