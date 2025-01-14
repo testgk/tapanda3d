@@ -7,6 +7,7 @@ from enums.colors import Color
 from sphere import create_sphere
 from statemachine.state import State
 from entities.parts.part import Part
+from states.backupstate import BackupState
 from states.checkobstaclestate import CheckObstacle
 from states.states import States
 from states.idlestate import IdleState
@@ -21,18 +22,25 @@ from states.obstaclestate import ObstacleState
 from movement.movementmanager import MovementManager
 from entities.entity import Entity, entitypart, entitymodule
 from states.roamstate import RoamState
+from target import Target
+
+
+class DetectorLimits:
+	Wide = 90
+	Normal = 45
 
 
 class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.__amplitude = 0
+		self._limit = DetectorLimits.Normal
 		self.locatorMode: LocatorModes = LocatorModes.All
-		self.angle_increment = 1
+		self.__angle_increment = 2
 		self.__verticalAngle = 0
 		self.__horizontalAngle = -5
 		self.__dynamicDetector = None
-		self.targetOnly = False
 		self.__speed = None
 		self.__targetVisible = False
 		self.__edge = None
@@ -41,7 +49,7 @@ class Mover( Entity ):
 		self.__leftDetector = None
 		self.__rightDetector = None
 		self.__leftEdge = None
-		self._movementManager = None
+		self._movementManager: MovementManager or None = None
 		self.__hpr = None
 		self.regularSpeed = 100
 		self._chassis = chassis
@@ -61,6 +69,10 @@ class Mover( Entity ):
 	def bpTarget( self ):
 		return self.__bypassTarget
 
+	@bpTarget.setter
+	def bpTarget( self, target ):
+		self.__bypassTarget = target
+
 	@property
 	def speed( self ) -> float:
 		return self.__speed
@@ -73,10 +85,6 @@ class Mover( Entity ):
 	def aligned( self ):
 		if self._movementManager:
 			return self._movementManager.aligned
-
-	@bpTarget.setter
-	def bpTarget( self, target ):
-		self.__bypassTarget = target
 
 	@property
 	def moveTargets( self ) -> deque:
@@ -93,7 +101,7 @@ class Mover( Entity ):
 		self.__obstacle = obstacle
 
 	@property
-	def currentTarget( self ) -> SelectionItem:
+	def currentTarget( self ) -> Target:
 		return self._currentTarget
 
 	@property
@@ -145,12 +153,12 @@ class Mover( Entity ):
 				States.OBSTACLE: ObstacleState( self ),
 				States.BYPASS: BypassState( self ),
 				States.CHECK_OBSTACKE: CheckObstacle( self ),
+				States.BACKUP: BackupState( self ),
 				States.ROAM: RoamState( self )
 		}
 
 	def scheduleTargetMonitoringTask( self ):
-		if not taskMgr.hasTaskNamed( f"{ self.name }_target_monitor" ):
-			self.scheduleTask( self.targetMonitoringTask )
+		self.scheduleTask( self.targetMonitoringTask, checkExisting = True )
 
 	def targetMonitoringTask( self, task ):
 		if self.__bypassTarget:
@@ -165,7 +173,7 @@ class Mover( Entity ):
 			return task.cont
 		elif any( self.moveTargets ):
 			self._currentTarget = self.moveTargets.popleft()
-			print( f"current target: {self._currentTarget}" )
+			print( f"current target: { self._currentTarget }" )
 		return task.cont
 
 	@property
@@ -187,8 +195,7 @@ class Mover( Entity ):
 		self.scheduleTask( self._movementManager.maintain_turret_angle )
 
 	def scheduleBackupTasks( self ):
-		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, extraArgs = [ position ] )
-		
+		self.scheduleTask( self._movementManager.set_velocity_backwards_direction )
 
 	def scheduleCheckObstaclesTasks( self ):
 		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
@@ -196,7 +203,7 @@ class Mover( Entity ):
 
 	def scheduleObstacleTasks( self ):
 		#self.scheduleTask( self._movementManager.monitor_handle_obstacles )
-		self.scheduleTask( self._movementManager.alternative_target2 )
+		self.scheduleTask( self._movementManager.target_detection )
 
 	def finishedMovement( self ):
 		return self._currentTarget is None
@@ -262,15 +269,26 @@ class Mover( Entity ):
 
 	def moveDynamicDetector( self, task ):
 		task.delayTime = 1
-		self.__verticalAngle += self.angle_increment
-		if self.__verticalAngle >= 90 or self.__verticalAngle <= -90:
-			self.angle_increment *= -1
+		self.__verticalAngle += self.__angle_increment
+		if self.__verticalAngle >= self._limit or self.__verticalAngle <= -self._limit:
+			self.__angle_increment *= -1
+		print( f' angle: { self.__verticalAngle } limit: { self._limit } ' )
 		radians_angle = radians( self.__verticalAngle )
 		x = self._length / 2 + self._width * cos( radians_angle )
 		y = self._width * sin( radians_angle )
 		z = self.__horizontalAngle
 		self.__dynamicDetector.setPos( x, y, z )
 		return task.cont
+
+	def __gradualDetectorLimits( self ):
+		if self.__verticalAngle > self._limit:
+			self.__angle_increment *= -1
+			self._limit += self.__angle_increment
+			self.__verticalAngle = self._limit - 1
+		elif self.__verticalAngle < -self._limit:
+			self.__angle_increment *= -1
+			self._limit -= self.__angle_increment
+			self.__verticalAngle = - self._limit + 1
 
 	def isMidRangeFromObstacle( self ):
 		if self.__lastObstacle is None:
@@ -280,6 +298,10 @@ class Mover( Entity ):
 			return True
 		return False
 
+	def closeToObstacle( self ):
+		if not self.hasObstacles():
+			return False
+		return self._movementManager.distance_from_obstacle() <= 25
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
 	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks )

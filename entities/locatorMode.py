@@ -5,14 +5,17 @@ from enums.colors import Color
 
 
 class Locators( Enum ):
-	Right = 0
-	Left = 1
-	Target = 2
-	Dynamic = 3
-	TargetRight = 4
-	TargetLeft = 5
+	NONE = 0
+	Right = 1
+	Left = 2
+	Target = 3
+	Dynamic = 4
+	TargetRight = 5
+	TargetLeft = 6
+
 
 class LocatorModes( Enum ):
+	NONE = None
 	All = ( Locators.Right, Locators.Left )
 	Edges = ( Locators.Left, Locators.Right )
 	TargetEdges = ( Locators.TargetLeft, Locators.TargetRight )
