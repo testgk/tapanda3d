@@ -4,6 +4,7 @@ from panda3d.core import GeomVertexReader, GeomNode, NodePath, GeomVertexFormat,
 	GeomTriangles, CollisionPolygon, GeomLines, Vec3, LVecBase3f
 
 from enums.colors import Color
+from selectionmodes import SelectionModes
 
 
 def getNodePosition( name ):
@@ -85,7 +86,6 @@ def createWireNode( customNode ):
 
 
 class CustomPolygon:
-
 	def __init__( self, child: NodePath ):
 		self._child = child
 		self._name = self._child.getName()
@@ -96,10 +96,15 @@ class CustomPolygon:
 			self._angle = calculate_angle( vertex )
 			self._area = triangle_area( vertex[ 0 ], vertex[ 1 ], vertex[ 2 ] )
 			self._row, self._col = getNodePosition( self._name )
+		self._isTerrain = True
 
 	@property
 	def position( self ):
 		return self._child.get_pos()
+
+	@property
+	def isTerrain( self ):
+		return True
 
 	@property
 	def isObstacle( self ):
@@ -146,6 +151,12 @@ class CustomPolygon:
 
 	def createDebugNode( self ):
 		return self.createDebugNodeGeomNode( self._vertices )
+
+	def handleSelection( self, mode: SelectionModes = SelectionModes.ANY ):
+		print( f'{ self._name } selection mode: { mode }' )
+
+	def clearSelection( self ):
+		print( f'{ self._name } selection cleared' )
 
 	def createDebugNodeGeomNode( self, vertices ):
 		debug_geom_node = GeomNode( 'debug_geom' )

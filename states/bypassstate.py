@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorModes
 from statemachine.state import State
+from states.states import States
 from states.movementstate import MovementState
 
 if TYPE_CHECKING:
@@ -23,9 +24,9 @@ class BypassState( MovementState ):
 			self._done = True
 			print( f'{self._entity.name} finished moving' )
 			if self.mover.hasObstacles():
-				self.nextState = "obstacle"
+				self.nextState = States.OBSTACLE
 			else:
-				self.nextState = "idle"
+				self.nextState = States.IDLE
 		elif self.mover.isMidRangeFromObstacle():
 			self._done = True
-			self.nextState = "movement"
+			self.nextState = States.MOVEMENT

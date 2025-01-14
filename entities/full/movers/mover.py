@@ -1,23 +1,25 @@
+from panda3d.core import Vec3
 from collections import deque
 from math import cos, sin, radians
 from direct.task.TaskManagerGlobal import taskMgr
-from panda3d.core import Vec3
 
-from entities.locatorMode import LocatorModes
-from entities.modules.chassis import Chassis
-from entities.parts.engine import Engine
-from entities.entity import Entity, entitypart, entitymodule
-from entities.parts.part import Part
 from enums.colors import Color
-from movement.movementmanager import MovementManager
-from selectionitem import SelectionItem
-from selectionmodes import SelectionModes
 from sphere import create_sphere
 from statemachine.state import State
-from states.bypassstate import BypassState
+from entities.parts.part import Part
+from states.states import States
 from states.idlestate import IdleState
+from selectionitem import SelectionItem
+from entities.parts.engine import Engine
+from selectionmodes import SelectionModes
+from states.bypassstate import BypassState
+from entities.modules.chassis import Chassis
+from entities.locatorMode import LocatorModes
 from states.movementstate import MovementState
 from states.obstaclestate import ObstacleState
+from movement.movementmanager import MovementManager
+from entities.entity import Entity, entitypart, entitymodule
+from states.roamstate import RoamState
 
 
 class Mover( Entity ):
@@ -49,8 +51,8 @@ class Mover( Entity ):
 		self._isMover = True
 		self._currentTarget = None
 		self.__terrainSize = None
-		self.__obstacle: 'Entity' | None = None
-		self.__lastObstacle: 'Entity' = None
+		self.__obstacle: 'Entity' or None = None
+		self.__lastObstacle: 'Entity' or None = None
 		self.__bypassTarget = None
 
 	@property
@@ -118,29 +120,20 @@ class Mover( Entity ):
 		edgePos = self.edgePos()
 		return edgePos, dynamicPos
 
-	@property
-	def collisionBox( self ):
-		return self._partBuilder.collisionBox
-
-	def monitorIdleState( self, task ):
-		if not any( self.moveTargets ) and not self.bpTarget:
-			return task.cont
-		print( f'{self.name} new targets' )
-		return task.done
-
-	def initMovementManager( self, world ):
+	def __initMovementManager( self, world ):
 		self._movementManager = MovementManager( self, world )
 
 	def decide( self, currentState: 'State' ) -> str:
-		if currentState == "MovementState":
-			return "idle"
+		if currentState is MovementState:
+			return States.IDLE
 
 	def initStatesPool( self ):
 		self._statesPool = {
-				"idle": IdleState( self ),
-				"movement": MovementState( self ),
-				"obstacle": ObstacleState( self ),
-				"bypass": BypassState( self )
+				States.IDLE: IdleState( self ),
+				States.MOVEMENT: MovementState( self ),
+				States.OBSTACLE: ObstacleState( self ),
+				States.BYPASS: BypassState( self ),
+				States.ROAM: RoamState( self )
 		}
 
 	def scheduleTargetMonitoringTask( self ):
@@ -183,9 +176,7 @@ class Mover( Entity ):
 
 	def scheduleObstacleTasks( self ):
 		self.scheduleTask( self._movementManager.monitor_handle_obstacles )
-		self.scheduleTask( self._movementManager.alternative_target )
-
-	#def scheduleStuckTasks( self ):
+		self.scheduleTask( self._movementManager.alternative_target2 )
 
 	def finishedMovement( self ):
 		return self._currentTarget is None
@@ -207,24 +198,17 @@ class Mover( Entity ):
 	def chassis( self ) -> Chassis:
 		return self._chassis
 
-	#   @entitypart
-	def engine( self ) -> Engine:
-		return self._engine
-
-	def _maintainTurretAngle( self, target ):
-		raise NotImplementedError
-
 	def selfHit( self, hit ):
 		return hit in self._partBuilder.rigidBodyNodes
 
 	def completeLoading( self, physicsWorld ):
-		#self.setDamping()
-		self.connectModules( physicsWorld )
+		self._setDamping()
+		self._connectModules( physicsWorld )
 		self.__createModelBounds()
 		self.__createEdges()
 		self.__createRearEdges()
-		self.initMovementManager( physicsWorld )
-		self.createStateMachine()
+		self.__initMovementManager( physicsWorld )
+		self._createStateMachine()
 
 	def clearCurrentTarget( self ):
 		if not self._currentTarget:
@@ -245,9 +229,9 @@ class Mover( Entity ):
 
 	def __createModelBounds( self ):
 		self.__modelBounds = self.coreBodyPath.getTightBounds()
-		self._width = (self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y)
-		self._length = (self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x)
-		self._height = (self.__modelBounds[ 1 ].z - self.__modelBounds[ 0 ].z)
+		self._width = ( self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y )
+		self._length = ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x )
+		self._height = ( self.__modelBounds[ 1 ].z - self.__modelBounds[ 0 ].z )
 
 	def __createRearEdges( self ):
 		self.__leftRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( -self._length / 2, self._width / 2, 0 ) )
@@ -274,9 +258,6 @@ class Mover( Entity ):
 		if distance > 100:
 			return True
 		return False
-
-	def isTargetVisible( self ):
-		return self.__targetVisible
 
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):

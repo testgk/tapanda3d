@@ -27,7 +27,7 @@ class TerrainProvider:
     def __init__( self, loader ):
         self._loader = loader
 
-    def create_terrain(self, terrainName: str, showTexture: bool, blockSize = 128 ) -> TerrainInfo:
+    def create_terrain(self, terrainName: str, showTexture: bool, blockSize = 64 ) -> TerrainInfo:
         terrain = GeoMipTerrain( "terrain" )
         heightmap = PNMImage( Filename( f"maps/{ terrainName }.png" ) )
         terrain.setHeightfield( heightmap )
