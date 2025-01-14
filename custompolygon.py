@@ -5,6 +5,7 @@ from panda3d.core import GeomVertexReader, GeomNode, NodePath, GeomVertexFormat,
 
 from enums.colors import Color
 from selectionmodes import SelectionModes
+from target import Target
 
 
 def getNodePosition( name ):
@@ -85,7 +86,7 @@ def createWireNode( customNode ):
 
 
 
-class CustomPolygon:
+class CustomPolygon( Target ):
 	def __init__( self, child: NodePath ):
 		self._child = child
 		self._name = self._child.getName()
@@ -107,6 +108,10 @@ class CustomPolygon:
 
 	def getPos( self, model ):
 		return self._child.get_pos( model )
+
+	@property
+	def isTerrain( self ):
+		return True
 
 	@property
 	def isTerrain( self ):

@@ -9,6 +9,7 @@ from selectionitem import SelectionItem
 from custompolygon import CustomPolygon
 from selectionmodes import SelectionModes
 from custompolygonpool import CustomPolygonPool
+from target import Target
 
 
 def getPointGeomNode( point ):
@@ -29,7 +30,7 @@ def getPointGeomNode( point ):
 currentFrame = [ ]
 
 
-class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
+class CustomCollisionPolygon( CustomPolygon, Target ):
 	def __init__( self, child: NodePath ):
 		super().__init__( child )
 		SelectionItem.__init__( self )
@@ -60,9 +61,6 @@ class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 
 	def randomNeighbor( self ):
 		return random.choice( list( self.__neighbors.values() ) )
-
-	def randomCloserrNeighbor( self, position ):
-		pass
 
 	@neighbors.setter
 	def neighbors( self, neighbors ):
