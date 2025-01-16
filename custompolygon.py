@@ -102,6 +102,12 @@ class CustomPolygon:
 	def position( self ):
 		return self._child.get_pos()
 
+	def hpr( self, model ):
+		return self._child.getHpr( model )
+
+	def getPos( self, model ):
+		return self._child.get_pos( model )
+
 	@property
 	def isTerrain( self ):
 		return True
