@@ -17,12 +17,12 @@ class MovementManager:
 		self.__detection = Detection( entity, world )
 		self.__tempTarget = None
 		self.__mover: Mover = entity
-		self.__aligned = False
+		self.aligned = False
 
 	def set_velocity_toward_point_with_stop( self, target_pos, task ):
 		speed = self.__mover.speed
 		stop_threshold = 20
-		if not self.__aligned:
+		if not self.aligned:
 			return task.cont
 		if self.__mover.hasObstacles():
 			self.__mover.currentTarget.clearSelection()
@@ -46,9 +46,9 @@ class MovementManager:
 		                                         tracking_speed = 50 )
 		self.__mover.coreBodyPath.setHpr( new_hpr )
 		if abs( h_diff ) <= 5:
-			self.__aligned = True
+			self.aligned = True
 		else:
-			self.__aligned = False
+			self.aligned = False
 		return task.cont
 
 	def track_target_detectors_angle( self, task ):
@@ -57,10 +57,6 @@ class MovementManager:
 		h_diff, new_hpr = self.__getRelativeHpr( self.__mover.rightDetector, self.__mover.currentTarget.position,
 		                                         tracking_speed = 80 )
 		self.__mover.rightDetector.setHpr( new_hpr )
-		if abs( h_diff ) <= 5:
-			self.__aligned = True
-		else:
-			self.__aligned = False
 		return task.cont
 
 	def __getRelativeHpr( self, bodyPart, target_position, tracking_speed = 100 ):
@@ -100,8 +96,8 @@ class MovementManager:
 		#task.delayTime = 0.5
 		if self.__mover.currentTarget is None:
 			return task.again
-		if not self.__aligned:
-			return task.again
+		#if not self.aligned:
+			#return task.again
 		obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
 		try:
 			if obstacle is None:
@@ -149,7 +145,7 @@ class MovementManager:
 			return task.cont
 
 		self.__tempTarget = randomTarget
-		self.__aligned = False
+		self.aligned = False
 		return task.cont
 
 	def alternative_target2( self, task ):
@@ -160,7 +156,7 @@ class MovementManager:
 			return task.done
 		randomTarget = self.__detection.detectPosition()
 		self.__tempTarget = randomTarget
-		self.__aligned = False
+		self.aligned = False
 		return task.cont
 
 	def __getCurrentTarget( self ):

@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 
 from statemachine.state import State
+from states.states import States
+
 if TYPE_CHECKING:
     from entities.full.movers.mover import Mover
 
@@ -18,5 +20,5 @@ class IdleState( State ):
 
     def execute( self ):
         if self.mover.currentTarget or self.mover.bpTarget:
-            self.nextState = "movement"
+            self.nextState = States.CHECK_OBSTACKE
             self._done = True

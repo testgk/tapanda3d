@@ -14,23 +14,15 @@ class CheckObstacle( MovementState ):
 		super().__init__( entity )
 		self._currentTarget = None
 
-	@property
-	def mover( self ) -> 'Mover':
-		return self._entity
-
 	def enter( self ):
-		self._currentTarget = self.mover.currentTarget
-		self.mover.speed = 75
-		self.mover.locatorMode = LocatorModes.All
-		self.mover.elasticLocator = True
-		print( f'current target: { self._currentTarget} ' )
-		self.mover.schedulePointToPointTasks()
+		self.mover.locatorMode = LocatorModes.TargetOnly
+		self.mover.scheduleCheckObstaclesTasks()
 
 	def execute( self ):
-		if self.mover.hasObstacles() or self.mover.currentTarget != self._currentTarget:
+		if self.mover.hasObstacles() or self.mover.aligned:
 			self._done = True
 			print( f'{ self._entity.name } finished moving' )
 			if self.mover.hasObstacles():
 				self.nextState = States.OBSTACLE
 			else:
-				self.nextState = States.IDLE
+				self.nextState = States.MOVEMENT
