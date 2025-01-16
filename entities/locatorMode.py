@@ -13,7 +13,7 @@ class Locators( Enum ):
 	TargetLeft = 5
 
 class LocatorModes( Enum ):
-	All = ( Locators.Right, Locators.Left, Locators.Target )
+	All = ( Locators.Right, Locators.Left )
 	Edges = ( Locators.Left, Locators.Right )
 	TargetEdges = ( Locators.TargetLeft, Locators.TargetRight )
 	TargetOnly = ( Locators.Target, Locators.Target )

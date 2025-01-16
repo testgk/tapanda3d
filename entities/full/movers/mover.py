@@ -7,6 +7,7 @@ from enums.colors import Color
 from sphere import create_sphere
 from statemachine.state import State
 from entities.parts.part import Part
+from states.checkobstaclestate import CheckObstacle
 from states.states import States
 from states.idlestate import IdleState
 from selectionitem import SelectionItem
@@ -30,7 +31,6 @@ class Mover( Entity ):
 		self.angle_increment = 1
 		self.angle = 0
 		self.__dynamicDetector = None
-		self.elasticLocator = False
 		self.targetOnly = False
 		self.__speed = None
 		self.__targetVisible = False
@@ -67,6 +67,11 @@ class Mover( Entity ):
 	@speed.setter
 	def speed( self, value ):
 		self.__speed = value
+
+	@property
+	def aligned( self ):
+		if self._movementManager:
+			return self._movementManager.aligned
 
 	@bpTarget.setter
 	def bpTarget( self, target ):
@@ -138,6 +143,7 @@ class Mover( Entity ):
 				States.MOVEMENT: MovementState( self ),
 				States.OBSTACLE: ObstacleState( self ),
 				States.BYPASS: BypassState( self ),
+				States.CHECK_OBSTACKE: CheckObstacle( self ),
 				States.ROAM: RoamState( self )
 		}
 
@@ -175,10 +181,13 @@ class Mover( Entity ):
 		print( f"new position: { position }" )
 		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, extraArgs = [ position ] )
 		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
-		#self.scheduleTask( self._movementManager.track_target_detectors_angle, checkExisting = True )
 		self.scheduleTask( self._movementManager.maintain_terrain_boundaries, extraArgs = [ self.__terrainSize ] )
 		self.scheduleTask( self._movementManager.monitor_obstacles )
 		self.scheduleTask( self._movementManager.maintain_turret_angle )
+
+	def scheduleCheckObstaclesTasks( self ):
+		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
+		self.scheduleTask( self._movementManager.monitor_obstacles )
 
 	def scheduleObstacleTasks( self ):
 		self.scheduleTask( self._movementManager.monitor_handle_obstacles )
@@ -212,7 +221,7 @@ class Mover( Entity ):
 		self._connectModules( physicsWorld )
 		self.__createModelBounds()
 		self.__createEdges()
-		self.__createRearEdges()
+		#self.__createRearEdges()
 		self.__initMovementManager( physicsWorld )
 		self._createStateMachine()
 
@@ -226,6 +235,7 @@ class Mover( Entity ):
 
 	def __createEdges( self ):
 		self.__edge = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._length / 2, 0, 0 ) )
+		self.__targetDetector = create_and_setup_sphere( self.coreBodyPath, Color.ORANGE, Vec3( self._length, 0, 0 ) )
 		self.__leftEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._length / 2, self._width / 2, 0 ) )
 		self.__rightEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._length / 2, - self._width / 2, 0 ) )
 		self.__leftDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._length, self._width / 2, 0 ) )
@@ -255,6 +265,10 @@ class Mover( Entity ):
 		y = self._width * sin( radians_angle )
 		z = -5
 		self.__dynamicDetector.setPos( x, y, z )
+		#if self._currentTarget is None:
+		#	return task.cont
+		#relative_pos = self._currentTarget.getPos( self.coreBodyPath )
+		#self.__targetDetector.setPos( relative_pos.x * 0.5, relative_pos.y * 0.5, self._height )
 		return task.cont
 
 	def isMidRangeFromObstacle( self ):
