@@ -83,7 +83,7 @@ class Detection:
 		else:
 			edge, detector = self.__detectors[ option ]()
 		direction = Vec3( detector - edge )
-		self.__ray = self.visualize_ray( start = edge, end = edge + direction * 10 )
+		self.__ray = self.visualize_ray( start = edge, color = Color.GREEN, end = edge + direction * 10 )
 		result = self.__world.rayTestAll( edge, edge + direction * 10 )
 		return result
 
