@@ -22,8 +22,8 @@ class MovementManager:
 	def set_velocity_toward_point_with_stop( self, target_pos, task ):
 		speed = self.__mover.speed
 		stop_threshold = 20
-		if not self.aligned:
-			return task.cont
+		#if not self.aligned:
+		#	return task.cont
 		if self.__mover.hasObstacles():
 			self.__mover.currentTarget.clearSelection()
 			return task.done
@@ -45,7 +45,7 @@ class MovementManager:
 		h_diff, new_hpr = self.__getRelativeHpr( self.__mover.coreBodyPath, self.__mover.currentTarget.position,
 		                                         tracking_speed = 50 )
 		self.__mover.coreBodyPath.setHpr( new_hpr )
-		if abs( h_diff ) <= 5:
+		if abs( h_diff ) <= 50:
 			self.aligned = True
 		else:
 			self.aligned = False
@@ -96,8 +96,6 @@ class MovementManager:
 		#task.delayTime = 0.5
 		if self.__mover.currentTarget is None:
 			return task.again
-		#if not self.aligned:
-			#return task.again
 		obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
 		try:
 			if obstacle is None:
@@ -154,8 +152,11 @@ class MovementManager:
 			print( f'current random target: { self.__tempTarget }' )
 			self.__tempTarget = None
 			return task.done
-		randomTarget = self.__detection.detectPosition()
+		randomTarget = self.__detection.detectPosition( target = self.__getCurrentTarget() )
 		self.__tempTarget = randomTarget
+		if self.__tempTarget:
+			self.__mover.obstacle.clearSelection()
+			self.__mover.obstacle = None
 		self.aligned = False
 		return task.cont
 

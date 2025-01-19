@@ -29,7 +29,8 @@ class Mover( Entity ):
 		super().__init__()
 		self.locatorMode: LocatorModes = LocatorModes.All
 		self.angle_increment = 1
-		self.angle = 0
+		self.__verticalAngle = 0
+		self.__horizontalAngle = -5
 		self.__dynamicDetector = None
 		self.targetOnly = False
 		self.__speed = None
@@ -185,12 +186,16 @@ class Mover( Entity ):
 		self.scheduleTask( self._movementManager.monitor_obstacles )
 		self.scheduleTask( self._movementManager.maintain_turret_angle )
 
+	def scheduleBackupTasks( self ):
+		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, extraArgs = [ position ] )
+		
+
 	def scheduleCheckObstaclesTasks( self ):
 		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
 		self.scheduleTask( self._movementManager.monitor_obstacles )
 
 	def scheduleObstacleTasks( self ):
-		self.scheduleTask( self._movementManager.monitor_handle_obstacles )
+		#self.scheduleTask( self._movementManager.monitor_handle_obstacles )
 		self.scheduleTask( self._movementManager.alternative_target2 )
 
 	def finishedMovement( self ):
@@ -257,18 +262,14 @@ class Mover( Entity ):
 
 	def moveDynamicDetector( self, task ):
 		task.delayTime = 1
-		self.angle += self.angle_increment
-		if self.angle >= 90 or self.angle <= -90:
+		self.__verticalAngle += self.angle_increment
+		if self.__verticalAngle >= 90 or self.__verticalAngle <= -90:
 			self.angle_increment *= -1
-		radians_angle = radians( self.angle )
+		radians_angle = radians( self.__verticalAngle )
 		x = self._length / 2 + self._width * cos( radians_angle )
 		y = self._width * sin( radians_angle )
-		z = -5
+		z = self.__horizontalAngle
 		self.__dynamicDetector.setPos( x, y, z )
-		#if self._currentTarget is None:
-		#	return task.cont
-		#relative_pos = self._currentTarget.getPos( self.coreBodyPath )
-		#self.__targetDetector.setPos( relative_pos.x * 0.5, relative_pos.y * 0.5, self._height )
 		return task.cont
 
 	def isMidRangeFromObstacle( self ):
