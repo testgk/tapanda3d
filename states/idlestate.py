@@ -19,6 +19,9 @@ class IdleState( State ):
         self._entity.scheduleTargetMonitoringTask()
 
     def execute( self ):
-        if self.mover.currentTarget or self.mover.bpTarget:
+        if self.mover.currentTarget:
             self.nextState = States.CHECK_OBSTACKE
+            self._done = True
+        if self.mover.bpTarget:
+            self.nextState = States.MOVEMENT
             self._done = True

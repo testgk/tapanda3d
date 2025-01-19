@@ -30,7 +30,7 @@ class TerrainCamera:
                                                    cameraAngle = self.__cameraAngle )
 
     def setCamera( self ):
-        self.__cameraAngle = 0  # Initial __camera angle
+        self.__cameraAngle = 0  # Initial __camera __verticalAngle
         self.__cameraRadius = 1200  # Distance from the __center of the terrain
         self.__cameraHeight = 1400  # Height of the __camera
 
