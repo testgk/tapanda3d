@@ -41,15 +41,15 @@ class Detection:
 					continue
 				if not item.isObstacle:
 					continue
-				#if self.isCloser( self.__mover, target, item ):
-				#	continue
-				#if self.isCloser( item, target, self.__mover ):
-				#	continue
+				if self.isCloser( self.__mover, target, item ):
+					continue
+				if self.isCloser( item, target, self.__mover ):
+					continue
 				item.handleSelection()
 				return item
 		return None
 
-	def detectPosition( self ):
+	def detectPosition( self, target ):
 		result = self.__getDetection( locatorMode = Locators.Dynamic )
 		if result.hasHits():
 			for hit in result.getHits():
@@ -63,6 +63,8 @@ class Detection:
 				if item is None:
 					continue
 				if not item.isTerrain:
+					continue
+				if not self.isCloser( target, item, self.__mover ):
 					continue
 #				item.handleSelection()
 				print( f'detect position: { item }' )
