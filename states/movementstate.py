@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorModes
-from selectionmodes import SelectionModes
 from statemachine.state import State
 from states.states import States
 

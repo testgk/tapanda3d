@@ -52,8 +52,8 @@ class MovementManager:
 	def moveCurvedPath( self ):
 		curve_evaluator = NurbsCurveEvaluator()
 		curve = curve_evaluator.add_curve()
-		curve.push_back( self.__mover.bpTarget.position )  # Start point
-		curve.push_back( self.__mover.currentTarget.position )  # Control point 1
+		#curve.push_back( self.__mover.bpTargets.position )  # Start point
+		#curve.push_back( self.__mover.currentTarget.position )  # Control point 1
 
 	def distance_from_obstacle( self ):
 		return ( self.__mover.obstacle.position - self.__mover.position ).length()
