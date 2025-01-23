@@ -63,15 +63,15 @@ class Mover( Entity ):
 		self.__terrainSize = None
 		self.__obstacle: 'Entity' or None = None
 		self.__lastObstacle: 'Entity' or None = None
-		self.__bypassTarget = None
+		self.__bypassTargets: Target or None =  None
 
 	@property
 	def bpTarget( self ):
-		return self.__bypassTarget
+		return self.__bypassTargets
 
 	@bpTarget.setter
 	def bpTarget( self, target ):
-		self.__bypassTarget = target
+		self.__bypassTargets = target
 
 	@property
 	def speed( self ) -> float:
@@ -161,14 +161,14 @@ class Mover( Entity ):
 		self.scheduleTask( self.targetMonitoringTask, checkExisting = True )
 
 	def targetMonitoringTask( self, task ):
-		if self.__bypassTarget:
+		if self.__bypassTargets:
 			if self._currentTarget in self._selectedTargets:
 				self.moveTargets.appendleft( self._currentTarget )
 				self._currentTarget.handleSelection( mode = SelectionModes.TEMP )
 			else:
 				self._currentTarget.clearSelection()
-			self._currentTarget = self.__bypassTarget
-			self.__bypassTarget = None
+			self._currentTarget = self.__bypassTargets
+			self.__bypassTargets = None
 		if self._currentTarget is not None:
 			return task.cont
 		elif any( self.moveTargets ):
@@ -272,7 +272,7 @@ class Mover( Entity ):
 		self.__verticalAngle += self.__angle_increment
 		if self.__verticalAngle >= self._limit or self.__verticalAngle <= -self._limit:
 			self.__angle_increment *= -1
-		print( f' angle: { self.__verticalAngle } limit: { self._limit } ' )
+		#print( f' angle: { self.__verticalAngle } limit: { self._limit } ' )
 		radians_angle = radians( self.__verticalAngle )
 		x = self._length / 2 + self._width * cos( radians_angle )
 		y = self._width * sin( radians_angle )
