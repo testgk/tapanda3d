@@ -1,9 +1,8 @@
 from panda3d.core import Vec3
 
-from selectionitem import SelectionItem
 
 
-class Target( SelectionItem ):
+class Target:
 	def __init__( self ):
 		super().__init__()
 
