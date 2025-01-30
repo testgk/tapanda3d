@@ -2,6 +2,7 @@ import math
 from distutils.command.sdist import sdist
 
 from direct import task
+from direct.directutil.Mopath import Mopath
 from panda3d.core import Vec3, NurbsCurveEvaluator
 
 from movement.detection import Detection
@@ -49,11 +50,14 @@ class MovementManager:
 		self.__mover.coreRigidBody.set_linear_velocity( direction * self.__mover.speed )
 		return task.cont
 
-	def moveCurvedPath( self ):
+	def createCurvePath( self ):
 		curve_evaluator = NurbsCurveEvaluator()
 		curve = curve_evaluator.add_curve()
-		#curve.push_back( self.__mover.bpTargets.position )  # Start point
-		#curve.push_back( self.__mover.currentTarget.position )  # Control point 1
+		curve.push_back( self.__mover.position )
+		curve.push_back( self.__mover.bpTarget.position )  # Start point
+		curve.push_back( self.__mover.currentTarget.position )  # Control point 1
+		curve.set_order( 3 )
+
 
 	def distance_from_obstacle( self ):
 		return ( self.__mover.obstacle.position - self.__mover.position ).length()
@@ -115,20 +119,6 @@ class MovementManager:
 					self.__mover.obstacle = obstacle
 				return task.again
 			return task.done
-		finally:
-			self.__mover.obstacle = obstacle
-
-	def monitor_handle_obstacles( self, task ):
-		#task.delayTime = 0.2
-		obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
-		try:
-			if obstacle is None:
-				if self.__mover.obstacle is not None:
-					self.__mover.obstacle.clearSelection()
-					self.__mover.obstacle = obstacle
-					return task.done
-			else:
-				return task.again
 		finally:
 			self.__mover.obstacle = obstacle
 

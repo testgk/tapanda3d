@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorModes
 from statemachine.state import State
+from states.moverstate import MoverState
 from states.states import States
 from states.movementstate import MovementState
 
@@ -9,7 +10,7 @@ if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
 
 
-class BypassState( MovementState ):
+class BypassState( MoverState ):
 	def __init__( self, entity: 'Mover' ):
 		super().__init__( entity )
 

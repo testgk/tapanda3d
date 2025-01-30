@@ -4,6 +4,7 @@ from panda3d.core import GeomVertexReader, GeomNode, NodePath, GeomVertexFormat,
 	GeomTriangles, CollisionPolygon, GeomLines, Vec3, LVecBase3f
 
 from enums.colors import Color
+from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
 from target import Target
 
@@ -86,7 +87,7 @@ def createWireNode( customNode ):
 
 
 
-class CustomPolygon( Target ):
+class CustomPolygon( SelectionItem, Target ):
 	def __init__( self, child: NodePath ):
 		self._child = child
 		self._name = self._child.getName()
@@ -98,6 +99,7 @@ class CustomPolygon( Target ):
 			self._area = triangle_area( vertex[ 0 ], vertex[ 1 ], vertex[ 2 ] )
 			self._row, self._col = getNodePosition( self._name )
 		self._isTerrain = True
+		self._selectionMode = SelectionModes.NONE
 
 	@property
 	def position( self ):

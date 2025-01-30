@@ -45,7 +45,7 @@ class Selector:
 			self.__selectedItem = picked_item
 			self.__selectedItem.handleSelection( SelectionModes.CREATE )
 		else:
-			self.__selectedItem = self.__selectedItem.handleSelectItem( picked_item )
+			self.__selectedItem = self.__selectedItem.selectItem( picked_item )
 		self.__terrainCamera.setSelectedItem( self.__selectedItem )
 
 	def __getPickedItem( self, button ):
