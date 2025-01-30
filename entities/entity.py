@@ -137,7 +137,7 @@ class Entity( SelectionItem ):
 		if self.__collisionBox:
 			self.__collisionBox.hide()
 
-	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
+	def selectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
 		if item == self:
 			self.clearSelection()
 		if item != self and item.isMover:
@@ -147,7 +147,7 @@ class Entity( SelectionItem ):
 		if item.isTerrain:
 			if self.isMover:
 				self._selectedTargets.append( item )
-				self._moveTargets.append( item )
+				self._moveTargets.appendleft( item )
 				item.handleSelection( SelectionModes.P2P )
 				return self
 			else:

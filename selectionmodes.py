@@ -9,6 +9,7 @@ class SelectionModes:
 	CREATE = 4
 	CHECK = 5
 	TARGET = 6
+	ORIGINAL_TARGET = 8
 	TEMP = 7
 
 	selectioColors = {
@@ -16,6 +17,7 @@ class SelectionModes:
 		CHECK: Color.RED,
 		P2P: Color.YELLOW,
 		TARGET: Color.ORANGE,
+		ORIGINAL_TARGET: Color.CYAN,
 		TEMP: Color.MAGENTA,
 	}
 

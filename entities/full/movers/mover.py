@@ -9,6 +9,7 @@ from statemachine.state import State
 from entities.parts.part import Part
 from states.backupstate import BackupState
 from states.checkobstaclestate import CheckObstacle
+from states.curvestate import CurveState
 from states.states import States
 from states.idlestate import IdleState
 from selectionitem import SelectionItem
@@ -16,7 +17,7 @@ from entities.parts.engine import Engine
 from selectionmodes import SelectionModes
 from states.bypassstate import BypassState
 from entities.modules.chassis import Chassis
-from entities.locatorMode import LocatorModes
+from entities.locatorMode import LocatorModes, LocatorLength
 from states.movementstate import MovementState
 from states.obstaclestate import ObstacleState
 from movement.movementmanager import MovementManager
@@ -37,6 +38,7 @@ class Mover( Entity ):
 		self.__amplitude = 0
 		self._limit = DetectorLimits.Normal
 		self.locatorMode: LocatorModes = LocatorModes.All
+		self.detectorLength: LocatorLength = LocatorLength.Short
 		self.__angle_increment = 2
 		self.__verticalAngle = 0
 		self.__horizontalAngle = -5
@@ -64,6 +66,7 @@ class Mover( Entity ):
 		self.__obstacle: 'Entity' or None = None
 		self.__lastObstacle: 'Entity' or None = None
 		self.__bypassTargets: Target or None =  None
+		self.__curveTargets: list[ Target ] = []
 
 	@property
 	def bpTarget( self ):
@@ -154,7 +157,8 @@ class Mover( Entity ):
 				States.BYPASS: BypassState( self ),
 				States.CHECK_OBSTACKE: CheckObstacle( self ),
 				States.BACKUP: BackupState( self ),
-				States.ROAM: RoamState( self )
+				States.ROAM: RoamState( self ),
+				States.CURVE: CurveState( self )
 		}
 
 	def scheduleTargetMonitoringTask( self ):
@@ -162,19 +166,25 @@ class Mover( Entity ):
 
 	def targetMonitoringTask( self, task ):
 		if self.__bypassTargets:
-			if self._currentTarget in self._selectedTargets:
-				self.moveTargets.appendleft( self._currentTarget )
-				self._currentTarget.handleSelection( mode = SelectionModes.TEMP )
+			if self._currentTarget.isSelected( SelectionModes.P2P ):
+				self.moveTargets.append( self._currentTarget )
+				self._currentTarget.handleSelection( mode = SelectionModes.ORIGINAL_TARGET )
 			else:
 				self._currentTarget.clearSelection()
 			self._currentTarget = self.__bypassTargets
+			self._currentTarget.handleSelection( mode = SelectionModes.TEMP )
 			self.__bypassTargets = None
+
 		if self._currentTarget is not None:
 			return task.cont
 		elif any( self.moveTargets ):
-			self._currentTarget = self.moveTargets.popleft()
+			self._currentTarget = self.moveTargets.pop()
 			print( f"current target: { self._currentTarget }" )
 		return task.cont
+
+	def targetCurveMonitoringTask( self, task ):
+		if len( self.moveTargets ) > 2:
+
 
 	@property
 	def terrainSize( self ):
@@ -185,7 +195,7 @@ class Mover( Entity ):
 		self.__terrainSize = terrainSize
 
 	def schedulePointToPointTasks( self ):
-		self._currentTarget.handleSelection( mode = SelectionModes.TARGET )
+		#self._currentTarget.handleSelection( mode = SelectionModes.TARGET )
 		position = self._currentTarget.position
 		print( f"new position: { position }" )
 		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, extraArgs = [ position ] )
@@ -193,6 +203,9 @@ class Mover( Entity ):
 		self.scheduleTask( self._movementManager.maintain_terrain_boundaries, extraArgs = [ self.__terrainSize ] )
 		self.scheduleTask( self._movementManager.monitor_obstacles )
 		self.scheduleTask( self._movementManager.maintain_turret_angle )
+
+	def generateCurve( self ):
+		curvePath = self._movementManager.createCurvePath()
 
 	def scheduleBackupTasks( self ):
 		self.scheduleTask( self._movementManager.set_velocity_backwards_direction )
@@ -301,7 +314,7 @@ class Mover( Entity ):
 	def closeToObstacle( self ):
 		if not self.hasObstacles():
 			return False
-		return self._movementManager.distance_from_obstacle() <= 25
+		return self._movementManager.distance_from_obstacle() <= 10
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
 	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks )

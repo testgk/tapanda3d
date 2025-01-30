@@ -29,3 +29,8 @@ locatorColors = {
 		Locators.Dynamic.value: Color.ORANGE,
 	}
 
+class LocatorLength:
+	Short = 5
+	Medium = 10
+	Long = 20
+
