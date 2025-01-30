@@ -3,13 +3,14 @@ from typing import TYPE_CHECKING
 from entities.locatorMode import LocatorModes
 from statemachine.state import State
 from states.movementstate import MovementState
+from states.moverstate import MoverState
 from states.states import States
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
 
 
-class BackupState( MovementState ):
+class BackupState( MoverState ):
 	def __init__( self, entity: 'Mover' ):
 		super().__init__( entity )
 

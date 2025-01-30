@@ -41,12 +41,13 @@ class Detection:
 					continue
 				if not item.isObstacle:
 					continue
-				if self.isCloser( self.__mover, target, item ):
+				obstacle = item
+				if self.isCloser( self.__mover, target, obstacle ):
 					continue
 				#if self.isCloser( item, target, self.__mover ):
 				#	continue
-				item.handleSelection()
-				return item
+				obstacle.handleSelection()
+				return obstacle
 		return None
 
 	def detectPosition( self, target ):
@@ -86,7 +87,7 @@ class Detection:
 		else:
 			edge, detector = self.__detectors[ option ]()
 		direction = Vec3( detector - edge )
-		self.__ray = self.visualize_ray( start = edge, color = Color.GREEN, end = edge + direction * 10 )
+		self.__ray = self.visualize_ray( start = edge, color = Color.GREEN, end = edge + direction * self.__mover.detectorLength )
 		result = self.__world.rayTestAll( edge, edge + direction * 10 )
 		return result
 

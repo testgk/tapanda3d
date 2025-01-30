@@ -30,7 +30,7 @@ def getPointGeomNode( point ):
 currentFrame = [ ]
 
 
-class CustomCollisionPolygon( CustomPolygon, Target ):
+class CustomCollisionPolygon( CustomPolygon, SelectionItem ):
 	def __init__( self, child: NodePath ):
 		super().__init__( child )
 		SelectionItem.__init__( self )
@@ -170,7 +170,7 @@ class CustomCollisionPolygon( CustomPolygon, Target ):
 		self._selectionMode = mode
 		self.__markArea( level = 0, color = SelectionModes.selectionColors( mode ) )
 
-	def handleSelectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
+	def selectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
 		item.handleSelection( SelectionModes.CREATE )
 		self.clearSelection()
 		return item
