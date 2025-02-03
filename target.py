@@ -1,5 +1,5 @@
 from panda3d.core import Vec3
-
+from selectionmodes import SelectionModes
 
 
 class Target:
@@ -9,6 +9,9 @@ class Target:
 	@property
 	def position( self ):
 		return NotImplemented
+
+	def isSelected( self, selectionMode: SelectionModes ):
+		raise NotImplementedError()
 
 
 class CustomTarget( Target ):
