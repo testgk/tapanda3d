@@ -177,13 +177,17 @@ class Mover( Entity ):
 
 		if self._currentTarget is not None:
 			return task.cont
-		elif any( self.moveTargets ):
+
+		if any( self.moveTargets ):
 			self._currentTarget = self.moveTargets.pop()
 			print( f"current target: { self._currentTarget }" )
 		return task.cont
 
 	def targetCurveMonitoringTask( self, task ):
 		if len( self.moveTargets ) > 2:
+			return task.done
+		while  any( self.moveTargets ):
+			self.__curveTargets.append( self.moveTargets.pop() )
 
 
 	@property
@@ -205,7 +209,7 @@ class Mover( Entity ):
 		self.scheduleTask( self._movementManager.maintain_turret_angle )
 
 	def generateCurve( self ):
-		curvePath = self._movementManager.createCurvePath()
+		curvePath = self._movementManager.createCurvePath( positions = [ self.position, self.currentTarget.position, self.moveTargets.pop().position ] )
 
 	def scheduleBackupTasks( self ):
 		self.scheduleTask( self._movementManager.set_velocity_backwards_direction )
@@ -215,7 +219,6 @@ class Mover( Entity ):
 		self.scheduleTask( self._movementManager.monitor_obstacles )
 
 	def scheduleObstacleTasks( self ):
-		#self.scheduleTask( self._movementManager.monitor_handle_obstacles )
 		self.scheduleTask( self._movementManager.target_detection )
 
 	def finishedMovement( self ):
