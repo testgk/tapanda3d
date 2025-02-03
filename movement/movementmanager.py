@@ -1,21 +1,25 @@
 import math
+import random
 from distutils.command.sdist import sdist
 
 from direct import task
 from direct.directutil.Mopath import Mopath
-from panda3d.core import Vec3, NurbsCurveEvaluator
+from panda3d.core import Vec3, NurbsCurveEvaluator, Vec4
 
+from enums.colors import Color
 from movement.detection import Detection
 from phyisics import globalClock
 from typing import TYPE_CHECKING
 
+from target import Target
 
 if TYPE_CHECKING:
-	from entities.full.movers.mover import Mover
+	from entities.full.movers.mover import Mover, create_and_setup_sphere
 
 
 class MovementManager:
 	def __init__( self, entity, world ):
+		self.__curve = None
 		self.__detection = Detection( entity, world )
 		self.__tempTarget = None
 		self.__mover: Mover = entity
@@ -50,13 +54,30 @@ class MovementManager:
 		self.__mover.coreRigidBody.set_linear_velocity( direction * self.__mover.speed )
 		return task.cont
 
-	def createCurvePath( self ):
+	def createCurvePath( self, positions = list, targets: int = 5 ):
+		curve = self.__createCurve( positions )
+		self.__generateRandom( curve, targets )
+		return curve
+
+	def __createCurve( self, positions ):
+		if len( positions ) < 3:
+			raise ValueError( "At least 3 positions are required to create a NURBS curve." )
 		curve_evaluator = NurbsCurveEvaluator()
-		curve = curve_evaluator.add_curve()
-		curve.push_back( self.__mover.position )
-		curve.push_back( self.__mover.bpTarget.position )  # Start point
-		curve.push_back( self.__mover.currentTarget.position )  # Control point 1
-		curve.set_order( 3 )
+		curve_evaluator.reset( len( positions ) )
+		for i, pos in enumerate( positions ):
+			curve_evaluator.set_vertex( i, Vec4( pos[ 0 ], pos[ 1 ], pos[ 2 ], 1 ) )
+		curve_evaluator.set_order( 3 )
+		return curve_evaluator.evaluate()
+
+	def __generateRandom( self, curve, numOfPoints: int = 10 ):
+		for _ in range( numOfPoints ):
+			t = random.uniform( 0.0, 1.0 )
+			pos = curve.get_point( t )
+			print( f"t = { t:.2f }, Position: { pos }" )
+			self.__renderPoint( pos )
+
+	def __renderPoint( self, pos ):
+		point = create_and_setup_sphere( self.__mover.render, position = pos, color = Color.RED )
 
 
 	def distance_from_obstacle( self ):
