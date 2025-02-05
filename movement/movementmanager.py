@@ -4,35 +4,39 @@ from distutils.command.sdist import sdist
 
 from direct import task
 from direct.directutil.Mopath import Mopath
-from panda3d.core import Vec3, NurbsCurveEvaluator, Vec4
+from panda3d.core import LineSegs, NodePath, Vec3, NurbsCurveEvaluator, Vec4
 
 from enums.colors import Color
 from movement.detection import Detection
 from phyisics import globalClock
 from typing import TYPE_CHECKING
 
+from sphere import create_sphere
 from target import Target
 
 if TYPE_CHECKING:
-	from entities.full.movers.mover import Mover, create_and_setup_sphere
+	from entities.full.movers.mover import Mover
 
 
 class MovementManager:
 	def __init__( self, entity, world ):
+		self.__curve_np = None
 		self.__curve = None
+		self.__t = 0.0
 		self.__detection = Detection( entity, world )
 		self.__tempTarget = None
 		self.__mover: Mover = entity
 		self.aligned = False
 
-	def set_velocity_toward_point_with_stop( self, target_pos, task ):
+	def set_velocity_toward_point_with_stop( self, task ):
+		if not self.__mover.currentTarget:
+			return task.cont
 		speed = self.__mover.speed
+		target_pos = self.__mover.currentTarget.position
 		stop_threshold = 20
-		#if not self.aligned:
-		#	return task.cont
-		if self.__mover.hasObstacles():
-			self.__mover.currentTarget.clearSelection()
-			return task.done
+		#if self.__mover.hasObstacles():
+		#	self.__mover.currentTarget.clearSelection()
+		#	return task.done
 		current_pos = self.__mover.position
 		direction = Vec3( target_pos.x - current_pos.x, target_pos.y - current_pos.y, 0 )
 		distance = direction.length()
@@ -55,33 +59,63 @@ class MovementManager:
 		return task.cont
 
 	def createCurvePath( self, positions = list, targets: int = 5 ):
-		curve = self.__createCurve( positions )
-		self.__generateRandom( curve, targets )
-		return curve
+		self.__curve = self.__createCurve( positions )
+		self.visualize_curve( self.__curve )
+		self.__generateRandom( )
+		#self.__generateRandom( __curve, targets )
+		return self.__curve
+
+	def visualize_curve( self, curve, num_samples: int = 100 ):
+		if self.__curve_np:
+			self.__curve_np.remove_node()
+
+		lines = LineSegs()
+		lines.set_thickness( 2.0 )
+		pos = Vec3()
+
+		for i in range( num_samples + 1 ):  # +1 to include the endpoint
+			t = i / num_samples
+			curve.eval_point( t, pos )
+			lines.draw_to( pos )
+
+		self.__curve_np = NodePath( lines.create() )
+		self.__curve_np.reparent_to( self.__mover.render )
+
 
 	def __createCurve( self, positions ):
 		if len( positions ) < 3:
-			raise ValueError( "At least 3 positions are required to create a NURBS curve." )
+			raise ValueError( "At least 3 positions are required to create a NURBS __curve." )
 		curve_evaluator = NurbsCurveEvaluator()
 		curve_evaluator.reset( len( positions ) )
 		for i, pos in enumerate( positions ):
-			curve_evaluator.set_vertex( i, Vec4( pos[ 0 ], pos[ 1 ], pos[ 2 ], 1 ) )
+			curve_evaluator.set_vertex( i, Vec4( pos[ 0 ], pos[ 1 ], pos[ 2 ] + 100, 1 ) )
 		curve_evaluator.set_order( 3 )
 		return curve_evaluator.evaluate()
 
-	def __generateRandom( self, curve, numOfPoints: int = 10 ):
+	def moveAlogCurve( self, task ):
+		if self.__t > 1.0:
+			return task.done
+
+		pos = Vec3()
+		self.__curve.eval_point( self.__t, pos )  # Evaluate position
+		self.__mover.setPos( pos )  # Move the object
+		self.__t += self.__mover.speed * globalClock.get_dt()  # Increase __t over time
+		return task.cont  # Continue updating
+
+	def __generateRandom( self, numOfPoints: int = 10 ):
 		for _ in range( numOfPoints ):
 			t = random.uniform( 0.0, 1.0 )
-			pos = curve.get_point( t )
-			print( f"t = { t:.2f }, Position: { pos }" )
+			pos = Vec3()
+			self.__curve.eval_point( t, pos )
 			self.__renderPoint( pos )
 
 	def __renderPoint( self, pos ):
 		point = create_and_setup_sphere( self.__mover.render, position = pos, color = Color.RED )
 
-
 	def distance_from_obstacle( self ):
-		return ( self.__mover.obstacle.position - self.__mover.position ).length()
+		distance = ( self.__mover.obstacle.position - self.__mover.position ).length()
+		print( "distance_from_obstacle:", distance )
+		return distance
 
 	def track_target_coreBody_angle( self, task ):
 		if self.__mover.currentTarget is None:
@@ -159,4 +193,11 @@ class MovementManager:
 		return task.cont
 
 	def __getCurrentTarget( self ):
-		return self.__tempTarget or self.__mover.currentTarget
+		return self.__mover.currentTarget
+
+def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
+	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks )
+	sphere.reparentTo( parent )
+	sphere.setColor( color )
+	sphere.setPos( position )
+	return sphere

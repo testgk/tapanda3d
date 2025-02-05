@@ -7,5 +7,5 @@ class States:
 	OBSTACLE = "obstacle"
 	BYPASS = "bypass"
 	BACKUP = "backup"
-	CURVE = "curve"
+	CURVE = "__curve"
 	ROAM = "roam"

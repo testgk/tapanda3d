@@ -16,7 +16,7 @@ class BackupState( MoverState ):
 
 	def enter( self ):
 		self.mover.speed = -50
-		self.mover.locatorMode = LocatorModes.NONE
+		self.mover.locatorMode = LocatorModes.Edges
 		print( f'current target: { self._currentTarget } ' )
 		self.mover.scheduleBackupTasks()
 
