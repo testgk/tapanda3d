@@ -72,12 +72,11 @@ class Detection:
 				return item
 		return None
 
-
 	def __getDetection( self, target = None, locatorMode: Locators = None ):
 		global edge
 		if self.__ray:
 			self.__ray.remove_node()
-		if  self.__mover.locatorMode == Locators.NONE:
+		if self.__mover.locatorMode == Locators.NONE:
 			return None
 		option = locatorMode or random.choice( self.__mover.locatorMode.value )
 		if option == Locators.Target:

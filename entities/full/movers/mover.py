@@ -12,8 +12,6 @@ from states.checkobstaclestate import CheckObstacle
 from states.curvestate import CurveState
 from states.states import States
 from states.idlestate import IdleState
-from selectionitem import SelectionItem
-from entities.parts.engine import Engine
 from selectionmodes import SelectionModes
 from states.bypassstate import BypassState
 from entities.modules.chassis import Chassis
@@ -35,6 +33,7 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.__nextTarget = None
 		self.__amplitude = 0
 		self._limit = DetectorLimits.Normal
 		self.locatorMode: LocatorModes = LocatorModes.All
@@ -65,8 +64,8 @@ class Mover( Entity ):
 		self.__terrainSize = None
 		self.__obstacle: 'Entity' or None = None
 		self.__lastObstacle: 'Entity' or None = None
-		self.__bypassTargets: Target or None =  None
-		self.__curveTargets: list[ Target ] = []
+		self.__bypassTargets: Target or None = None
+		self.__curveTargets: list[ Target ] = [ ]
 
 	@property
 	def bpTarget( self ):
@@ -90,7 +89,7 @@ class Mover( Entity ):
 			return self._movementManager.aligned
 
 	@property
-	def moveTargets( self ) -> deque:
+	def __moveTargets( self ) -> deque:
 		return self._moveTargets
 
 	@property
@@ -165,12 +164,12 @@ class Mover( Entity ):
 		self.scheduleTask( self.targetMonitoringTask, checkExisting = True )
 
 	def targetMonitoringTask( self, task ):
+		if self.__nextTarget is None and any( self._selectedTargets ):
+			self.__nextTarget = self._selectedTargets.pop()
+
 		if self.__bypassTargets:
-			if self._currentTarget.isSelected( SelectionModes.P2P ):
-				self.moveTargets.append( self._currentTarget )
-				self._currentTarget.handleSelection( mode = SelectionModes.ORIGINAL_TARGET )
-			else:
-				self._currentTarget.clearSelection()
+			if self._currentTarget is self.__nextTarget:
+				self.__moveTargets.append( self._currentTarget )
 			self._currentTarget = self.__bypassTargets
 			self._currentTarget.handleSelection( mode = SelectionModes.TEMP )
 			self.__bypassTargets = None
@@ -178,17 +177,20 @@ class Mover( Entity ):
 		if self._currentTarget is not None:
 			return task.cont
 
-		if any( self.moveTargets ):
-			self._currentTarget = self.moveTargets.pop()
-			print( f"current target: { self._currentTarget }" )
+		if self.__nextTarget is not None and self.__nextTarget not in self.__moveTargets:
+			self.__moveTargets.append( self.__nextTarget )
+
+		if any( self.__moveTargets ):
+			self._currentTarget = self.__moveTargets.pop()
+			print( f"current target: {self._currentTarget}" )
+
 		return task.cont
 
 	def targetCurveMonitoringTask( self, task ):
-		if len( self.moveTargets ) > 2:
+		if len( self.__moveTargets ) > 2:
 			return task.done
-		while  any( self.moveTargets ):
-			self.__curveTargets.append( self.moveTargets.pop() )
-
+		while any( self.__moveTargets ):
+			self.__curveTargets.append( self.__moveTargets.pop() )
 
 	@property
 	def terrainSize( self ):
@@ -199,18 +201,24 @@ class Mover( Entity ):
 		self.__terrainSize = terrainSize
 
 	def schedulePointToPointTasks( self ):
-		#self._currentTarget.handleSelection( mode = SelectionModes.TARGET )
-		position = self._currentTarget.position
-		print( f"new position: { position }" )
-		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, extraArgs = [ position ] )
+		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, checkExisting = True )
 		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
 		self.scheduleTask( self._movementManager.maintain_terrain_boundaries, extraArgs = [ self.__terrainSize ] )
 		self.scheduleTask( self._movementManager.monitor_obstacles )
 		self.scheduleTask( self._movementManager.maintain_turret_angle )
 
 	def generateCurve( self ):
-		curvePath = self._movementManager.createCurvePath( positions = [ self.position, self.currentTarget.position, self.moveTargets.pop().position ] )
+		pos1 = self.position
+		pos2 = self.currentTarget.position
+		pos3 = self.__moveTargets.pop().position
 
+		create_and_setup_sphere( self.render, radius = 10, color = Color.ORANGE, position = pos1 )
+		create_and_setup_sphere( self.render, radius = 10, color = Color.GREEN, position = pos2 )
+		create_and_setup_sphere( self.render, radius = 10, color = Color.YELLOW, position = pos3 )
+
+		curvePath = self._movementManager.createCurvePath( positions = [ pos1, pos2, pos3 ] )
+
+	#self.scheduleTask( self._movementManager.moveAlogCurve )
 	def scheduleBackupTasks( self ):
 		self.scheduleTask( self._movementManager.set_velocity_backwards_direction )
 
@@ -256,32 +264,43 @@ class Mover( Entity ):
 	def clearCurrentTarget( self ):
 		if not self._currentTarget:
 			return
-		self._currentTarget.clearSelection()
-		self._currentTarget = None
-		if self._currentTarget in self._selectedTargets:
-			self._selectedTargets.remove( self._currentTarget )
+		#self._currentTarget.clearSelection()
+		if self._currentTarget is self.__nextTarget:
+			self.__nextTarget = None
 
+		self._currentTarget = None
+
+	#if self._currentTarget in self._selectedTargets:
+	#self._selectedTargets.remove( self._currentTarget )
 	def __createEdges( self ):
 		self.__edge = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._length / 2, 0, 0 ) )
 		self.__targetDetector = create_and_setup_sphere( self.coreBodyPath, Color.ORANGE, Vec3( self._length, 0, 0 ) )
-		self.__leftEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._length / 2, self._width / 2, 0 ) )
-		self.__rightEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( self._length / 2, - self._width / 2, 0 ) )
-		self.__leftDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._length, self._width / 2, 0 ) )
-		self.__rightDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3( self._length, - self._width / 2, 0 ) )
+		self.__leftEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN,
+		                                           Vec3( self._length / 2, self._width / 2, 0 ) )
+		self.__rightEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN,
+		                                            Vec3( self._length / 2, - self._width / 2, 0 ) )
+		self.__leftDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED,
+		                                               Vec3( self._length, self._width / 2, 0 ) )
+		self.__rightDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE,
+		                                                Vec3( self._length, - self._width / 2, 0 ) )
 		self.__dynamicDetector = create_and_setup_sphere( self.coreBodyPath, Color.YELLOW, Vec3( 0, 0, 0 ) )
 		taskMgr.add( self.moveDynamicDetector, "CircularMotionTask" )
 
 	def __createModelBounds( self ):
 		self.__modelBounds = self.coreBodyPath.getTightBounds()
-		self._width = ( self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y )
-		self._length = ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x )
-		self._height = ( self.__modelBounds[ 1 ].z - self.__modelBounds[ 0 ].z )
+		self._width = (self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y)
+		self._length = (self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x)
+		self._height = (self.__modelBounds[ 1 ].z - self.__modelBounds[ 0 ].z)
 
 	def __createRearEdges( self ):
-		self.__leftRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( -self._length / 2, self._width / 2, 0 ) )
-		self.__rightRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN, Vec3( -self._length / 2, - self._width / 2, 0 ) )
-		self.__leftRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( -self._length, self._width / 2, 0 ) )
-		self.__rightRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE, Vec3( -self._length, - self._width / 2, 0 ) )
+		self.__leftRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN,
+		                                               Vec3( -self._length / 2, self._width / 2, 0 ) )
+		self.__rightRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN,
+		                                                Vec3( -self._length / 2, - self._width / 2, 0 ) )
+		self.__leftRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.RED,
+		                                                   Vec3( -self._length, self._width / 2, 0 ) )
+		self.__rightRearDetector = create_and_setup_sphere( self.coreBodyPath, Color.BLUE,
+		                                                    Vec3( -self._length, - self._width / 2, 0 ) )
 
 	def moveDynamicDetector( self, task ):
 		task.delayTime = 1
@@ -309,7 +328,7 @@ class Mover( Entity ):
 	def isMidRangeFromObstacle( self ):
 		if self.__lastObstacle is None:
 			return True
-		distance = ( self.__lastObstacle.position - self.position ).length()
+		distance = (self.__lastObstacle.position - self.position).length()
 		if distance > 100:
 			return True
 		return False
@@ -317,7 +336,11 @@ class Mover( Entity ):
 	def closeToObstacle( self ):
 		if not self.hasObstacles():
 			return False
-		return self._movementManager.distance_from_obstacle() <= 10
+		return self._movementManager.distance_from_obstacle() <= 300
+
+	def setPos( self, pos ):
+		self.coreBodyPath.setPos( pos )
+
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
 	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks )

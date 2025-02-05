@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorModes
-from statemachine.state import State
 from states.moverstate import MoverState
 from states.states import States
 
@@ -17,12 +16,13 @@ class MovementState( MoverState ):
 	def enter( self ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
-		self.mover.locatorMode = LocatorModes.All
+		self.mover.locatorMode = LocatorModes.Edges
 		print( f'current target: { self._currentTarget }' )
 		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):
 		if self.mover.hasObstacles() or self.mover.currentTarget != self._currentTarget:
+			print( f'mover target: {self.mover.currentTarget }' )
 			self._done = True
 			print( f'{ self._entity.name } finished moving' )
 			if self.mover.hasObstacles():

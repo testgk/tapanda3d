@@ -146,8 +146,7 @@ class Entity( SelectionItem ):
 			return item
 		if item.isTerrain:
 			if self.isMover:
-				self._selectedTargets.append( item )
-				self._moveTargets.appendleft( item )
+				self._selectedTargets.appendleft( item )
 				item.handleSelection( SelectionModes.P2P )
 				return self
 			else:
