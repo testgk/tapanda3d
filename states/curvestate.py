@@ -20,5 +20,6 @@ class CurveState( MoverState ):
 		self.mover.generateCurve()
 
 	def execute( self ):
+		return
 		self._done = True
 		self.nextState = States.MOVEMENT
