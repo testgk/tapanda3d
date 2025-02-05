@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from entities.locatorMode import LocatorModes
+from entities.locatorMode import LocatorModes, Locators
 from selectionmodes import SelectionModes
 from states.moverstate import MoverState
 from states.states import States
@@ -15,6 +15,10 @@ class ObstacleState( MoverState ):
 
     def enter( self ):
         self.mover.locatorMode = LocatorModes.Edges
+        if self.mover.obstacle.detection == Locators.Right:
+            self.mover.setDynamicDetector( Locators.Left )
+        else:
+            self.mover.setDynamicDetector( Locators.Right )
         self.mover.scheduleObstacleTasks()
 
     def execute( self ):

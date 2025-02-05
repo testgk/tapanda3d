@@ -27,7 +27,7 @@ class Detection:
 	def detectObstacle( self, target ):
 		if target is None:
 			return None
-		result = self.__getDetection( target.position )
+		result, option = self.__getDetection( target.position )
 		if result.hasHits():
 			for hit in result.getHits():
 				hit_node = hit.getNode()
@@ -42,16 +42,15 @@ class Detection:
 				if not item.isObstacle:
 					continue
 				obstacle = item
-				if self.isCloser( self.__mover, target, obstacle ):
+				if self.__mover.selectedTarget( target ) and self.isCloser( self.__mover, target, obstacle ):
 					continue
-				#if self.isCloser( item, target, self.__mover ):
-				#	continue
+				obstacle.detection = option
 				obstacle.handleSelection()
 				return obstacle
 		return None
 
 	def detectPosition( self, target ):
-		result = self.__getDetection( locatorMode = Locators.Dynamic )
+		result, option = self.__getDetection( locatorMode = Locators.Dynamic )
 		if result.hasHits():
 			for hit in result.getHits():
 				hit_node = hit.getNode()
@@ -67,7 +66,6 @@ class Detection:
 					continue
 				if not self.isCloser( target, item, self.__mover ):
 					continue
-#				item.handleSelection()
 				print( f'detect position: { item }' )
 				return item
 		return None
@@ -88,7 +86,7 @@ class Detection:
 		direction = Vec3( detector - edge )
 		self.__ray = self.visualize_ray( start = edge, color = Color.GREEN, end = edge + direction * self.__mover.detectorLength )
 		result = self.__world.rayTestAll( edge, edge + direction * 10 )
-		return result
+		return result, option
 
 	def visualize_ray( self, start, end, color = Color.GREEN, thickness = 2.0 ):
 		if self.__mover.hasObstacles():

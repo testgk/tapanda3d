@@ -50,7 +50,7 @@ class MovementManager:
 		return task.cont
 
 	def set_velocity_backwards_direction( self, task ):
-		if not self.__mover.hasObstacles():
+		if not self.__mover.closeToObstacle():
 			return task.done
 
 		direction = Vec3( self.__mover.obstacle.position - self.__mover.position )
@@ -164,6 +164,8 @@ class MovementManager:
 
 	def monitor_obstacles( self, task ):
 		#task.delayTime = 0.5
+		if self.__mover.obstacle is not None:
+			return task.cont
 		if self.__mover.currentTarget is None:
 			return task.again
 		obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
@@ -175,6 +177,8 @@ class MovementManager:
 				return task.again
 			return task.done
 		finally:
+			if obstacle is not None:
+				print( "monitor_obstacles:", obstacle.detection )
 			self.__mover.obstacle = obstacle
 
 	def __checkForObstacles( self, target ):
@@ -193,7 +197,7 @@ class MovementManager:
 		return task.cont
 
 	def __getCurrentTarget( self ):
-		return self.__mover.currentTarget
+		return self.__tempTarget or self.__mover.currentTarget
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
 	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks )

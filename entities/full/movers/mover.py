@@ -15,7 +15,7 @@ from states.idlestate import IdleState
 from selectionmodes import SelectionModes
 from states.bypassstate import BypassState
 from entities.modules.chassis import Chassis
-from entities.locatorMode import LocatorModes, LocatorLength
+from entities.locatorMode import LocatorModes, LocatorLength, Locators
 from states.movementstate import MovementState
 from states.obstaclestate import ObstacleState
 from movement.movementmanager import MovementManager
@@ -35,7 +35,6 @@ class Mover( Entity ):
 		super().__init__()
 		self.__nextTarget = None
 		self.__amplitude = 0
-		self._limit = DetectorLimits.Normal
 		self.locatorMode: LocatorModes = LocatorModes.All
 		self.detectorLength: LocatorLength = LocatorLength.Short
 		self.__angle_increment = 2
@@ -66,6 +65,7 @@ class Mover( Entity ):
 		self.__lastObstacle: 'Entity' or None = None
 		self.__bypassTargets: Target or None = None
 		self.__curveTargets: list[ Target ] = [ ]
+		self.setDynamicDetector( mode = "full")
 
 	@property
 	def bpTarget( self ):
@@ -257,7 +257,6 @@ class Mover( Entity ):
 		self._connectModules( physicsWorld )
 		self.__createModelBounds()
 		self.__createEdges()
-		#self.__createRearEdges()
 		self.__initMovementManager( physicsWorld )
 		self._createStateMachine()
 
@@ -305,27 +304,29 @@ class Mover( Entity ):
 	def moveDynamicDetector( self, task ):
 		task.delayTime = 1
 		self.__verticalAngle += self.__angle_increment
-		if self.__verticalAngle >= self._limit or self.__verticalAngle <= -self._limit:
+		if self.__verticalAngle >= self.__rightLimit or self.__verticalAngle <= self.__leftLimit:
 			self.__angle_increment *= -1
-		#print( f' angle: { self.__verticalAngle } limit: { self._limit } ' )
 		radians_angle = radians( self.__verticalAngle )
-		x = self._length / 2 + self._width * cos( radians_angle )
-		y = self._width * sin( radians_angle )
-		z = self.__horizontalAngle
-		self.__dynamicDetector.setPos( x, y, z )
+		self.__dynamicDetector.setPos( self._length / 2 + self._width * cos( radians_angle ),
+		                               self._width * sin( radians_angle ),
+		                               self.__horizontalAngle )
 		return task.cont
 
-	def __gradualDetectorLimits( self ):
-		if self.__verticalAngle > self._limit:
-			self.__angle_increment *= -1
-			self._limit += self.__angle_increment
-			self.__verticalAngle = self._limit - 1
-		elif self.__verticalAngle < -self._limit:
-			self.__angle_increment *= -1
-			self._limit -= self.__angle_increment
-			self.__verticalAngle = - self._limit + 1
+	def setDynamicDetector( self, mode: Locators ):
+		if mode == Locators.Left:
+			self.__leftLimit = 0
+			self.__rightLimit = DetectorLimits.Wide
+			self.__verticalAngle = 2
+		elif mode == Locators.Right:
+			self.__leftLimit = -DetectorLimits.Wide
+			self.__rightLimit = 0
+			self.__verticalAngle = -2
+		else:
+			self.__verticalAngle = 0
+			self.__rightLimit = DetectorLimits.Normal
+			self.__leftLimit = -DetectorLimits.Normal
 
-	def isMidRangeFromObstacle( self ):
+	def isMidRangeFromObstacle( self ) -> bool:
 		if self.__lastObstacle is None:
 			return True
 		distance = (self.__lastObstacle.position - self.position).length()
@@ -333,13 +334,16 @@ class Mover( Entity ):
 			return True
 		return False
 
-	def closeToObstacle( self ):
+	def closeToObstacle( self ) -> bool:
 		if not self.hasObstacles():
 			return False
 		return self._movementManager.distance_from_obstacle() <= 300
 
-	def setPos( self, pos ):
+	def setPos( self, pos ) -> None:
 		self.coreBodyPath.setPos( pos )
+
+	def selectedTarget( self, target ) -> bool:
+		return target is self.__nextTarget or target in self._selectedTargets
 
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
