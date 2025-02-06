@@ -8,6 +8,7 @@ from panda3d.core import NodePath
 
 from entities.partfactory import PartFactory
 from entities.commandmanager import CommandManager
+from entities.parts.part import Part
 from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
 from statemachine.commands.command import Command
@@ -41,18 +42,18 @@ class Entity( SelectionItem ):
 		self._partBuilder = PartFactory( self )
 		self._commandManager = CommandManager()
 		self.__collisionBox = None
-		self.__rigidBodies = None
+		self.__rigidBodies : dict[ str: { BulletRigidBodyNode, list[ 'Part' ] } ] = None
 		self._corePart = None
 		self._coreBodyPath = None
 		self._isMover = False
-		self.initStatesPool()
-		self.render = None
+		self._initStatesPool()
+		self.__render = None
 		self._length = None
 		self._width = None
 		self._height = None
 
 	@property
-	def rigidBodyNodes( self ) -> dict:
+	def rigidBodyNodes( self )  -> dict[ str: { BulletRigidBodyNode, list[ 'Part' ] } ]:
 		return self.__rigidBodies
 
 	@property
@@ -95,9 +96,9 @@ class Entity( SelectionItem ):
 	def buildModels( self, loader ):
 		self._partBuilder.build( loader )
 		self.__models = self._partBuilder.models
-		self.__collisionBox = self._partBuilder.collisionBox
+		self.__collisionBox = self._partBuilder.collisionBox()
 		self.__collisionBox.setPythonTag( 'collision_target', self )
-		self.__rigidBodies = self._partBuilder.rigidBodies
+		self.__rigidBodies = self._partBuilder.rigidBodies()
 
 	def _connectModules( self, world ):
 		raise NotImplementedError
@@ -155,7 +156,7 @@ class Entity( SelectionItem ):
 				return item
 		return None
 
-	def initStatesPool( self ):
+	def _initStatesPool( self ):
 		self._statesPool = {
 			"idle" : IdleState,
 		}
@@ -163,5 +164,5 @@ class Entity( SelectionItem ):
 	def isValidState( self, stateName ) -> bool:
 		return stateName in self._statesPool
 
-	def completeLoading( self, physicsWorld ):
+	def completeLoading( self, physicsWorld, render ):
 		pass

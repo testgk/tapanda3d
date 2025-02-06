@@ -1,27 +1,28 @@
+from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
 from panda3d.core import Vec3
 from collections import deque
 from math import cos, sin, radians
 from direct.task.TaskManagerGlobal import taskMgr
 
+from target import Target
 from enums.colors import Color
 from sphere import create_sphere
+from states.states import States
 from statemachine.state import State
 from entities.parts.part import Part
-from states.backupstate import BackupState
-from states.checkobstaclestate import CheckObstacle
-from states.curvestate import CurveState
-from states.states import States
 from states.idlestate import IdleState
+from states.roamstate import RoamState
+from states.curvestate import CurveState
 from selectionmodes import SelectionModes
+from states.backupstate import BackupState
 from states.bypassstate import BypassState
 from entities.modules.chassis import Chassis
-from entities.locatorMode import LocatorModes, LocatorLength, Locators
 from states.movementstate import MovementState
 from states.obstaclestate import ObstacleState
 from movement.movementmanager import MovementManager
+from states.checkobstaclestate import CheckObstacle
 from entities.entity import Entity, entitypart, entitymodule
-from states.roamstate import RoamState
-from target import Target
+from entities.locatorMode import LocatorModes, LocatorLength, Locators
 
 
 class DetectorLimits:
@@ -33,6 +34,9 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.__aligned: bool = False
+		self.__leftLimit = None
+		self.__rightLimit = None
 		self.__nextTarget = None
 		self.__amplitude = 0
 		self.locatorMode: LocatorModes = LocatorModes.All
@@ -63,17 +67,17 @@ class Mover( Entity ):
 		self.__terrainSize = None
 		self.__obstacle: 'Entity' or None = None
 		self.__lastObstacle: 'Entity' or None = None
-		self.__bypassTargets: Target or None = None
+		self.__bypassTarget: Target or None = None
 		self.__curveTargets: list[ Target ] = [ ]
-		self.setDynamicDetector( mode = "full")
+		self.setDynamicDetector( mode = Locators.Full )
 
 	@property
 	def bpTarget( self ):
-		return self.__bypassTargets
+		return self.__bypassTarget
 
 	@bpTarget.setter
-	def bpTarget( self, target ):
-		self.__bypassTargets = target
+	def bpTarget( self, target: Target ):
+		self.__bypassTarget = target
 
 	@property
 	def speed( self ) -> float:
@@ -85,8 +89,11 @@ class Mover( Entity ):
 
 	@property
 	def aligned( self ):
-		if self._movementManager:
-			return self._movementManager.aligned
+		return self.__aligned
+
+	@aligned.setter
+	def aligned( self, value ):
+		self.__aligned = value
 
 	@property
 	def __moveTargets( self ) -> deque:
@@ -119,21 +126,25 @@ class Mover( Entity ):
 	def height( self ):
 		return self._length
 
+	@property
+	def dynamicDetector( self ):
+		return self.__dynamicDetector
+
 	def edgePos( self ):
-		return self.__edge.get_pos( self.render )
+		return self.__edge.get_pos( self.__render )
 
 	def getLeftDetectorDirection( self ):
-		leftPos = self.__leftDetector.get_pos( self.render )
-		edgePos = self.__leftEdge.get_pos( self.render )
+		leftPos = self.__leftDetector.get_pos( self.__render )
+		edgePos = self.__leftEdge.get_pos( self.__render )
 		return edgePos, leftPos
 
 	def getRightDetectorDirection( self ):
-		rightPos = self.__rightDetector.get_pos( self.render )
-		edgePos = self.__rightEdge.get_pos( self.render )
+		rightPos = self.__rightDetector.get_pos( self.__render )
+		edgePos = self.__rightEdge.get_pos( self.__render )
 		return edgePos, rightPos
 
 	def getDynamicDetectorDirection( self ):
-		dynamicPos = self.__dynamicDetector.get_pos( self.render )
+		dynamicPos = self.__dynamicDetector.get_pos( self.__render )
 		edgePos = self.edgePos()
 		return edgePos, dynamicPos
 
@@ -142,13 +153,13 @@ class Mover( Entity ):
 		return self.__rightDetector
 
 	def __initMovementManager( self, world ):
-		self._movementManager = MovementManager( self, world )
+		self._movementManager = MovementManager( self, world, self.__render )
 
 	def decide( self, currentState: 'State' ) -> str:
 		if currentState is MovementState:
 			return States.IDLE
 
-	def initStatesPool( self ):
+	def _initStatesPool( self ):
 		self._statesPool = {
 				States.IDLE: IdleState( self ),
 				States.MOVEMENT: MovementState( self ),
@@ -164,15 +175,21 @@ class Mover( Entity ):
 		self.scheduleTask( self.targetMonitoringTask, checkExisting = True )
 
 	def targetMonitoringTask( self, task ):
+		#if any( self.__curveTargets ):
+		#	self.__bypassTarget = None
+		#	return task.done
+
+		# accept new next target
 		if self.__nextTarget is None and any( self._selectedTargets ):
 			self.__nextTarget = self._selectedTargets.pop()
 
-		if self.__bypassTargets:
+		if False and self.__bypassTarget:
+			# store and replace current target
 			if self._currentTarget is self.__nextTarget:
 				self.__moveTargets.append( self._currentTarget )
-			self._currentTarget = self.__bypassTargets
+			self._currentTarget = self.__bypassTarget
 			self._currentTarget.handleSelection( mode = SelectionModes.TEMP )
-			self.__bypassTargets = None
+			self.__bypassTarget = None
 
 		if self._currentTarget is not None:
 			return task.cont
@@ -182,15 +199,9 @@ class Mover( Entity ):
 
 		if any( self.__moveTargets ):
 			self._currentTarget = self.__moveTargets.pop()
-			print( f"current target: {self._currentTarget}" )
+			print( f"current target: { self._currentTarget }" )
 
 		return task.cont
-
-	def targetCurveMonitoringTask( self, task ):
-		if len( self.__moveTargets ) > 2:
-			return task.done
-		while any( self.__moveTargets ):
-			self.__curveTargets.append( self.__moveTargets.pop() )
 
 	@property
 	def terrainSize( self ):
@@ -210,17 +221,15 @@ class Mover( Entity ):
 	def generateCurve( self ):
 		pos1 = self.position
 		pos2 = self.currentTarget.position
-		pos3 = self.__moveTargets.pop().position
+		pos3 = self.__nextTarget.position
+		if self._movementManager.generateAndCheckNewCurve( positions = [ pos1, pos2, pos3 ], obstacle = self.__obstacle ):
+			self.__moveTargets.append( self._movementManager.getCurvePoints() )
+			return True
+		return False
 
-		create_and_setup_sphere( self.render, radius = 10, color = Color.ORANGE, position = pos1 )
-		create_and_setup_sphere( self.render, radius = 10, color = Color.GREEN, position = pos2 )
-		create_and_setup_sphere( self.render, radius = 10, color = Color.YELLOW, position = pos3 )
-
-		curvePath = self._movementManager.createCurvePath( positions = [ pos1, pos2, pos3 ] )
-
-	#self.scheduleTask( self._movementManager.moveAlogCurve )
 	def scheduleBackupTasks( self ):
 		self.scheduleTask( self._movementManager.set_velocity_backwards_direction )
+		self.scheduleTask( self._movementManager.monitor_obstacles )
 
 	def scheduleCheckObstaclesTasks( self ):
 		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
@@ -252,25 +261,22 @@ class Mover( Entity ):
 	def selfHit( self, hit ):
 		return hit in self._partBuilder.rigidBodyNodes
 
-	def completeLoading( self, physicsWorld ):
+	def completeLoading( self, physicsWorld, render ):
 		self._setDamping()
 		self._connectModules( physicsWorld )
 		self.__createModelBounds()
 		self.__createEdges()
+		self.__render = render
 		self.__initMovementManager( physicsWorld )
 		self._createStateMachine()
 
 	def clearCurrentTarget( self ):
 		if not self._currentTarget:
 			return
-		#self._currentTarget.clearSelection()
 		if self._currentTarget is self.__nextTarget:
 			self.__nextTarget = None
-
 		self._currentTarget = None
 
-	#if self._currentTarget in self._selectedTargets:
-	#self._selectedTargets.remove( self._currentTarget )
 	def __createEdges( self ):
 		self.__edge = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._length / 2, 0, 0 ) )
 		self.__targetDetector = create_and_setup_sphere( self.coreBodyPath, Color.ORANGE, Vec3( self._length, 0, 0 ) )
@@ -287,9 +293,9 @@ class Mover( Entity ):
 
 	def __createModelBounds( self ):
 		self.__modelBounds = self.coreBodyPath.getTightBounds()
-		self._width = (self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y)
-		self._length = (self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x)
-		self._height = (self.__modelBounds[ 1 ].z - self.__modelBounds[ 0 ].z)
+		self._width = ( self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y )
+		self._length = ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x )
+		self._height = ( self.__modelBounds[ 1 ].z - self.__modelBounds[ 0 ].z )
 
 	def __createRearEdges( self ):
 		self.__leftRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN,
@@ -329,7 +335,7 @@ class Mover( Entity ):
 	def isMidRangeFromObstacle( self ) -> bool:
 		if self.__lastObstacle is None:
 			return True
-		distance = (self.__lastObstacle.position - self.position).length()
+		distance = ( self.__lastObstacle.position - self.position ).length()
 		if distance > 100:
 			return True
 		return False
@@ -337,13 +343,16 @@ class Mover( Entity ):
 	def closeToObstacle( self ) -> bool:
 		if not self.hasObstacles():
 			return False
-		return self._movementManager.distance_from_obstacle() <= 300
+		return self._movementManager.distance_from_obstacle() <= 200
 
 	def setPos( self, pos ) -> None:
 		self.coreBodyPath.setPos( pos )
 
 	def selectedTarget( self, target ) -> bool:
 		return target is self.__nextTarget or target in self._selectedTargets
+
+	def terminateCurve( self ):
+		self._movementManager.terminateCurve()
 
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
@@ -352,3 +361,15 @@ def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16,
 	sphere.setColor( color )
 	sphere.setPos( position )
 	return sphere
+
+def create_and_setup_rigid_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
+	sphere = create_and_setup_sphere( parent, color, position, radius = radius, slices = slices, stacks = stacks  )
+	shape = BulletSphereShape( radius )
+	body = BulletRigidBodyNode( 'RigidSphere' )
+	body.addShape( shape )
+	body.setMass( 1.0 )
+	body_np = parent.attachNewNode( body )
+	body_np.setPos( position )
+	sphere.reparentTo( body_np )
+	return body_np
+

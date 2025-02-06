@@ -22,13 +22,9 @@ class ObstacleState( MoverState ):
         self.mover.scheduleObstacleTasks()
 
     def execute( self ):
-       # if not self.mover.currentTarget.isSelected( SelectionModes.P2P ):
-       #     self._done = True
-       #     self.nextState = States.CURVE
-       #     return
-        if self.mover.closeToObstacle():
+        if self.mover.bpTarget:
             self._done = True
-            self.nextState = States.BACKUP
-        if not self.mover.hasObstacles():
-            self._done = True
-            self.nextState = States.BYPASS
+            self.nextState = States.CURVE
+        #elif self.mover.closeToObstacle():
+        #    self._done = True
+        #    self.nextState = States.BACKUP

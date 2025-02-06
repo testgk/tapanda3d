@@ -28,7 +28,7 @@ class PartFactory:
         self.__entity = entity
         self.__models = []
         self.__collisionBox = None
-        self.__rigidBodiesInfo = { }
+        self.__rigidBodiesInfo: dict[ str: { BulletRigidBodyNode,  list[ 'Part' ] } ] = { }
         self.__parts: list[ 'Part' ] = [ ]
         self.__modelData = defaultdict( list )
         self.__rigidBodyNodes = []
@@ -40,12 +40,10 @@ class PartFactory:
             self.__parts.append( part() )
         return self.__parts
 
-    @property
     def collisionBox( self ) -> NodePath:
         return self.__collisionBox
 
-    @property
-    def rigidBodies( self ) -> dict:
+    def rigidBodies( self ) -> dict[ str: { BulletRigidBodyNode,  list[ 'Part' ] } ] :
         return self.__rigidBodiesInfo
 
     @property

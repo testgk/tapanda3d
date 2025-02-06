@@ -18,7 +18,7 @@ class EntityLoader:
 			parts = rm[ "parts" ]
 			bulletNode = rm[ "rigidbody" ]
 			self.__renderModelsGroup( point = entry, parts = parts,  bulletNode = bulletNode )
-		entity.completeLoading( self.__physicsWorld )
+		entity.completeLoading( self.__physicsWorld, self.__render )
 		return entity
 
 	def __renderModelsGroup( self, point, parts, bulletNode ):
