@@ -1,10 +1,8 @@
 from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorModes
-from statemachine.state import State
 from states.moverstate import MoverState
 from states.states import States
-from states.movementstate import MovementState
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
@@ -16,7 +14,7 @@ class BypassState( MoverState ):
 
 	def enter( self ):
 		self._currentTarget = self.mover.currentTarget
-		self.mover.speed = 10
+		self.mover.speed = 5
 		self.mover.locatorMode = LocatorModes.Edges
 		self.mover.schedulePointToPointTasks()
 

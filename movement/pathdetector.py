@@ -1,6 +1,7 @@
 import random
 
-from panda3d.core import LineSegs, NodePath, Vec3
+from direct.task.TaskManagerGlobal import taskMgr
+from panda3d.core import ClockObject, LineSegs, NodePath, Vec3
 
 from customcollisionpolygon import CustomCollisionPolygon
 from custompolygon import CustomPolygon
@@ -13,8 +14,8 @@ if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
 
 
-class Detection:
-	def __init__( self, entity, world ):
+class PathDetector:
+	def __init__( self, entity, world, render ):
 		self.__mover: Mover = entity
 		self.__world = world
 		self.__ray = None
@@ -23,6 +24,7 @@ class Detection:
 			Locators.Right: self.__mover.getRightDetectorDirection,
 			Locators.Dynamic: self.__mover.getDynamicDetectorDirection,
 		}
+		self.__render = render
 
 	def detectObstacle( self, target ):
 		if target is None:
@@ -49,7 +51,7 @@ class Detection:
 				return obstacle
 		return None
 
-	def detectPosition( self, target ):
+	def detectAlternativePosition( self, target ):
 		result, option = self.__getDetection( locatorMode = Locators.Dynamic )
 		if result.hasHits():
 			for hit in result.getHits():
@@ -98,7 +100,7 @@ class Detection:
 		line.move_to( start )
 		line.draw_to( end )
 		line_node = NodePath( line.create() )
-		line_node.reparent_to( self.__mover.render )
+		line_node.reparent_to( self.__render )
 		return line_node
 
 	def isCloser( self, origin, target1, target2 ):
