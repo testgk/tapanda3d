@@ -1,10 +1,8 @@
 from typing import TYPE_CHECKING
 
-from entities.locatorMode import LocatorModes
-from statemachine.state import State
-from states.movementstate import MovementState
-from states.moverstate import MoverState
 from states.states import States
+from states.moverstate import MoverState
+from entities.locatorMode import LocatorModes
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
@@ -18,6 +16,8 @@ class CurveState( MoverState ):
 		self.mover.speed = 0
 		self.mover.locatorMode = LocatorModes.All
 		self.mover.generateCurve()
+		#self.mover.obstacle.clearSelection()
+		#self.mover.obstacle = None
 
 	def execute( self ):
 		return

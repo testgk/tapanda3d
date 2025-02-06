@@ -1,10 +1,12 @@
+import copy
 import math
 import random
 from distutils.command.sdist import sdist
 
 from direct import task
 from direct.directutil.Mopath import Mopath
-from panda3d.core import LineSegs, NodePath, Vec3, NurbsCurveEvaluator, Vec4
+from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
+from panda3d.core import ClockObject, LineSegs, NodePath, Vec3, NurbsCurveEvaluator, Vec4
 
 from enums.colors import Color
 from movement.detection import Detection
@@ -12,7 +14,7 @@ from phyisics import globalClock
 from typing import TYPE_CHECKING
 
 from sphere import create_sphere
-from target import Target
+from target import Target, CustomTarget
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
@@ -24,7 +26,9 @@ class MovementManager:
 		self.__curve = None
 		self.__t = 0.0
 		self.__detection = Detection( entity, world )
+		self.__world = world
 		self.__tempTarget = None
+		self.__nullTarget = None
 		self.__mover: Mover = entity
 		self.aligned = False
 
@@ -52,17 +56,15 @@ class MovementManager:
 	def set_velocity_backwards_direction( self, task ):
 		if not self.__mover.closeToObstacle():
 			return task.done
-
 		direction = Vec3( self.__mover.obstacle.position - self.__mover.position )
 		direction.normalize()
 		self.__mover.coreRigidBody.set_linear_velocity( direction * self.__mover.speed )
 		return task.cont
 
-	def createCurvePath( self, positions = list, targets: int = 5 ):
+	def createCurvePath( self, positions = list ):
 		self.__curve = self.__createCurve( positions )
 		self.visualize_curve( self.__curve )
-		self.__generateRandom( )
-		#self.__generateRandom( __curve, targets )
+		self.__generateRandom( self.__curve )
 		return self.__curve
 
 	def visualize_curve( self, curve, num_samples: int = 100 ):
@@ -92,25 +94,21 @@ class MovementManager:
 		curve_evaluator.set_order( 3 )
 		return curve_evaluator.evaluate()
 
-	def moveAlogCurve( self, task ):
-		if self.__t > 1.0:
-			return task.done
+	def curveDetection( self ):
+		self.__detection.detectCurveCollisionTask( self.__curve )
 
-		pos = Vec3()
-		self.__curve.eval_point( self.__t, pos )  # Evaluate position
-		self.__mover.setPos( pos )  # Move the object
-		self.__t += self.__mover.speed * globalClock.get_dt()  # Increase __t over time
-		return task.cont  # Continue updating
-
-	def __generateRandom( self, numOfPoints: int = 10 ):
+	def __generateRandom( self, curve, numOfPoints: int = 10 ):
 		for _ in range( numOfPoints ):
 			t = random.uniform( 0.0, 1.0 )
 			pos = Vec3()
-			self.__curve.eval_point( t, pos )
-			self.__renderPoint( pos )
+			curve.eval_point( t, pos )
+			point = create_and_setup_rigid_sphere( self.__mover.render, position = pos, color = Color.RED )
+			self.__world.attach( point )
+			if self.__world.contactTest( point, self.__mover.obstacle.coreRigidBody ).get_num_contacts() > 0:
+				print( f"Curve touches model at t={t} (Position: {pos})" )
 
 	def __renderPoint( self, pos ):
-		point = create_and_setup_sphere( self.__mover.render, position = pos, color = Color.RED )
+		point = create_and_setup_rigid_sphere( self.__mover.render, position = pos, color = Color.RED )
 
 	def distance_from_obstacle( self ):
 		distance = ( self.__mover.obstacle.position - self.__mover.position ).length()
@@ -185,23 +183,22 @@ class MovementManager:
 		return self.__detection.detectObstacle( target )
 
 	def target_detection( self, task ):
-		if not self.__mover.hasObstacles():
+		if self.__tempTarget is not None:
 			self.__mover.bpTarget = self.__tempTarget
-			print( f'current random target: { self.__tempTarget }' )
 			self.__tempTarget = None
 			return task.done
-		self.__tempTarget = self.__detection.detectPosition( target = self.__getCurrentTarget() )
-		if self.__tempTarget:
-			self.__mover.obstacle.clearSelection()
-			self.__mover.obstacle = None
+		detection = self.__detection.detectPosition( self.__getCurrentTarget() )
+		if detection:
+			self.__tempTarget = CustomTarget( detection.position )
+			#self.__mover.obstacle.clearSelection()
+			#self.__mover.obstacle = None
 		return task.cont
 
 	def __getCurrentTarget( self ):
 		return self.__tempTarget or self.__mover.currentTarget
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
-	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks )
+	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks, color = color )
 	sphere.reparentTo( parent )
-	sphere.setColor( color )
 	sphere.setPos( position )
 	return sphere

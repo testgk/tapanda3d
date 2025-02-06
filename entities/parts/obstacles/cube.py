@@ -24,6 +24,10 @@ class Cube( Entity, SelectionItem ):
 	def cubePart( self ):
 		return self._cube
 
+	@property
+	def model( self ):
+		return  self._cube.model
+
 	def show( self ):
 		print( f'{ self.name} hit')
 

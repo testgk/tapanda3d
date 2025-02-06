@@ -2,8 +2,10 @@ from panda3d.core import GeomVertexFormat, GeomVertexData, Geom, GeomVertexWrite
 from panda3d.core import NodePath
 from math import sin, cos, pi
 
+from enums.colors import Color
 
-def create_sphere( radius = 1.0, slices = 16, stacks = 16 ):
+
+def create_sphere( radius = 1.0, slices = 16, stacks = 16, color = Color.RED ):
 	# Set up the vertex format
 	format = GeomVertexFormat.get_v3n3()
 	vdata = GeomVertexData( "sphere", format, Geom.UH_static )
@@ -41,7 +43,9 @@ def create_sphere( radius = 1.0, slices = 16, stacks = 16 ):
 	# Create a GeomNode to hold the geometry
 	node = GeomNode( "sphere" )
 	node.addGeom( geom )
-	return NodePath( node )
+	np = NodePath( node )
+	np.setColor( color )
+	return np
 
 
 # Initialize Panda3D and add the sphere to the scene

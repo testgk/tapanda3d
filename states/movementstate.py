@@ -27,10 +27,7 @@ class MovementState( MoverState ):
 			self._done = True
 			print( f'{ self._entity.name } finished moving' )
 			if self.mover.hasObstacles():
-				if not self.mover.closeToObstacle():
-					self.nextState = States.OBSTACLE
-				else:
-					self.nextState = States.BACKUP
+				self.nextState = States.OBSTACLE
 			else:
 				if self.mover.currentTarget is None:
 					self.nextState = States.IDLE

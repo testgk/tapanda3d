@@ -1,6 +1,7 @@
 import random
 
-from panda3d.core import LineSegs, NodePath, Vec3
+from direct.task.TaskManagerGlobal import taskMgr
+from panda3d.core import ClockObject, LineSegs, NodePath, Vec3
 
 from customcollisionpolygon import CustomCollisionPolygon
 from custompolygon import CustomPolygon
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
 
 class Detection:
 	def __init__( self, entity, world ):
+		self.__t = 0.0
 		self.__mover: Mover = entity
 		self.__world = world
 		self.__ray = None

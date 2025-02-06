@@ -1,27 +1,28 @@
+from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
 from panda3d.core import Vec3
 from collections import deque
 from math import cos, sin, radians
 from direct.task.TaskManagerGlobal import taskMgr
 
+from target import Target
 from enums.colors import Color
 from sphere import create_sphere
+from states.states import States
 from statemachine.state import State
 from entities.parts.part import Part
-from states.backupstate import BackupState
-from states.checkobstaclestate import CheckObstacle
-from states.curvestate import CurveState
-from states.states import States
 from states.idlestate import IdleState
+from states.roamstate import RoamState
+from states.curvestate import CurveState
 from selectionmodes import SelectionModes
+from states.backupstate import BackupState
 from states.bypassstate import BypassState
 from entities.modules.chassis import Chassis
-from entities.locatorMode import LocatorModes, LocatorLength, Locators
 from states.movementstate import MovementState
 from states.obstaclestate import ObstacleState
 from movement.movementmanager import MovementManager
+from states.checkobstaclestate import CheckObstacle
 from entities.entity import Entity, entitypart, entitymodule
-from states.roamstate import RoamState
-from target import Target
+from entities.locatorMode import LocatorModes, LocatorLength, Locators
 
 
 class DetectorLimits:
@@ -72,7 +73,7 @@ class Mover( Entity ):
 		return self.__bypassTargets
 
 	@bpTarget.setter
-	def bpTarget( self, target ):
+	def bpTarget( self, target: Target ):
 		self.__bypassTargets = target
 
 	@property
@@ -118,6 +119,10 @@ class Mover( Entity ):
 	@property
 	def height( self ):
 		return self._length
+
+	@property
+	def dynamicDetector( self ):
+		return self.__dynamicDetector
 
 	def edgePos( self ):
 		return self.__edge.get_pos( self.render )
@@ -210,17 +215,19 @@ class Mover( Entity ):
 	def generateCurve( self ):
 		pos1 = self.position
 		pos2 = self.currentTarget.position
-		pos3 = self.__moveTargets.pop().position
+		pos3 = self.__nextTarget.position
 
-		create_and_setup_sphere( self.render, radius = 10, color = Color.ORANGE, position = pos1 )
-		create_and_setup_sphere( self.render, radius = 10, color = Color.GREEN, position = pos2 )
-		create_and_setup_sphere( self.render, radius = 10, color = Color.YELLOW, position = pos3 )
+		#create_and_setup_sphere( self.render, radius = 10, color = Color.ORANGE, position = pos1 )
+		#create_and_setup_sphere( self.render, radius = 10, color = Color.GREEN, position = pos2 )
+		#create_and_setup_sphere( self.render, radius = 10, color = Color.YELLOW, position = pos3 )
 
-		curvePath = self._movementManager.createCurvePath( positions = [ pos1, pos2, pos3 ] )
+		self._movementManager.createCurvePath( positions = [ pos1, pos2, pos3 ] )
+		#self._movementManager.curveDetection()
 
 	#self.scheduleTask( self._movementManager.moveAlogCurve )
 	def scheduleBackupTasks( self ):
 		self.scheduleTask( self._movementManager.set_velocity_backwards_direction )
+		self.scheduleTask( self._movementManager.monitor_obstacles )
 
 	def scheduleCheckObstaclesTasks( self ):
 		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
@@ -263,14 +270,10 @@ class Mover( Entity ):
 	def clearCurrentTarget( self ):
 		if not self._currentTarget:
 			return
-		#self._currentTarget.clearSelection()
 		if self._currentTarget is self.__nextTarget:
 			self.__nextTarget = None
-
 		self._currentTarget = None
 
-	#if self._currentTarget in self._selectedTargets:
-	#self._selectedTargets.remove( self._currentTarget )
 	def __createEdges( self ):
 		self.__edge = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._length / 2, 0, 0 ) )
 		self.__targetDetector = create_and_setup_sphere( self.coreBodyPath, Color.ORANGE, Vec3( self._length, 0, 0 ) )
@@ -337,7 +340,7 @@ class Mover( Entity ):
 	def closeToObstacle( self ) -> bool:
 		if not self.hasObstacles():
 			return False
-		return self._movementManager.distance_from_obstacle() <= 300
+		return self._movementManager.distance_from_obstacle() <= 200
 
 	def setPos( self, pos ) -> None:
 		self.coreBodyPath.setPos( pos )
@@ -352,3 +355,15 @@ def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16,
 	sphere.setColor( color )
 	sphere.setPos( position )
 	return sphere
+
+def create_and_setup_rigid_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
+	sphere = create_and_setup_sphere( parent, color, position, radius = radius, slices = slices, stacks = stacks  )
+	shape = BulletSphereShape( radius )
+	body = BulletRigidBodyNode( 'RigidSphere' )
+	body.addShape( shape )
+	body.setMass( 1.0 )
+	body_np = parent.attachNewNode( body )
+	body_np.setPos( position )
+	sphere.reparentTo( body_np )
+	return body_np
+
