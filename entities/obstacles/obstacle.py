@@ -1,10 +1,12 @@
 from entities.locatorMode import Locators
+from selectionitem import SelectionItem
 
 
-class Obstacle:
+class Obstacle( SelectionItem ):
 
 	def __init__( self ):
-		pass
+		super().__init__()
+		self.__detection = None
 
 	@property
 	def detection( self ) -> Locators:
