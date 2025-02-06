@@ -43,7 +43,7 @@ class EntityButtons:
 		tank = Tank( engine = engine, turret = turret, chassis = chassis )
 		entity = self.__loader.loadEntity( entity = tank, entry = self.__selector.point )
 		entity.terrainSize = self.__terrainSize
-		entity.render = self.__render
+		entity.__render = self.__render
 
 	def __createObstacle( self ):
 		cube = Cube()

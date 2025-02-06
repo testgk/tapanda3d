@@ -12,7 +12,7 @@ class Locators( Enum ):
 	Dynamic = 4
 	TargetRight = 5
 	TargetLeft = 6
-
+	Full = 7
 
 class LocatorModes( Enum ):
 	NONE = None
