@@ -30,7 +30,7 @@ locatorColors = {
 	}
 
 class LocatorLength:
-	Short = 5
-	Medium = 10
+	Short = 1
+	Medium = 5
 	Long = 20
 

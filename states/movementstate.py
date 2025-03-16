@@ -17,7 +17,7 @@ class MovementState( MoverState ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
 		self.mover.locatorMode = LocatorModes.Edges
-		self.mover.setDynamicDetector( Locators.NONE )
+		self.mover.setDynamicDetector( Locators.Full )
 		print( f'current target: { self._currentTarget }' )
 		self.mover.schedulePointToPointTasks()
 
@@ -27,9 +27,11 @@ class MovementState( MoverState ):
 			self._done = True
 			print( f'{ self._entity.name } finished moving' )
 			if self.mover.hasObstacles():
+				print( f'obstacle detected' )
 				self.nextState = States.OBSTACLE
 			else:
 				if self.mover.currentTarget is None:
+					print( f'no more targets' )
 					self.nextState = States.IDLE
 				else:
 					self.nextState = States.BYPASS

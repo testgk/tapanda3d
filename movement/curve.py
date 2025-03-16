@@ -1,4 +1,5 @@
 import random
+from collections import deque
 
 from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
 from panda3d.core import NurbsCurveEvaluator, Vec4, Vec3, LineSegs, NodePath
@@ -15,14 +16,10 @@ class CurveGenerator:
 		self.__world = world
 		self.__curve = None
 		self.__curve_np = None
-		self._curvePoints = []
+		self.__curvePositions = []
 
-	@property
-	def curvePoints( self ):
-		return self._curvePoints
-
-	def getCurveTargets( self ):
-		return [ CustomTarget( position = position ) for position in self._curvePoints ]
+	def getCurveTargets( self ) -> list:
+		return [ CustomTarget( position = position ) for position in reversed( self.__curvePositions ) ]
 
 	def generateNewCurve( self, positions = list ):
 		self.__curve = self.__createCurve( positions )
@@ -30,15 +27,19 @@ class CurveGenerator:
 		return self.__curve
 
 	def terminateCurve( self ):
-		self.__curve = None
-		if self.__curve_np:
-			self.__curve_np.remove_node()
-			self.__curve_np = None
-		self.__clearRigidPoints()
-		self._curvePoints.clear()
-		self.__rigidPoints.clear()
+		pass
+		#self.__curve = None
+		#if self.__curve_np:
+		#	self.__curve_np.remove_node()
+		#	self.__curve_np = None
+		#self.__clearRigidPoints()
+		#self.__curvePositions.clear()
+		#self.__rigidPoints.clear()
 
 	def __createCurve( self, positions ):
+		if self.__curve_np:
+			self.__curve_np.remove_node()
+		self.__curvePositions.clear()
 		curve_evaluator = NurbsCurveEvaluator()
 		curve_evaluator.reset( len( positions ) )
 		for i, pos in enumerate( positions ):
@@ -47,8 +48,7 @@ class CurveGenerator:
 		return curve_evaluator.evaluate()
 
 	def __visualizeCurve( self, num_samples: int = 100 ):
-		if self.__curve_np:
-			self.__curve_np.remove_node()
+		print( "visualizing curve" )
 		lines = LineSegs()
 		lines.set_thickness( 2.0 )
 		pos = Vec3()
@@ -60,29 +60,25 @@ class CurveGenerator:
 		self.__curve_np = NodePath( lines.create() )
 		self.__curve_np.reparent_to( self.__render )
 
-	def checkCurveObstacleContact( self, curve, obstacle, numOfPoints: int = 10 ):
+	def checkCurveObstacleContact( self, curve, obstacle, numOfPoints: int = 100 ):
 		for i in range( numOfPoints ):
-			t = i / (numOfPoints - 1)  # Evenly spaced t values
-			pos = Vec3()
-			curve.eval_point( t, pos )
-			point = createRigidPoints( self.__render, position = pos, color = Color.BLUE )
-			self.__world.attach( point )
-			self.__rigidPoints.append( point )
+			point = None
+			try:
+				t = i / (numOfPoints - 1)  # Evenly spaced t values
+				pos = Vec3()
+				curve.eval_point( t, pos )
+				point = createRigidPoints( self.__render, position = pos, color = Color.BLUE )
+				self.__world.attach( point )
+				#self.__rigidPoints.append( point )
 
-			if self.__world.contactTest( point, obstacle.coreRigidBody ).get_num_contacts() > 0:
-				print( f"Curve touches model at t={ t } ( Position: { pos } )" )
-				self.__clearRigidPoints()
-				return True
+				if self.__world.contactTest( point, obstacle.coreRigidBody ).get_num_contacts() > 0:
+					print( f"Curve touches model at t={ t } ( Position: { pos } )" )
+					return False
 
-			self._curvePoints.append( pos )
-		return False
-
-	def __clearRigidPoints( self ):
-		for body_np in self.__rigidPoints:
-			self.__world.removeRigidBody( body_np.node() )
-			body_np.detachNode()
-			body_np.node().clearChildren()  #
-
+				self.__curvePositions.append( pos )
+			finally:
+				self.__world.removeRigidBody( point )
+		return True
 
 def createRigidPoints( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
 	shape = BulletSphereShape( radius )
