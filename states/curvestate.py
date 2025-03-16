@@ -19,10 +19,12 @@ class CurveState( MoverState ):
 		self.mover.bpTarget = None
 
 	def execute( self ):
-		if self.mover.generateCurve():
-			#self.mover.clearCurrentTarget()
+		self.mover.generateCurve()
+		if self.mover.curveTarget:
 			self._done = True
-			self.nextState = States.MOVEMENT
-		else:
-			self.mover.terminateCurve()
-			self._done = False
+			self.nextState = States.OBSTACLE
+			return
+
+		self.mover.obstacle = None
+		self._done = True
+		self.nextState = States.CURVE_IDLE
