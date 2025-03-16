@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorModes, Locators
-from selectionmodes import SelectionModes
 from states.moverstate import MoverState
 from states.states import States
 
@@ -22,9 +21,6 @@ class ObstacleState( MoverState ):
         self.mover.scheduleObstacleTasks()
 
     def execute( self ):
-        if self.mover.bpTarget:
+        if self.mover.curveTarget:
             self._done = True
             self.nextState = States.CURVE
-        #elif self.mover.closeToObstacle():
-        #    self._done = True
-        #    self.nextState = States.BACKUP

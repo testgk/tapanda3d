@@ -2,6 +2,7 @@
 import math
 from panda3d.core import Vec3
 
+from entities.locatorMode import LocatorModes
 from movement.curve import CurveGenerator
 from movement.pathdetector import PathDetector
 from phyisics import globalClock
@@ -96,6 +97,8 @@ class MovementManager:
 		return task.cont
 
 	def monitor_obstacles( self, task ):
+		if self.__mover.locatorMode == LocatorModes.NONE:
+			return task.done
 		if self.__mover.obstacle is not None:
 			return task.cont
 		if self.__mover.currentTarget is None:
@@ -131,11 +134,10 @@ class MovementManager:
 
 	def generateAndCheckNewCurve( self, positions, obstacle ):
 		curve = self._curveGenerator.generateNewCurve( positions )
-		return not self._curveGenerator.checkCurveObstacleContact( curve, obstacle )
+		return self._curveGenerator.checkCurveObstacleContact( curve, obstacle )
 
 	def getCurvePoints( self ):
 		return self._curveGenerator.getCurveTargets()
 
 	def terminateCurve( self ):
 		self._curveGenerator.terminateCurve()
-
