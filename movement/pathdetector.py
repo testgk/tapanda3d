@@ -68,6 +68,7 @@ class PathDetector:
 					continue
 				if not self.isCloser( target, item, self.__mover ):
 					continue
+				item.handleSelection()
 				print( f'detect position: { item }' )
 				return item
 		return None

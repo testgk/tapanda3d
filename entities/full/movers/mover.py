@@ -1,9 +1,13 @@
+import random
+
 from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
 from panda3d.core import Vec3
 from collections import deque
 from math import cos, sin, radians
 from direct.task.TaskManagerGlobal import taskMgr
 
+from states.curveidlestate import CurveIdleState
+from states.curvemovementstate import CurveMovementState
 from target import Target
 from enums.colors import Color
 from sphere import create_sphere
@@ -34,13 +38,14 @@ class Mover( Entity ):
 
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
+		self.__curveTarget = None
 		self.__aligned: bool = False
 		self.__leftLimit = None
 		self.__rightLimit = None
 		self.__nextTarget = None
 		self.__amplitude = 0
 		self.locatorMode: LocatorModes = LocatorModes.All
-		self.detectorLength: LocatorLength = LocatorLength.Short
+		self.detectorLength: LocatorLength = LocatorLength.Medium
 		self.__angle_increment = 2
 		self.__verticalAngle = 0
 		self.__horizontalAngle = -5
@@ -63,17 +68,21 @@ class Mover( Entity ):
 		self._hull = chassis.hull()
 		self._corePart = self.mobility()
 		self._isMover = True
-		self._currentTarget = None
+		self.__currentTarget = None
 		self.__terrainSize = None
 		self.__obstacle: 'Entity' or None = None
 		self.__lastObstacle: 'Entity' or None = None
 		self.__bypassTarget: Target or None = None
-		self.__curveTargets: list[ Target ] = [ ]
+		self.__curveTargets: list[ Target ] = []
 		self.setDynamicDetector( mode = Locators.Full )
 
 	@property
 	def bpTarget( self ):
 		return self.__bypassTarget
+
+	@property
+	def curveTarget( self ):
+		return self.__curveTarget
 
 	@bpTarget.setter
 	def bpTarget( self, target: Target ):
@@ -111,7 +120,7 @@ class Mover( Entity ):
 
 	@property
 	def currentTarget( self ) -> Target:
-		return self._currentTarget
+		return self.__currentTarget
 
 	@property
 	def hpr( self ) -> Vec3:
@@ -165,41 +174,56 @@ class Mover( Entity ):
 				States.MOVEMENT: MovementState( self ),
 				States.OBSTACLE: ObstacleState( self ),
 				States.BYPASS: BypassState( self ),
-				States.CHECK_OBSTACKE: CheckObstacle( self ),
+				States.CHECK_OBSTACLE: CheckObstacle( self ),
 				States.BACKUP: BackupState( self ),
 				States.ROAM: RoamState( self ),
-				States.CURVE: CurveState( self )
+				States.CURVE: CurveState( self ),
+				States.CURVE_MOVEMENT: CurveMovementState( self ),
+				States.CURVE_IDLE: CurveIdleState( self )
 		}
 
 	def scheduleTargetMonitoringTask( self ):
 		self.scheduleTask( self.targetMonitoringTask, checkExisting = True )
 
-	def targetMonitoringTask( self, task ):
-		#if any( self.__curveTargets ):
-		#	self.__bypassTarget = None
-		#	return task.done
+	def scheduleCurveMovementMonitoringTaskTask( self ):
+		self.scheduleTask( self.curveMovementMonitoringTask, checkExisting = True )
 
-		# accept new next target
+	def curveMovementMonitoringTask( self, task ):
+		if not any( self.__curveTargets ):
+			return task.done
+		if self.__currentTarget is None and any( self.__curveTargets ):
+			self.__currentTarget = self.__curveTargets.pop()
+			print( f"---> {self.__currentTarget}")
+		return task.cont
+
+	def targetMonitoringTask( self, task ):
+		if any( self.__curveTargets ):
+			return task.done
+
+		# accept new selected target
 		if self.__nextTarget is None and any( self._selectedTargets ):
 			self.__nextTarget = self._selectedTargets.pop()
 
-		if False and self.__bypassTarget:
+		if self.__bypassTarget:
 			# store and replace current target
-			if self._currentTarget is self.__nextTarget:
-				self.__moveTargets.append( self._currentTarget )
-			self._currentTarget = self.__bypassTarget
-			self._currentTarget.handleSelection( mode = SelectionModes.TEMP )
+			if self.__currentTarget is self.__nextTarget:
+				self.__moveTargets.append( self.__currentTarget )
+			self.__curveTarget = self.__bypassTarget
+			self.__currentTarget = self.__bypassTarget
+			self.__currentTarget.handleSelection( mode = SelectionModes.TEMP )
 			self.__bypassTarget = None
 
-		if self._currentTarget is not None:
+		if self.__currentTarget is not None:
 			return task.cont
 
 		if self.__nextTarget is not None and self.__nextTarget not in self.__moveTargets:
 			self.__moveTargets.append( self.__nextTarget )
 
+		# accept target from existing move targets
 		if any( self.__moveTargets ):
-			self._currentTarget = self.__moveTargets.pop()
-			print( f"current target: { self._currentTarget }" )
+			self.__currentTarget = self.__moveTargets.pop()
+			print( f"current target: { self.__currentTarget }" )
+			self.__currentTarget.handleSelection( mode = SelectionModes.P2P )
 
 		return task.cont
 
@@ -220,10 +244,13 @@ class Mover( Entity ):
 
 	def generateCurve( self ):
 		pos1 = self.position
-		pos2 = self.currentTarget.position
+		pos2 = self.curveTarget.position
 		pos3 = self.__nextTarget.position
 		if self._movementManager.generateAndCheckNewCurve( positions = [ pos1, pos2, pos3 ], obstacle = self.__obstacle ):
-			self.__moveTargets.append( self._movementManager.getCurvePoints() )
+			targets = self._movementManager.getCurvePoints()
+			self.__curveTargets =  targets[ ::20 ]
+			self.__curveTarget = None
+			self.__currentTarget = None
 			return True
 		return False
 
@@ -239,7 +266,7 @@ class Mover( Entity ):
 		self.scheduleTask( self._movementManager.target_detection )
 
 	def finishedMovement( self ):
-		return self._currentTarget is None
+		return self.__currentTarget is None
 
 	def hasObstacles( self ) -> bool:
 		if self.__obstacle is not None:
@@ -271,11 +298,11 @@ class Mover( Entity ):
 		self._createStateMachine()
 
 	def clearCurrentTarget( self ):
-		if not self._currentTarget:
+		if not self.__currentTarget:
 			return
-		if self._currentTarget is self.__nextTarget:
+		if self.__currentTarget is self.__nextTarget:
 			self.__nextTarget = None
-		self._currentTarget = None
+		self.__currentTarget = None
 
 	def __createEdges( self ):
 		self.__edge = create_and_setup_sphere( self.coreBodyPath, Color.RED, Vec3( self._length / 2, 0, 0 ) )
@@ -327,7 +354,7 @@ class Mover( Entity ):
 			self.__leftLimit = -DetectorLimits.Wide
 			self.__rightLimit = 0
 			self.__verticalAngle = -2
-		else:
+		elif mode == Locators.Full:
 			self.__verticalAngle = 0
 			self.__rightLimit = DetectorLimits.Normal
 			self.__leftLimit = -DetectorLimits.Normal
