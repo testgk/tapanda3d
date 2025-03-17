@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from entities.locatorMode import LocatorModes, Locators
+from entities.locatorMode import LocatorLength, LocatorModes, Locators
 from states.moverstate import MoverState
 from states.states import States
 
@@ -17,8 +17,9 @@ class MovementState( MoverState ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
 		self.mover.locatorMode = LocatorModes.Edges
+		self.mover.stopDistance = True
+		self.mover.detectorLength = LocatorLength.Medium
 		self.mover.setDynamicDetector( Locators.Full )
-		print( f'current target: { self._currentTarget }' )
 		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):
