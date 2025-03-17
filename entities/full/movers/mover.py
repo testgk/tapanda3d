@@ -48,7 +48,7 @@ class Mover( Entity ):
 		self.detectorLength: LocatorLength = LocatorLength.Medium
 		self.__angle_increment = 2
 		self.__verticalAngle = 0
-		self.__horizontalAngle = -5
+		self.__horizontalAngle = -2
 		self.__dynamicDetector = None
 		self.__speed = None
 		self.__targetVisible = False
@@ -74,6 +74,12 @@ class Mover( Entity ):
 		self.__lastObstacle: 'Entity' or None = None
 		self.__bypassTarget: Target or None = None
 		self.__curveTargets: list[ Target ] = []
+		self.__stopDistance = True
+		self.__detectors = {
+			Locators.Left: self.__getLeftDetectorDirection,
+			Locators.Right: self.__getRightDetectorDirection,
+			Locators.Dynamic: self.__getDynamicDetectorDirection,
+		}
 		self.setDynamicDetector( mode = Locators.Full )
 
 	@property
@@ -87,6 +93,10 @@ class Mover( Entity ):
 	@bpTarget.setter
 	def bpTarget( self, target: Target ):
 		self.__bypassTarget = target
+
+	@property
+	def insideCurve( self ):
+		return any( self.__curveTargets )
 
 	@property
 	def speed( self ) -> float:
@@ -105,8 +115,16 @@ class Mover( Entity ):
 		self.__aligned = value
 
 	@property
-	def __moveTargets( self ) -> deque:
+	def moveTargets( self ) -> deque:
 		return self._moveTargets
+
+	@property
+	def stopDistance(self):
+		return self.__stopDistance
+
+	@stopDistance.setter
+	def stopDistance(self, value):
+		self.__stopDistance = value
 
 	@property
 	def obstacle( self ):
@@ -142,17 +160,17 @@ class Mover( Entity ):
 	def edgePos( self ):
 		return self.__edge.get_pos( self.__render )
 
-	def getLeftDetectorDirection( self ):
+	def __getLeftDetectorDirection( self ):
 		leftPos = self.__leftDetector.get_pos( self.__render )
 		edgePos = self.__leftEdge.get_pos( self.__render )
 		return edgePos, leftPos
 
-	def getRightDetectorDirection( self ):
+	def __getRightDetectorDirection( self ):
 		rightPos = self.__rightDetector.get_pos( self.__render )
 		edgePos = self.__rightEdge.get_pos( self.__render )
 		return edgePos, rightPos
 
-	def getDynamicDetectorDirection( self ):
+	def __getDynamicDetectorDirection( self ):
 		dynamicPos = self.__dynamicDetector.get_pos( self.__render )
 		edgePos = self.edgePos()
 		return edgePos, dynamicPos
@@ -191,12 +209,36 @@ class Mover( Entity ):
 	def curveMovementMonitoringTask( self, task ):
 		if not any( self.__curveTargets ):
 			return task.done
+
+		if self.hasObstacles():
+			return task.done
+
 		if self.__currentTarget is None and any( self.__curveTargets ):
 			self.__currentTarget = self.__curveTargets.pop()
-			print( f"---> {self.__currentTarget}")
 		return task.cont
 
+	def byPassMovementMonitoringTask( self, task ):
+		if self.__bypassTarget:
+			self.moveTargets.append( self.__currentTarget )
+			self.moveTargets.append( self.__bypassTarget )
+			self.__bypassTarget = None
+			self.__currentTarget = None
+			return task.cont
+
+		if self.__currentTarget:
+			return task.cont
+
+		if any( self.moveTargets ):
+			self.__currentTarget = self.moveTargets.pop()
+			self.__currentTarget.handleSelection( mode = SelectionModes.P2P )
+			return task.cont
+
+		return task.done
+
 	def targetMonitoringTask( self, task ):
+		if self.__bypassTarget:
+			return task.done
+
 		if any( self.__curveTargets ):
 			return task.done
 
@@ -204,24 +246,24 @@ class Mover( Entity ):
 		if self.__nextTarget is None and any( self._selectedTargets ):
 			self.__nextTarget = self._selectedTargets.pop()
 
-		if self.__bypassTarget:
+		#if self.__bypassTarget:
 			# store and replace current target
-			if self.__currentTarget is self.__nextTarget:
-				self.__moveTargets.append( self.__currentTarget )
-			self.__curveTarget = self.__bypassTarget
-			self.__currentTarget = self.__bypassTarget
-			self.__currentTarget.handleSelection( mode = SelectionModes.TEMP )
-			self.__bypassTarget = None
+		#	if self.__currentTarget is self.__nextTarget:
+		#		self.moveTargets.append( self.__currentTarget )
+		#	self.__curveTarget = self.__bypassTarget
+		#	self.__currentTarget = self.__bypassTarget
+		#	self.__currentTarget.handleSelection( mode = SelectionModes.TEMP )
+		#	self.__bypassTarget = None
 
 		if self.__currentTarget is not None:
 			return task.cont
 
-		if self.__nextTarget is not None and self.__nextTarget not in self.__moveTargets:
-			self.__moveTargets.append( self.__nextTarget )
+		if self.__nextTarget is not None and self.__nextTarget not in self.moveTargets:
+			self.moveTargets.append( self.__nextTarget )
 
 		# accept target from existing move targets
-		if any( self.__moveTargets ):
-			self.__currentTarget = self.__moveTargets.pop()
+		if any( self.moveTargets ):
+			self.__currentTarget = self.moveTargets.pop()
 			print( f"current target: { self.__currentTarget }" )
 			self.__currentTarget.handleSelection( mode = SelectionModes.P2P )
 
@@ -248,9 +290,10 @@ class Mover( Entity ):
 		pos3 = self.__nextTarget.position
 		if self._movementManager.generateAndCheckNewCurve( positions = [ pos1, pos2, pos3 ], obstacle = self.__obstacle ):
 			targets = self._movementManager.getCurvePoints()
-			self.__curveTargets =  targets[ ::20 ]
+			self.__curveTargets = targets[ ::20 ]
 			self.__curveTarget = None
 			self.__currentTarget = None
+			self.__obstacle = None
 			return True
 		return False
 
@@ -264,6 +307,7 @@ class Mover( Entity ):
 
 	def scheduleObstacleTasks( self ):
 		self.scheduleTask( self._movementManager.target_detection )
+		self.scheduleTask( self.byPassMovementMonitoringTask )
 
 	def finishedMovement( self ):
 		return self.__currentTarget is None
@@ -380,6 +424,17 @@ class Mover( Entity ):
 
 	def terminateCurve( self ):
 		self._movementManager.terminateCurve()
+
+	def getDetector( self, option ):
+		return self.__detectors[ option ]()
+
+	def stopMovement( self ):
+		self._movementManager.stopMovement()
+
+	def removeObstacle( self ):
+		self.__obstacle.clearSelection()
+		self.__obstacle = None
+
 
 
 def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):

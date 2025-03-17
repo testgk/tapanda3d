@@ -24,20 +24,25 @@ class MovementManager:
 	def set_velocity_toward_point_with_stop( self, task ):
 		if not self.__mover.currentTarget:
 			return task.cont
+		if not self.__mover.aligned:
+			return task.cont
 		speed = self.__mover.speed
 		target_pos = self.__mover.currentTarget.position
-		stop_threshold = 20
 		current_pos = self.__mover.position
 		direction = Vec3( target_pos.x - current_pos.x, target_pos.y - current_pos.y, 0 )
 		distance = direction.length()
-		if distance < stop_threshold:
-			self.__mover.coreRigidBody.set_linear_velocity( Vec3( 0, 0, 0 ) )
+		if distance < 20:
+			if self.__mover.stopDistance:
+				self.stopMovement()
 			self.__mover.clearCurrentTarget()
-			return task.done
+			return task.cont
 		direction.normalize()
 		velocity = direction * speed
 		self.__mover.coreRigidBody.set_linear_velocity( velocity )
 		return task.cont
+
+	def stopMovement( self ):
+		self.__mover.coreRigidBody.set_linear_velocity( Vec3( 0, 0, 0 ) )
 
 	def set_velocity_backwards_direction( self, task ):
 		if not self.__mover.closeToObstacle():

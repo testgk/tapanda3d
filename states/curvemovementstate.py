@@ -16,12 +16,17 @@ class CurveMovementState( MovementState ):
 	def enter( self ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
-		self.mover.locatorMode = LocatorModes.NONE
-		self.mover.setDynamicDetector( Locators.NONE )
-		self.mover.detectorLength  = LocatorLength.Short
+		self.mover.locatorMode = LocatorModes.Edges
+		self.mover.setDynamicDetector( Locators.Full )
+		self.mover.detectorLength = LocatorLength.Medium
+		self.mover.stopDistance = False
 		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):
+		if self.mover.hasObstacles():
+			self.nextState = States.OBSTACLE
+			self._done = True
+			return
 		if self.mover.currentTarget != self._currentTarget:
 			print( f'mover target: { self.mover.currentTarget }' )
 			self._done = True

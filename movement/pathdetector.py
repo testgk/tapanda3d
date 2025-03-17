@@ -19,11 +19,6 @@ class PathDetector:
 		self.__mover: Mover = entity
 		self.__world = world
 		self.__ray = None
-		self.__detectors = {
-			Locators.Left: self.__mover.getLeftDetectorDirection,
-			Locators.Right: self.__mover.getRightDetectorDirection,
-			Locators.Dynamic: self.__mover.getDynamicDetectorDirection,
-		}
 		self.__render = render
 
 	def detectObstacle( self, target ):
@@ -85,7 +80,7 @@ class PathDetector:
 			detector = target
 			detector.z = edge.getZ()
 		else:
-			edge, detector = self.__detectors[ option ]()
+			edge, detector = self.__mover.getDetector( option )
 		direction = Vec3( detector - edge )
 		self.__ray = self.visualize_ray( start = edge, color = Color.GREEN, end = edge + direction * self.__mover.detectorLength )
 		result = self.__world.rayTestAll( edge, edge + direction * 10 )
