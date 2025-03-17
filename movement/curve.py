@@ -27,10 +27,9 @@ class CurveGenerator:
 		return self.__curve
 
 	def terminateCurve( self ):
-		pass
-		#self.__curve = None
-		#if self.__curve_np:
-		#	self.__curve_np.remove_node()
+		self.__curve = None
+		if self.__curve_np:
+			self.__curve_np.remove_node()
 		#	self.__curve_np = None
 		#self.__clearRigidPoints()
 		#self.__curvePositions.clear()
@@ -63,11 +62,12 @@ class CurveGenerator:
 	def checkCurveObstacleContact( self, curve, obstacle, numOfPoints: int = 100 ):
 		for i in range( numOfPoints ):
 			point = None
+			sphere = None
 			try:
 				t = i / (numOfPoints - 1)  # Evenly spaced t values
 				pos = Vec3()
 				curve.eval_point( t, pos )
-				point = createRigidPoints( self.__render, position = pos, color = Color.BLUE )
+				point, sphere = createRigidPoint( self.__render, position = pos, color = Color.BLUE )
 				self.__world.attach( point )
 				#self.__rigidPoints.append( point )
 
@@ -77,10 +77,11 @@ class CurveGenerator:
 
 				self.__curvePositions.append( pos )
 			finally:
+				sphere.removeNode()
 				self.__world.removeRigidBody( point )
 		return True
 
-def createRigidPoints( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
+def createRigidPoint( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
 	shape = BulletSphereShape( radius )
 	body = BulletRigidBodyNode( 'RigidSphere' )
 	body.addShape( shape )
@@ -89,4 +90,4 @@ def createRigidPoints( parent, color, position, radius = 5.0, slices = 16, stack
 	body_np.setPos( position )
 	sphere = create_sphere( radius = radius, color = color, slices = slices, stacks = stacks )
 	sphere.reparentTo( body_np )
-	return body
+	return body, body_np
