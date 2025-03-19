@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from entities.locatorMode import LocatorLength, LocatorModes, Locators
+from entities.locatorMode import LocatorLength, LocatorModes
 from states.moverstate import MoverState
 from states.states import States
 
@@ -8,23 +8,23 @@ if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
 
 
-class MovementState( MoverState ):
+class CautiousState( MoverState ):
 	def __init__( self, entity: 'Mover' ):
 		super().__init__( entity )
 
 	def enter( self ):
 		self._currentTarget = self.mover.currentTarget
-		self.mover.speed = 75
-		self.mover.locatorMode = LocatorModes.Edges
-		self.mover.stopDistance = True
+		self.mover.speed = 25
+		self.mover.locatorMode = LocatorModes.TargetOnly
 		self.mover.detectorLength = LocatorLength.Medium
-		self.mover.setDynamicDetector( Locators.Full )
 		self.mover.schedulePointToPointTasks()
+		self.mover.scheduleTargetMonitoringTask()
 
 	def execute( self ):
-		if self.mover.hasObstacles():
-			return self.doneState( States.OBSTACLE )
-		if self.mover.currentTarget is None:
-			return self.doneState( States.IDLE )
+		if not self.mover.aligned:
+			self.mover.locatorMode = LocatorModes.TargetOnly
+		else:
+			self.mover.locatorMode = LocatorModes.Edges
+
 		if self.mover.currentTarget != self._currentTarget:
-			return self.doneState( States.MOVEMENT )
+			return self.doneState( States.IDLE )

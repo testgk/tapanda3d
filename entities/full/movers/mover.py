@@ -6,8 +6,11 @@ from collections import deque
 from math import cos, sin, radians
 from direct.task.TaskManagerGlobal import taskMgr
 
+from states.cautiousstate import CautiousState
 from states.curveidlestate import CurveIdleState
 from states.curvemovementstate import CurveMovementState
+from states.generatebypassstate import GenerateBypassState
+from states.generatecurvestate import GenerateCurveState
 from target import Target
 from enums.colors import Color
 from sphere import create_sphere
@@ -16,10 +19,8 @@ from statemachine.state import State
 from entities.parts.part import Part
 from states.idlestate import IdleState
 from states.roamstate import RoamState
-from states.curvestate import CurveState
 from selectionmodes import SelectionModes
 from states.backupstate import BackupState
-from states.bypassstate import BypassState
 from entities.modules.chassis import Chassis
 from states.movementstate import MovementState
 from states.obstaclestate import ObstacleState
@@ -83,15 +84,15 @@ class Mover( Entity ):
 		self.setDynamicDetector( mode = Locators.Full )
 
 	@property
-	def bpTarget( self ):
+	def bypassTarget( self ):
 		return self.__bypassTarget
 
 	@property
 	def curveTarget( self ):
 		return self.__curveTarget
 
-	@bpTarget.setter
-	def bpTarget( self, target: Target ):
+	@bypassTarget.setter
+	def bypassTarget( self, target: Target ):
 		self.__bypassTarget = target
 
 	@property
@@ -191,11 +192,12 @@ class Mover( Entity ):
 				States.IDLE: IdleState( self ),
 				States.MOVEMENT: MovementState( self ),
 				States.OBSTACLE: ObstacleState( self ),
-				States.BYPASS: BypassState( self ),
+				States.CAUTIOUS: CautiousState( self ),
+				States.BYPASS: GenerateBypassState( self ),
 				States.CHECK_OBSTACLE: CheckObstacle( self ),
 				States.BACKUP: BackupState( self ),
 				States.ROAM: RoamState( self ),
-				States.CURVE: CurveState( self ),
+				States.CURVE: GenerateCurveState( self ),
 				States.CURVE_MOVEMENT: CurveMovementState( self ),
 				States.CURVE_IDLE: CurveIdleState( self )
 		}
@@ -218,12 +220,6 @@ class Mover( Entity ):
 		return task.cont
 
 	def byPassMovementMonitoringTask( self, task ):
-		if self.__bypassTarget:
-			self.moveTargets.append( self.__currentTarget )
-			self.moveTargets.append( self.__bypassTarget )
-			self.__bypassTarget = None
-			self.__currentTarget = None
-			return task.cont
 
 		if self.__currentTarget:
 			return task.cont
@@ -236,8 +232,8 @@ class Mover( Entity ):
 		return task.done
 
 	def targetMonitoringTask( self, task ):
-		if self.__bypassTarget:
-			return task.done
+		#if self.__bypassTarget:
+		#	return task.done
 
 		if any( self.__curveTargets ):
 			return task.done
@@ -245,15 +241,6 @@ class Mover( Entity ):
 		# accept new selected target
 		if self.__nextTarget is None and any( self._selectedTargets ):
 			self.__nextTarget = self._selectedTargets.pop()
-
-		#if self.__bypassTarget:
-			# store and replace current target
-		#	if self.__currentTarget is self.__nextTarget:
-		#		self.moveTargets.append( self.__currentTarget )
-		#	self.__curveTarget = self.__bypassTarget
-		#	self.__currentTarget = self.__bypassTarget
-		#	self.__currentTarget.handleSelection( mode = SelectionModes.TEMP )
-		#	self.__bypassTarget = None
 
 		if self.__currentTarget is not None:
 			return task.cont
@@ -297,6 +284,12 @@ class Mover( Entity ):
 			return True
 		return False
 
+	def generateBypass( self ):
+		self.moveTargets.append( self.__currentTarget )
+		self.moveTargets.append( self.__bypassTarget )
+		self.__bypassTarget = None
+		self.__currentTarget = None
+
 	def scheduleBackupTasks( self ):
 		self.scheduleTask( self._movementManager.set_velocity_backwards_direction )
 		self.scheduleTask( self._movementManager.monitor_obstacles )
@@ -307,7 +300,6 @@ class Mover( Entity ):
 
 	def scheduleObstacleTasks( self ):
 		self.scheduleTask( self._movementManager.target_detection )
-		self.scheduleTask( self.byPassMovementMonitoringTask )
 
 	def finishedMovement( self ):
 		return self.__currentTarget is None

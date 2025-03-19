@@ -20,13 +20,12 @@ class ObstacleState( MoverState ):
         else:
             self.mover.setDynamicDetector( Locators.Right )
         self.mover.detectorLength = LocatorLength.Medium
+        self.mover.speed = 20
+        self.mover.stopDistance = True
         self.mover.scheduleObstacleTasks()
 
     def execute( self ):
-        if self.mover.currentTarget:
-            self.mover.removeObstacle()
-            self._done = True
-            self.nextState = States.IDLE
+        if self.mover.bypassTarget:
+            return self.doneState( States.BYPASS )
         if self.mover.curveTarget:
-            self._done = True
-            self.nextState = States.CURVE
+            return self.doneState( States.CURVE )

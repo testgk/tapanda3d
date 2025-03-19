@@ -21,15 +21,8 @@ class Selector:
 		self.__selectionMode = SelectionModes.NONE
 
 	@property
-	def selectedMover( self ) -> Mover:
-		return self.__selectedItem
-
-	@property
 	def point( self ):
 		return self.__point
-
-	def setSelectionMode( self, mode ):
-		self.__selectionMode = mode
 
 	def __getNewEntry( self ):
 		if self.__mouseWatcherNode.hasMouse():

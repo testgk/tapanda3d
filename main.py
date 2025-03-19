@@ -29,7 +29,7 @@ class MyApp( ShowBase ):
 		self.mapName = "heightmap1"
 		self.showTexture = True
 		if True:
-			self.mapName = "heightmap_flat_big"
+			self.mapName = "heightmap_big"
 			self.showTexture = True
 		ShowBase.__init__( self )
 		self.__terrainPhysicsLayer = None
@@ -75,7 +75,6 @@ class MyApp( ShowBase ):
 
 	def on_map_rightclick( self ):
 		self.__selector.on_map_click( button = 'right' )
-
 
 	def updateMouseTask( self, task ):
 		self.update_mouse_hover()
