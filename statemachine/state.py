@@ -1,8 +1,6 @@
 from statemachine.eventmetaclass import EventMetaclass
 
 
-
-
 class State( metaclass = EventMetaclass ):
     def __init__( self, entity):
         self._nextState = None
@@ -30,6 +28,10 @@ class State( metaclass = EventMetaclass ):
     def initialize( self ):
         self._done = False
         self._nextState = None
+
+    def doneState( self, nextState: str ) -> None:
+        self._done = True
+        self._nextState = nextState
 
     def enter( self ):
         raise NotImplementedError

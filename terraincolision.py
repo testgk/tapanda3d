@@ -1,6 +1,6 @@
-from panda3d.core import GeoMipTerrain, GeomNode, NodePath
+from panda3d.core import GeoMipTerrain, GeomNode
 
-from customcollisionpolygon import CustomCollisionPolygon
+from polygons.customcollisionpolygon import CustomCollisionPolygon
 
 polygons = { }
 
