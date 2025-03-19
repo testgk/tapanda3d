@@ -16,9 +16,8 @@ class CurveIdleState( IdleState ):
 
     def execute( self ):
         if self.mover.currentTarget:
-            self._done = True
             if self.mover.insideCurve:
                 self.nextState = States.CURVE_MOVEMENT
             else:
-                self.mover.terminateCurve()
                 self.nextState = States.IDLE
+            self._done = True

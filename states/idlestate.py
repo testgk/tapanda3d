@@ -20,8 +20,7 @@ class IdleState( State ):
 
     def execute( self ):
         if self.mover.currentTarget:
-            self.nextState = States.CHECK_OBSTACLE
-            self._done = True
-        if self.mover.bpTarget:
-            self.nextState = States.MOVEMENT
-            self._done = True
+            return self.doneState( States.CHECK_OBSTACLE )
+        #if self.mover.bypassTarget:
+        #    self.nextState = States.MOVEMENT
+        #    self._done = True
