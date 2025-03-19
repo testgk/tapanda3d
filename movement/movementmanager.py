@@ -42,7 +42,9 @@ class MovementManager:
 		return task.cont
 
 	def stopMovement( self ):
+		print( f"{ self.__mover.name } is stopping" )
 		self.__mover.coreRigidBody.set_linear_velocity( Vec3( 0, 0, 0 ) )
+		self.__mover.coreRigidBody.set_angular_velocity( Vec3( 0, 0, 0 ) )
 
 	def set_velocity_backwards_direction( self, task ):
 		if not self.__mover.closeToObstacle():
@@ -102,6 +104,8 @@ class MovementManager:
 		return task.cont
 
 	def monitor_obstacles( self, task ):
+		if not self.__mover.aligned:
+			return task.cont
 		if self.__mover.locatorMode == LocatorModes.NONE:
 			return task.done
 		if self.__mover.obstacle is not None:
@@ -126,7 +130,7 @@ class MovementManager:
 
 	def target_detection( self, task ):
 		if self.__tempTarget is not None:
-			self.__mover.bpTarget = self.__tempTarget
+			self.__mover.bypassTarget = self.__tempTarget
 			self.__tempTarget = None
 			return task.done
 		detection = self.__detector.detectAlternativePosition( self.__getCurrentTarget() )

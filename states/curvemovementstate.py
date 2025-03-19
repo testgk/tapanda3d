@@ -24,10 +24,6 @@ class CurveMovementState( MovementState ):
 
 	def execute( self ):
 		if self.mover.hasObstacles():
-			self.nextState = States.OBSTACLE
-			self._done = True
-			return
+			return self.doneState( States.OBSTACLE )
 		if self.mover.currentTarget != self._currentTarget:
-			print( f'mover target: { self.mover.currentTarget }' )
-			self._done = True
-			self.nextState = States.CURVE_IDLE
+			return self.doneState( States.CURVE_IDLE )

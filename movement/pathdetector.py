@@ -1,11 +1,7 @@
 import random
 
-from direct.task.TaskManagerGlobal import taskMgr
-from panda3d.core import ClockObject, LineSegs, NodePath, Vec3
+from panda3d.core import LineSegs, NodePath, Vec3
 
-from customcollisionpolygon import CustomCollisionPolygon
-from custompolygon import CustomPolygon
-from customrigidpolygon import CustomRigidPolygon
 from entities.locatorMode import Locators
 from enums.colors import Color
 from typing import TYPE_CHECKING

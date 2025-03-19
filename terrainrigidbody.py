@@ -1,5 +1,5 @@
-from panda3d.core import GeoMipTerrain, GeomNode, NodePath
-from customrigidpolygon import CustomRigidPolygon
+from panda3d.core import GeoMipTerrain, GeomNode
+from polygons.customrigidpolygon import CustomRigidPolygon
 
 
 class TerrainRigidBody:
