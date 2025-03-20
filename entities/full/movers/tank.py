@@ -6,20 +6,14 @@ from entities.full.attacker import Attacker
 from entities.full.movers.mover import Mover
 from entities.modules.chassis import Chassis
 from entities.modules.turret import Turret
+from entities.full.entitywithturret import EntityWithTurret
 
 
-class Tank( Mover, Attacker ):
+class Tank( Mover, Attacker, EntityWithTurret ):
     def __init__( self, engine, chassis: Chassis, turret: Turret ):
         super().__init__( chassis = chassis, engine = engine )
-        self.__turret = turret
+        EntityWithTurret.__init__( self, turret )
 
-    @entitypart
-    def turretBase( self ):
-        return self.__turret.turretBase
-
-    @entitypart
-    def cannon( self ):
-        return self.__turret.turretCannon
 
     def _connectModules( self, world ):
         pivot_in_hull = Vec3( 0, 0, 1 )

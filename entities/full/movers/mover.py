@@ -1,34 +1,26 @@
-import random
 
-from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
+
 from panda3d.core import Vec3
 from collections import deque
 from math import cos, sin, radians
 from direct.task.TaskManagerGlobal import taskMgr
 
-from states.cautiousstate import CautiousState
-from states.curveidlestate import CurveIdleState
-from states.curvemovementstate import CurveMovementState
-from states.generatebypassstate import GenerateBypassState
-from states.generatecurvestate import GenerateCurveState
 from target import Target
 from enums.colors import Color
 from sphere import create_sphere
 from states.states import States
 from statemachine.state import State
 from entities.parts.part import Part
-from states.idlestate import IdleState
-from states.roamstate import RoamState
 from selectionmodes import SelectionModes
 from states.backupstate import BackupState
 from entities.modules.chassis import Chassis
-from states.movementstate import MovementState
-from states.obstaclestate import ObstacleState
-from movement.movementmanager import MovementManager
 from states.checkobstaclestate import CheckObstacle
+from movement.movementmanager import MovementManager
 from entities.entity import Entity, entitypart, entitymodule
+from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
 from entities.locatorMode import LocatorModes, LocatorLength, Locators
-
+from states import ( MovementState, CautiousState, CurveIdleState, CurveMovementState,
+                    ObstacleState, IdleState, GenerateCurveState, GenerateBypassState )
 
 class DetectorLimits:
 	Wide = 90
@@ -94,6 +86,7 @@ class Mover( Entity ):
 	@bypassTarget.setter
 	def bypassTarget( self, target: Target ):
 		self.__bypassTarget = target
+		self.__curveTarget = target
 
 	@property
 	def insideCurve( self ):
@@ -196,7 +189,6 @@ class Mover( Entity ):
 				States.BYPASS: GenerateBypassState( self ),
 				States.CHECK_OBSTACLE: CheckObstacle( self ),
 				States.BACKUP: BackupState( self ),
-				States.ROAM: RoamState( self ),
 				States.CURVE: GenerateCurveState( self ),
 				States.CURVE_MOVEMENT: CurveMovementState( self ),
 				States.CURVE_IDLE: CurveIdleState( self )
@@ -406,7 +398,7 @@ class Mover( Entity ):
 	def closeToObstacle( self ) -> bool:
 		if not self.hasObstacles():
 			return False
-		return self._movementManager.distance_from_obstacle() <= 200
+		return self._movementManager.distanceFromObstacle() <= 200
 
 	def setPos( self, pos ) -> None:
 		self.coreBodyPath.setPos( pos )
