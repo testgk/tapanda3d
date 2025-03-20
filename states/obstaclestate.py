@@ -26,6 +26,7 @@ class ObstacleState( MoverState ):
 
     def execute( self ):
         if self.mover.bypassTarget:
-            return self.doneState( States.BYPASS )
-        if self.mover.curveTarget:
-            return self.doneState( States.CURVE )
+            if self.mover.closeToObstacle():
+                return self.doneState( States.BYPASS )
+            else:
+                return self.doneState( States.CURVE )

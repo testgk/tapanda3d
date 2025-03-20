@@ -89,6 +89,7 @@ def createWireNode( customNode ):
 
 class CustomPolygon( SelectionItem, Target ):
 	def __init__( self, child: NodePath ):
+		super().__init__()
 		self._child = child
 		self._name = self._child.getName()
 		self._vertices = getVertices( self._child.node().getGeom( 0 ) )

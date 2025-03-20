@@ -7,8 +7,9 @@ from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, Directional
     GeomVertexFormat, GeomVertexData, GeomVertexWriter, GeomTriangles, Geom, GeomNode, Vec4, Point3, GeomLines, \
     GeomPoints
 
+
+from polygons.custompolygon import CustomPolygon
 from collsiongroups import CollisionGroup
-from custompolygon import CustomPolygon
 from enums.colors import Color
 
 
