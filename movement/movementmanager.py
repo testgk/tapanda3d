@@ -54,7 +54,7 @@ class MovementManager:
 		self.__mover.coreRigidBody.set_linear_velocity( direction * self.__mover.speed )
 		return task.cont
 
-	def distance_from_obstacle( self ):
+	def distanceFromObstacle( self ):
 		distance = ( self.__mover.obstacle.position - self.__mover.position ).length()
 		print( "distance_from_obstacle:", distance )
 		return distance

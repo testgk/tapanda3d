@@ -5,10 +5,10 @@ from panda3d.core import CollisionNode, CollisionPolygon, \
 
 from enums.colors import Color
 from enums.directions import Direction
+from polygons.custompolygon import CustomPolygon
+from polygons.custompolygonpool import CustomPolygonPool
 from selectionitem import SelectionItem
-from custompolygon import CustomPolygon
 from selectionmodes import SelectionModes
-from custompolygonpool import CustomPolygonPool
 from target import Target
 
 

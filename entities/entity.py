@@ -100,8 +100,8 @@ class Entity( SelectionItem ):
 		self.__collisionBox.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies()
 
-	def _connectModules( self, world ):
-		raise NotImplementedError
+	#def _connectModules( self, world ):
+	#	raise NotImplementedError
 
 	def decide( self, currentState: State ) -> str:
 		raise NotImplementedError
