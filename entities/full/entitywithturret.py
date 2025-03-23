@@ -12,7 +12,11 @@ class EntityWithTurret:
 
 	@entitypart
 	def turretBase( self ):
-		return self._turret.turretBase
+		if self._turret:
+			return self._turret.turretBase
+
+	def chassis( self ) -> Chassis:
+		return self._chassis
 
 	def _connectModules( self, world ):
 		pivot_in_hull = Vec3( 0, 0, 1 )
