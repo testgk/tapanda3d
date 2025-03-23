@@ -22,9 +22,6 @@ def entitypart( func ):
 	return func
 
 
-def entitymodule( func ):
-	func._is_entitymodule = True
-	return func
 
 
 class Entity( SelectionItem ):
@@ -62,11 +59,13 @@ class Entity( SelectionItem ):
 
 	@property
 	def coreBodyPath( self ) -> NodePath:
-		return self._corePart.rigidBodyPath
+		if self._corePart:
+			return self._corePart.rigidBodyPath
 
 	@property
 	def coreRigidBody( self ) -> BulletRigidBodyNode:
-		return self._corePart.rigidBody
+		if self._corePart:
+			return self._corePart.rigidBody
 
 	@property
 	def selectBox( self ):

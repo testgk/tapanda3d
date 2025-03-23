@@ -1,8 +1,6 @@
 from direct.gui.DirectButton import DirectButton
-from entities.full.movers.tank import Tank
-from entities.modules.turret import CannonTurret
-from entities.modules.chassis import BasicTracksChassis
-from entities.parts.engine import BasicEngine
+
+from entities.entityfactory import EntityFactory
 from entities.parts.obstacles.cube import Cube
 from entityloader import EntityLoader
 from selector.selector import Selector
@@ -37,14 +35,12 @@ class EntityButtons:
 		)
 
 	def __createEntity( self ):
-		engine = BasicEngine()
-		turret = CannonTurret()
-		chassis = BasicTracksChassis()
-		tank = Tank( engine = engine, turret = turret, chassis = chassis )
-		entity = self.__loader.loadEntity( entity = tank, entry = self.__selector.point )
-		entity.terrainSize = self.__terrainSize
+		#tank = EntityFactory.create_entity( "basic_tank" )
+		towerSmall = EntityFactory.create_entity( "tower_small" )
+		entity = self.__loader.loadEntity( entity = towerSmall, entry = self.__selector.point )
+		#entity.terrainSize = self.__terrainSize
 		entity.__render = self.__render
 
 	def __createObstacle( self ):
-		cube = Cube()
+		cube = tank = EntityFactory.create_entity( "basic_tank" )
 		entity = self.__loader.loadEntity( entity = cube, entry = self.__selector.point )
