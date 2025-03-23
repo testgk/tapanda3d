@@ -16,7 +16,7 @@ from states.backupstate import BackupState
 from entities.modules.chassis import Chassis
 from states.checkobstaclestate import CheckObstacle
 from movement.movementmanager import MovementManager
-from entities.entity import Entity, entitypart, entitymodule
+from entities.entity import Entity, entitypart
 from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
 from entities.locatorMode import LocatorModes, LocatorLength, Locators
 from states import ( MovementState, CautiousState, CurveIdleState, CurveMovementState,
@@ -28,7 +28,6 @@ class DetectorLimits:
 
 
 class Mover( Entity ):
-
 	def __init__( self, engine, chassis: Chassis ):
 		super().__init__()
 		self.__curveTarget = None
@@ -54,7 +53,6 @@ class Mover( Entity ):
 		self._movementManager: MovementManager or None = None
 		self.__hpr = None
 		self.regularSpeed = 100
-		self._chassis = chassis
 		self._currentPosition = None
 		self._engine = engine
 		self._mobility = chassis.mobility()
@@ -310,10 +308,6 @@ class Mover( Entity ):
 	@entitypart
 	def mobility( self ) -> Part:
 		return self._mobility
-
-	@entitymodule
-	def chassis( self ) -> Chassis:
-		return self._chassis
 
 	def selfHit( self, hit ):
 		return hit in self._partBuilder.rigidBodyNodes
