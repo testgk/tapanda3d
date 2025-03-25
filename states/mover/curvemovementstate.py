@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING
 
-from entities.locatorMode import LocatorLength, LocatorModes, Locators
-from states.moverstate import MoverState
+from entities.locatorMode import LocatorModes, Locators, LocatorLength
+from states.mover.movementstate import MovementState
 from states.states import States
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
 
 
-class MovementState( MoverState ):
+class CurveMovementState( MovementState ):
 	def __init__( self, entity: 'Mover' ):
 		super().__init__( entity )
 
@@ -16,15 +16,14 @@ class MovementState( MoverState ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
 		self.mover.locatorMode = LocatorModes.Edges
-		self.mover.stopDistance = True
-		self.mover.detectorLength = LocatorLength.Medium
 		self.mover.setDynamicDetector( Locators.Full )
+		self.mover.detectorLength = LocatorLength.Medium
+		self.mover.stopDistance = False
 		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):
-		if self.mover.hasObstacles():
-			return self.doneState( States.OBSTACLE )
-		if self.mover.currentTarget is None:
+		if not self.mover.insideCurve:
 			return self.doneState( States.IDLE )
 		if self.mover.currentTarget != self._currentTarget:
-			return self.doneState( States.MOVEMENT )
+			self.mover.terminateCurve()
+			return self.doneState( States.CURVE_IDLE )

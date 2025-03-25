@@ -2,7 +2,7 @@ import os
 import random
 from collections import defaultdict
 from typing import TYPE_CHECKING, Callable
-from panda3d.core import  NodePath, Vec3, CollisionBox, CollisionNode, Point3
+from panda3d.core import NodePath, TransformState, Vec3, CollisionBox, CollisionNode, Point3
 from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
 
 
@@ -69,7 +69,7 @@ class PartFactory:
             try:
                 eggPath = self.__getPartEggPath( part )
                 model = self.__loadModel( eggPath, loader, part )
-                model.setScale( self.__entity.scale )
+                model.setScale( part.scale )
                 self.__models.append( model )
                 part.model = model
             except Exception as e:
@@ -112,6 +112,8 @@ class PartFactory:
         body_node = BulletRigidBodyNode( f'multi_shape_body_{random.randint(1,1000)}' )
         for model in models:
             mesh = BulletTriangleMesh()
+            scale = model.get_scale()  # Get the model's scale
+            # Apply the scale transformation to the model before adding it to the Bullet mesh
             add_model_to_bullet_mesh( mesh, model )
             model_shape = BulletTriangleMeshShape( mesh, dynamic = True )
             body_node.addShape( model_shape )
@@ -187,6 +189,12 @@ def create_combined_collision_box( model_nps ):
 
 def add_model_to_bullet_mesh( mesh, model_np ):
     geom_node = model_np.find( "**/+GeomNode" ).node()
+    transform = model_np.getTransform()  # Get the full transform (including scale)
+    matrix = transform.getMat()  # Extract LMatrix4f
+
     for i in range( geom_node.getNumGeoms() ):
         geom = geom_node.getGeom( i )
-        mesh.addGeom( geom )
+        transformed_geom = geom.makeCopy()
+        transformed_geom.transform_vertices( matrix )  # Apply scale
+
+        mesh.addGeom( transformed_geom )

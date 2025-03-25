@@ -5,9 +5,10 @@ from states.states import States
 
 if TYPE_CHECKING:
     from entities.full.movers.mover import Mover
+    from entities.entity import Entity
 
 class IdleState( State ):
-    def __init__( self, entity: 'Mover' ):
+    def __init__( self, entity: 'Entity' ) -> None:
         super().__init__( entity )
         self._nextState = "idle"
 
@@ -21,6 +22,3 @@ class IdleState( State ):
     def execute( self ):
         if self.mover.currentTarget:
             return self.doneState( States.CHECK_OBSTACLE )
-        #if self.mover.bypassTarget:
-        #    self.nextState = States.MOVEMENT
-        #    self._done = True

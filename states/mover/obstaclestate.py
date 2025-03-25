@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorLength, LocatorModes, Locators
-from states.moverstate import MoverState
+from states.mover.moverstate import MoverState
 from states.states import States
 
 
@@ -16,9 +16,9 @@ class ObstacleState( MoverState ):
         self.mover.stopMovement()
         self.mover.locatorMode = LocatorModes.Edges
         if self.mover.obstacle.detection == Locators.Right:
-            self.mover.setDynamicDetector( Locators.Left )
+            self.mover.setDynamicDetector( Locators.Left, freeze = True )
         else:
-            self.mover.setDynamicDetector( Locators.Right )
+            self.mover.setDynamicDetector( Locators.Right, freeze = True )
         self.mover.detectorLength = LocatorLength.Medium
         self.mover.speed = 20
         self.mover.stopDistance = True

@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from statemachine.state import State
-from states.movementstate import MovementState
 
 if TYPE_CHECKING:
 	from entities.full.attacker import Attacker

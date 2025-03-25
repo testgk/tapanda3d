@@ -2,7 +2,7 @@ from entities.full.movers.tank import Tank
 from entities.full.towers.towers import TowerSmall
 from entities.parts.engine import BasicEngine
 from entities.modules.turret import CannonTurret
-from entities.modules.chassis import BasicTracksChassis
+from entities.modules.mobilechassis import BasicTracksChassis
 from entities.parts.obstacles.cube import Cube
 
 
@@ -20,7 +20,7 @@ class EntityRegistry:
         "basic_tank": lambda: Tank(
             engine = BasicEngine(),
             turret = CannonTurret(),
-            chassis = BasicTracksChassis()
+            axis = BasicTracksChassis()
         ),
         "cube": lambda: Cube(),
         "tower_small": lambda: TowerSmall(),
