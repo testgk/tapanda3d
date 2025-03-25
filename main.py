@@ -51,8 +51,8 @@ class MyApp( ShowBase ):
 				camNode = self.camNode,
 				terrainCamera = self.terrainCamera,
 				render = self.render )
-		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader )
-		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader, terrainSize = self.terrainInfo.terrainSize, render = self.render )
+		self.__entityLoader = EntityLoader( render = self.render, physicsWorld = self.physics_world, loader = self.loader, terrainSize = self.terrainInfo.terrainSize )
+		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader )
 
 		self.task_duration = 0.2
 		self.accept( 'mouse1', self.on_map_click )

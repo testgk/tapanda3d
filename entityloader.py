@@ -6,11 +6,11 @@ from entities.full.movers.mover import Mover
 
 
 class EntityLoader:
-	def __init__( self, render, physicsWorld, loader: Loader ):
+	def __init__( self, render, physicsWorld, loader: Loader, terrainSize ):
 		self.__render = render
 		self.__physicsWorld = physicsWorld
 		self.__loader = loader
-
+		self.__terrainSize = terrainSize
 
 	def loadEntity( self, entity: Entity, entry ):
 		entity.buildModels( loader = self.__loader )
@@ -18,14 +18,14 @@ class EntityLoader:
 			parts = rm[ "parts" ]
 			bulletNode = rm[ "rigidbody" ]
 			self.__renderModelsGroup( point = entry, parts = parts,  bulletNode = bulletNode )
-		entity.completeLoading( self.__physicsWorld, self.__render )
+		entity.completeLoading( self.__physicsWorld, self.__render, self.__terrainSize )
 		return entity
 
 	def __renderModelsGroup( self, point, parts, bulletNode ):
 		modelBullet = self.__render.attachNewNode( bulletNode )
 		self.__physicsWorld.attachRigidBody( bulletNode )
 		modelBullet.set_pos( point )
-		modelBullet.setZ( modelBullet.getZ() + 50  )
+		modelBullet.setZ( modelBullet.getZ() + 200  )
 		for part in parts:
 			part.rigidBodyPath = modelBullet
 			part.model.reparentTo( modelBullet )

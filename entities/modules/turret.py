@@ -1,3 +1,4 @@
+from collsiongroups import CollisionGroup
 from entities.modules.module import Module
 from entities.parts.cannon import ShellCannon
 from entities.parts.part import Part
@@ -5,10 +6,10 @@ from enums.colors import Color
 
 
 class Turret( Module ):
-    def __init__( self, device: Part ):
+    def __init__( self, device: Part, ** kwargs ):
         self.__turretBase = TurretBase()
         self.__cannon = device
-        super().__init__( [ self.__turretBase , device ])
+        super().__init__( devices = [ self.__turretBase , device ], collideGroup = CollisionGroup.TURRET, ** kwargs )
 
 
     @property
@@ -21,8 +22,8 @@ class Turret( Module ):
 
 
 class CannonTurret( Turret ):
-    def __init__( self ):
-        super().__init__( ShellCannon() )
+    def __init__( self, ** kwargs ):
+        super().__init__( ShellCannon(), ** kwargs )
 
 
 class TurretBase( Part ):

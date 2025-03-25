@@ -1,8 +1,7 @@
 from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorModes
-from statemachine.state import State
-from states.movementstate import MovementState
+from states.mover.movementstate import MovementState
 from states.states import States
 
 if TYPE_CHECKING:

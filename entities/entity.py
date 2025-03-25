@@ -1,7 +1,7 @@
 import random
-from collections import defaultdict, deque
+from abc import abstractmethod
+from collections import deque
 
-from direct.task.Task import TaskManager
 from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.core import NodePath
@@ -11,10 +11,9 @@ from entities.commandmanager import CommandManager
 from entities.parts.part import Part
 from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
-from statemachine.commands.command import Command
 from statemachine.state import State
 from statemachine.statemachine import StateMachine
-from states.idlestate import IdleState
+from states.mover.idlestate import IdleState
 
 
 def entitypart( func ):
@@ -49,6 +48,10 @@ class Entity( SelectionItem ):
 		self._width = None
 		self._height = None
 
+	@abstractmethod
+	def _setCoreBodyPath( self ):
+		pass
+
 	@property
 	def rigidBodyNodes( self )  -> dict[ str: { BulletRigidBodyNode, list[ 'Part' ] } ]:
 		return self.__rigidBodies
@@ -74,19 +77,14 @@ class Entity( SelectionItem ):
 		except IndexError:
 			return None
 
-	@property
-	def scale( self ):
-		return self._scale
-
 	def _createStateMachine( self ):
-		self._stateMachine = StateMachine( self )
+		self._stateMachine = StateMachine( self, initState = IdleState( entity = self ) )
 		self.scheduleTask( self._stateMachine.stateMachineMainLoop, appendTask = True  )
 
 	@property
 	def position( self ):
 		if self.coreBodyPath:
 			return self.coreBodyPath.get_pos()
-
 
 	@property
 	def models( self ):
@@ -98,9 +96,6 @@ class Entity( SelectionItem ):
 		self.__collisionBox = self._partBuilder.collisionBox()
 		self.__collisionBox.setPythonTag( 'collision_target', self )
 		self.__rigidBodies = self._partBuilder.rigidBodies()
-
-	#def _connectModules( self, world ):
-	#	raise NotImplementedError
 
 	def decide( self, currentState: State ) -> str:
 		raise NotImplementedError
@@ -163,5 +158,17 @@ class Entity( SelectionItem ):
 	def isValidState( self, stateName ) -> bool:
 		return stateName in self._statesPool
 
-	def completeLoading( self, physicsWorld, render ):
+	def completeLoading( self, physicsWorld, render, terrainSize ) -> None:
+		pass
+
+	def _createModelBounds( self ):
+		self.__modelBounds = self.coreBodyPath.getTightBounds()
+		self._width = ( self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y )
+		self._length = ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x )
+		self._height = ( self.__modelBounds[ 1 ].z - self.__modelBounds[ 0 ].z )
+
+	def _initMovementManager( self, physicsWorld ):
+		pass
+
+	def _connectModules( self, physicsWorld ):
 		pass
