@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorLength, LocatorModes
-from states.moverstate import MoverState
+from states.mover.moverstate import MoverState
 from states.states import States
 
 if TYPE_CHECKING:

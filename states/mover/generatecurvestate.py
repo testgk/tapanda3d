@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 from states.states import States
-from states.moverstate import MoverState
-from entities.locatorMode import LocatorModes
+from states.mover.moverstate import MoverState
+from entities.locatorMode import LocatorModes, Locators
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
@@ -20,6 +20,7 @@ class GenerateCurveState( MoverState ):
 
 	def execute( self ):
 		self.mover.generateCurve()
+		self.mover.setDynamicDetector( Locators.Full  )
 		if self.mover.curveTarget:
 			return self.doneState( States.OBSTACLE )
 

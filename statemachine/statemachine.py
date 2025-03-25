@@ -1,11 +1,11 @@
 from statemachine.state import State
-from states.idlestate import IdleState
+from states.mover.idlestate import IdleState
 
 
 class StateMachine:
-    def __init__( self, entity ):
+    def __init__( self, entity, initState: State ):
         self.__entity = entity
-        self.__currentState: State = IdleState( entity )
+        self.__currentState: State = initState
         self.__currentState.enter()
 
     def stateMachineMainLoop( self, task ):

@@ -1,10 +1,11 @@
-
+from abc import abstractmethod
 
 from panda3d.core import Vec3
 from collections import deque
 from math import cos, sin, radians
 from direct.task.TaskManagerGlobal import taskMgr
 
+from entities.modules.mobilechassis import MobileChassis
 from target import Target
 from enums.colors import Color
 from sphere import create_sphere
@@ -12,9 +13,8 @@ from states.states import States
 from statemachine.state import State
 from entities.parts.part import Part
 from selectionmodes import SelectionModes
-from states.backupstate import BackupState
-from entities.modules.chassis import Chassis
-from states.checkobstaclestate import CheckObstacle
+from states.mover.backupstate import BackupState
+from states.mover.checkobstaclestate import CheckObstacle
 from movement.movementmanager import MovementManager
 from entities.entity import Entity, entitypart
 from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
@@ -23,13 +23,26 @@ from states import ( MovementState, CautiousState, CurveIdleState, CurveMovement
                     ObstacleState, IdleState, GenerateCurveState, GenerateBypassState )
 
 class DetectorLimits:
-	Wide = 90
+	Wide = 120
 	Normal = 45
 
 
-class Mover( Entity ):
-	def __init__( self, engine, chassis: Chassis ):
+class MovingEntity:
+
+	@abstractmethod
+	def mobility( self ) -> Part:
+		pass
+
+	@property
+	@abstractmethod
+	def speed( self ) -> float:
+		pass
+
+
+class Mover( Entity, MovingEntity ):
+	def __init__( self, engine, chassis: MobileChassis ):
 		super().__init__()
+		self.freezeDetector = False
 		self.__curveTarget = None
 		self.__aligned: bool = False
 		self.__leftLimit = None
@@ -201,8 +214,8 @@ class Mover( Entity ):
 		if not any( self.__curveTargets ):
 			return task.done
 
-		if self.hasObstacles():
-			return task.done
+		#if self.hasObstacles():
+		#	return task.done
 
 		if self.__currentTarget is None and any( self.__curveTargets ):
 			self.__currentTarget = self.__curveTargets.pop()
@@ -272,7 +285,7 @@ class Mover( Entity ):
 			self.__curveTargets = targets[ ::20 ]
 			self.__curveTarget = None
 			self.__currentTarget = None
-			self.__obstacle = None
+			self.removeObstacle()
 			return True
 		return False
 
@@ -312,14 +325,16 @@ class Mover( Entity ):
 	def selfHit( self, hit ):
 		return hit in self._partBuilder.rigidBodyNodes
 
-	def completeLoading( self, physicsWorld, render ):
+	def completeLoading( self, physicsWorld, render, terrainSize ) -> None:
 		self._setDamping()
 		self._connectModules( physicsWorld )
-		self.__createModelBounds()
+		self._createModelBounds()
 		self.__createEdges()
 		self.__render = render
+		self.__terrainSize = terrainSize
 		self.__initMovementManager( physicsWorld )
 		self._createStateMachine()
+		self._setCoreBodyPath()
 
 	def clearCurrentTarget( self ):
 		if not self.__currentTarget:
@@ -342,12 +357,6 @@ class Mover( Entity ):
 		self.__dynamicDetector = create_and_setup_sphere( self.coreBodyPath, Color.YELLOW, Vec3( 0, 0, 0 ) )
 		taskMgr.add( self.moveDynamicDetector, "CircularMotionTask" )
 
-	def __createModelBounds( self ):
-		self.__modelBounds = self.coreBodyPath.getTightBounds()
-		self._width = ( self.__modelBounds[ 1 ].y - self.__modelBounds[ 0 ].y )
-		self._length = ( self.__modelBounds[ 1 ].x - self.__modelBounds[ 0 ].x )
-		self._height = ( self.__modelBounds[ 1 ].z - self.__modelBounds[ 0 ].z )
-
 	def __createRearEdges( self ):
 		self.__leftRearEdge = create_and_setup_sphere( self.coreBodyPath, Color.CYAN,
 		                                               Vec3( -self._length / 2, self._width / 2, 0 ) )
@@ -359,25 +368,33 @@ class Mover( Entity ):
 		                                                    Vec3( -self._length, - self._width / 2, 0 ) )
 
 	def moveDynamicDetector( self, task ):
-		task.delayTime = 1
+		if self.freezeDetector:
+			return task.cont
+		task.delayTime = 0.01
 		self.__verticalAngle += self.__angle_increment
 		if self.__verticalAngle >= self.__rightLimit or self.__verticalAngle <= self.__leftLimit:
 			self.__angle_increment *= -1
-		radians_angle = radians( self.__verticalAngle )
+		self.__setDynamicDetectorPosition( self.__verticalAngle )
+		return task.again
+
+	def __setDynamicDetectorPosition( self, verticalAngle ):
+		radians_angle = radians( verticalAngle )
 		self.__dynamicDetector.setPos( self._length / 2 + self._width * cos( radians_angle ),
 		                               self._width * sin( radians_angle ),
 		                               self.__horizontalAngle )
-		return task.cont
 
-	def setDynamicDetector( self, mode: Locators ):
+	def setDynamicDetector( self, mode: Locators, freeze = False ):
+		self.freezeDetector = freeze
 		if mode == Locators.Left:
 			self.__leftLimit = 0
 			self.__rightLimit = DetectorLimits.Wide
-			self.__verticalAngle = 2
+			self.__verticalAngle = 80
+			self.__setDynamicDetectorPosition( self.__verticalAngle )
 		elif mode == Locators.Right:
 			self.__leftLimit = -DetectorLimits.Wide
 			self.__rightLimit = 0
-			self.__verticalAngle = -2
+			self.__verticalAngle = -80
+			self.__setDynamicDetectorPosition( self.__verticalAngle )
 		elif mode == Locators.Full:
 			self.__verticalAngle = 0
 			self.__rightLimit = DetectorLimits.Normal
@@ -394,7 +411,7 @@ class Mover( Entity ):
 	def closeToObstacle( self ) -> bool:
 		if not self.hasObstacles():
 			return False
-		return self._movementManager.distanceFromObstacle() <= 200
+		return self._movementManager.distanceFromObstacle() <= 120
 
 	def setPos( self, pos ) -> None:
 		self.coreBodyPath.setPos( pos )
@@ -411,8 +428,9 @@ class Mover( Entity ):
 	def stopMovement( self ):
 		self._movementManager.stopMovement()
 
-	def removeObstacle( self ):
-		self.__obstacle.clearSelection()
+	def removeObstacle( self ) -> None:
+		if self.__obstacle:
+			self.__obstacle.clearSelection()
 		self.__obstacle = None
 
 

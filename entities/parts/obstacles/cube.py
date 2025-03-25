@@ -26,10 +26,16 @@ class Cube( Entity, SelectionItem ):
 
 	@property
 	def model( self ):
-		return  self._cube.model
+		return self._cube.model
 
 	def show( self ):
-		print( f'{ self.name} hit')
+		print( f'{ self.name } hit')
 
 	def handleSelection( self, mode: SelectionModes = SelectionModes.ANY ):
-		self.cubePart().model.setColor( Color.MAGENTA )
+		self.model.setColor( Color.MAGENTA )
+
+	def clearSelection( self ):
+		self.model.setColor( self.cubePart().color )
+
+	def _createStateMachine( self ):
+		pass
