@@ -7,3 +7,4 @@ class CollisionGroup:
     TERRAIN = BitMask32( 1 )
     MODEL = BitMask32( 4 )
     ROLLS = BitMask32( 2 )
+    TURRET = BitMask32( 8 )
