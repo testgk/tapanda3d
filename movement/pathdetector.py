@@ -72,11 +72,11 @@ class PathDetector:
 			return None
 		option = locatorMode or random.choice( self.__mover.locatorMode.value )
 		if option == Locators.Target:
-			edge = self.__mover.edgePos()
+			edge = self.__mover.detectors.edgePos()
 			detector = target
 			detector.z = edge.getZ()
 		else:
-			edge, detector = self.__mover.getDetector( option )
+			edge, detector = self.__mover.detectors.getDirection( option )
 		direction = Vec3( detector - edge )
 		self.__ray = self.visualize_ray( start = edge, color = Color.GREEN, end = edge + direction * self.__mover.detectorLength )
 		result = self.__world.rayTestAll( edge, edge + direction * 10 )
