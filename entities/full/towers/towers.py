@@ -1,3 +1,4 @@
+from moverdetectors import Detectors
 from entities.entity import Entity, entitypart
 from entities.modules.turret import CannonTurret
 from entities.full.entitywithturret import EntityWithTurret
@@ -8,6 +9,8 @@ class Tower( EntityWithTurret, Entity ):
     def __init__( self, turret, towerBase ) -> None:
         super().__init__( turret = turret, axis = towerBase )
         Entity.__init__( self )
+        self.__render = None
+        self.__detectors = None
 
     @entitypart
     def towerBase( self ) -> Part:
@@ -26,6 +29,7 @@ class Tower( EntityWithTurret, Entity ):
         self._initMovementManager( physicsWorld )
         self._createStateMachine()
         self._connectModules( physicsWorld, axis = self._axis )
+        self.__detectors = Detectors( self.coreBodyPath, self._length, self._width, self.__render )
 
     def _initStatesPool( self ):
         self._statesPool = {
