@@ -30,20 +30,16 @@ class Entity( SelectionItem ):
 		self._scale = 1
 		self._statesPool: dict = {}
 		self._stateMachine = None
-		self.__pendingCommand = None
-		self._commands = [ ]
 		self.name = f'{ self.__class__.__name__}_{ random.randint(1, 1000 ) }'
 		self._id = None
 		self.__models = [ ]
 		self._partBuilder = PartFactory( self )
-		self._commandManager = CommandManager()
 		self.__collisionBox = None
 		self.__rigidBodies : dict[ str: { BulletRigidBodyNode, list[ 'Part' ] } ] = None
 		self._corePart = None
 		self._coreBodyPath = None
 		self._isMover = False
 		self._initStatesPool()
-		self.__render = None
 		self._length = None
 		self._width = None
 		self._height = None
@@ -51,6 +47,14 @@ class Entity( SelectionItem ):
 	@abstractmethod
 	def _setCoreBodyPath( self ):
 		pass
+
+	@property
+	def width( self ):
+		return self._width
+
+	@property
+	def height( self ):
+		return self._length
 
 	@property
 	def rigidBodyNodes( self )  -> dict[ str: { BulletRigidBodyNode, list[ 'Part' ] } ]:
