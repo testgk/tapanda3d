@@ -1,11 +1,8 @@
-import random
-from collections import deque
-
 from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
 from panda3d.core import NurbsCurveEvaluator, Vec4, Vec3, LineSegs, NodePath
 
 from enums.colors import Color
-from sphere import create_sphere
+from spheres import create_sphere
 from target import CustomTarget
 
 

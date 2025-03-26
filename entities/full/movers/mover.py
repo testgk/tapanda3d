@@ -2,13 +2,9 @@ from abc import abstractmethod
 
 from panda3d.core import Vec3
 from collections import deque
-from math import cos, sin, radians
-from direct.task.TaskManagerGlobal import taskMgr
-
+from moverdetectors import Detectors
 from entities.modules.mobilechassis import MobileChassis
 from target import Target
-from enums.colors import Color
-from sphere import create_sphere
 from states.states import States
 from statemachine.state import State
 from entities.parts.part import Part
@@ -22,9 +18,6 @@ from entities.locatorMode import LocatorModes, LocatorLength, Locators
 from states import ( MovementState, CautiousState, CurveIdleState, CurveMovementState,
                     ObstacleState, IdleState, GenerateCurveState, GenerateBypassState )
 
-class DetectorLimits:
-	Wide = 120
-	Normal = 45
 
 
 class MovingEntity:
@@ -42,27 +35,15 @@ class MovingEntity:
 class Mover( Entity, MovingEntity ):
 	def __init__( self, engine, chassis: MobileChassis ):
 		super().__init__()
-		self.freezeDetector = False
+		self.__render = None
 		self.__curveTarget = None
 		self.__aligned: bool = False
-		self.__leftLimit = None
-		self.__rightLimit = None
 		self.__nextTarget = None
-		self.__amplitude = 0
 		self.locatorMode: LocatorModes = LocatorModes.All
 		self.detectorLength: LocatorLength = LocatorLength.Medium
-		self.__angle_increment = 2
-		self.__verticalAngle = 0
-		self.__horizontalAngle = -2
-		self.__dynamicDetector = None
 		self.__speed = None
 		self.__targetVisible = False
-		self.__edge = None
-		self.__rightEdge = None
 		self.__modelBounds = None
-		self.__leftDetector = None
-		self.__rightDetector = None
-		self.__leftEdge = None
 		self._movementManager: MovementManager or None = None
 		self.__hpr = None
 		self.regularSpeed = 100
@@ -79,12 +60,8 @@ class Mover( Entity, MovingEntity ):
 		self.__bypassTarget: Target or None = None
 		self.__curveTargets: list[ Target ] = []
 		self.__stopDistance = True
-		self.__detectors = {
-			Locators.Left: self.__getLeftDetectorDirection,
-			Locators.Right: self.__getRightDetectorDirection,
-			Locators.Dynamic: self.__getDynamicDetectorDirection,
-		}
-		self.setDynamicDetector( mode = Locators.Full )
+		self.__detectors = None
+
 
 	@property
 	def bypassTarget( self ):
@@ -131,6 +108,10 @@ class Mover( Entity, MovingEntity ):
 		self.__stopDistance = value
 
 	@property
+	def detectors( self ) -> Detectors:
+		return self.__detectors
+
+	@property
 	def obstacle( self ):
 		return self.__obstacle
 
@@ -152,7 +133,7 @@ class Mover( Entity, MovingEntity ):
 	def __initMovementManager( self, world ):
 		self._movementManager = MovementManager( self, world, self.__render )
 
-	def decide( self, currentState: 'State' ) -> str:
+	def decide( self, currentState: 'State' ) -> str | None:
 		if currentState is MovementState:
 			return States.IDLE
 
@@ -295,12 +276,12 @@ class Mover( Entity, MovingEntity ):
 		self._setDamping()
 		self._connectModules( physicsWorld )
 		self._createModelBounds()
-		self.__createEdges()
 		self.__render = render
 		self.__terrainSize = terrainSize
 		self.__initMovementManager( physicsWorld )
 		self._createStateMachine()
 		self._setCoreBodyPath()
+		self.__detectors = Detectors( self.coreBodyPath, self._length, self._width, self.__render )
 
 	def clearCurrentTarget( self ):
 		if not self.__currentTarget:
@@ -331,9 +312,6 @@ class Mover( Entity, MovingEntity ):
 	def terminateCurve( self ):
 		self._movementManager.terminateCurve()
 
-	def getDetector( self, option ):
-		return self.__detectors[ option ]()
-
 	def stopMovement( self ):
 		self._movementManager.stopMovement()
 
@@ -343,22 +321,4 @@ class Mover( Entity, MovingEntity ):
 		self.__obstacle = None
 
 
-
-def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
-	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks )
-	sphere.reparentTo( parent )
-	sphere.setColor( color )
-	sphere.setPos( position )
-	return sphere
-
-def create_and_setup_rigid_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
-	sphere = create_and_setup_sphere( parent, color, position, radius = radius, slices = slices, stacks = stacks  )
-	shape = BulletSphereShape( radius )
-	body = BulletRigidBodyNode( 'RigidSphere' )
-	body.addShape( shape )
-	body.setMass( 1.0 )
-	body_np = parent.attachNewNode( body )
-	body_np.setPos( position )
-	sphere.reparentTo( body_np )
-	return body_np
 

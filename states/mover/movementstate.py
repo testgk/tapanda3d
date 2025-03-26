@@ -18,7 +18,7 @@ class MovementState( MoverState ):
 		self.mover.locatorMode = LocatorModes.Edges
 		self.mover.stopDistance = True
 		self.mover.detectorLength = LocatorLength.Medium
-		self.mover.setDynamicDetector( Locators.Full )
+		self.mover.detectors.setDynamicDetector( Locators.Full )
 		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):

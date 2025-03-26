@@ -20,7 +20,7 @@ class GenerateCurveState( MoverState ):
 
 	def execute( self ):
 		self.mover.generateCurve()
-		self.mover.setDynamicDetector( Locators.Full  )
+		self.mover.detectors.setDynamicDetector( Locators.Full  )
 		if self.mover.curveTarget:
 			return self.doneState( States.OBSTACLE )
 
