@@ -16,7 +16,7 @@ class CurveMovementState( MovementState ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
 		self.mover.locatorMode = LocatorModes.Edges
-		self.mover.setDynamicDetector( Locators.Full )
+		self.mover.detectors.setDynamicDetector( Locators.Full )
 		self.mover.detectorLength = LocatorLength.Medium
 		self.mover.stopDistance = False
 		self.mover.schedulePointToPointTasks()

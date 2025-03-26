@@ -16,9 +16,9 @@ class ObstacleState( MoverState ):
         self.mover.stopMovement()
         self.mover.locatorMode = LocatorModes.Edges
         if self.mover.obstacle.detection == Locators.Right:
-            self.mover.setDynamicDetector( Locators.Left, freeze = True )
+            self.mover.detectors.setDynamicDetector( Locators.Left, freeze = True )
         else:
-            self.mover.setDynamicDetector( Locators.Right, freeze = True )
+            self.mover.detectors.setDynamicDetector( Locators.Right, freeze = True )
         self.mover.detectorLength = LocatorLength.Medium
         self.mover.speed = 20
         self.mover.stopDistance = True
