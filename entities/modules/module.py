@@ -10,5 +10,6 @@ class Module:
 		for device in self.__devices:
 			device.rigidGroup = self.__class__.__name__
 			device.collideGroup = self._collideGroup
-			device.scale = kwargs.get( 'scale', 1 )
+			if device.scale == 1:
+				device.scale = kwargs.get( 'scale', 1 )
 			device.mass = kwargs.get( 'mass', 0 )

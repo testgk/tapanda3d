@@ -7,7 +7,7 @@ from enums.colors import Color
 
 class Turret( Module ):
     def __init__( self, device: Part, ** kwargs ):
-        self.__turretBase = TurretBase()
+        self.__turretBase = TurretBase( color = Color.BLUE )
         self.__cannon = device
         super().__init__( devices = [ self.__turretBase , device ], collideGroup = CollisionGroup.TURRET, ** kwargs )
 
@@ -25,12 +25,13 @@ class CannonTurret( Turret ):
     def __init__( self, ** kwargs ):
         super().__init__( ShellCannon(), ** kwargs )
 
-
 class TurretBase( Part ):
-    def __init__( self ):
+    def __init__( self, **kwargs ):
         super().__init__( partId = "turret_base" )
-        self._color = Color.RED
+        self._color = kwargs.get( "color", Color.RED )
 
     @property
     def objectPath( self ) -> str:
         return "turret"
+
+

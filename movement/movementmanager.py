@@ -5,6 +5,7 @@ from panda3d.core import Vec3
 from entities.locatorMode import LocatorModes
 from movement.curve import CurveGenerator
 from movement.pathdetector import PathDetector
+from movement.towermovementmanager import TowerMovementManager
 from phyisics import globalClock
 from typing import TYPE_CHECKING
 
@@ -14,8 +15,9 @@ if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
 
 
-class MovementManager:
+class MovementManager( TowerMovementManager ):
 	def __init__( self, entity, world, render ):
+		super().__init__( entity )
 		self.__detector = PathDetector( entity, world, render )
 		self._curveGenerator = CurveGenerator( world, render )
 		self.__tempTarget = None
@@ -59,33 +61,10 @@ class MovementManager:
 		print( "distance_from_obstacle:", distance )
 		return distance
 
-	def track_target_coreBody_angle( self, task ):
-		if self.__mover.currentTarget is None:
-			return task.cont
-		h_diff, new_hpr = self.__getRelativeHpr( self.__mover.coreBodyPath, self.__mover.currentTarget.position, tracking_speed = 50 )
-		self.__mover.coreBodyPath.setHpr( new_hpr )
-		if abs( h_diff ) <= 50:
-			self.__mover.aligned = True
-		else:
-			self.__mover.aligned = False
-		return task.cont
-
-	def __getRelativeHpr( self, bodyPart, target_position, tracking_speed = 100 ):
-		current_pos = bodyPart.getPos()
-		current_hpr = Vec3( bodyPart.getHpr() )
-		direction_vector = target_position - current_pos
-		target_heading = math.degrees( math.atan2( direction_vector.y, direction_vector.x ) )
-		target_hpr = Vec3( target_heading, 0, 0 )
-		h_diff = target_hpr.x - current_hpr.x
-		h_diff = ( h_diff + 180 ) % 360 - 180
-		h_adjust = max( -tracking_speed * globalClock.getDt(), min( h_diff, tracking_speed * globalClock.getDt() ) )
-		new_hpr = current_hpr + Vec3( h_adjust, 0, 0 )
-		return h_diff, new_hpr
-
 	def maintain_turret_angle( self, task ):
 		if self.__mover.finishedMovement():
 			return task.done
-		h_diff, new_hpr = self.__getRelativeHpr( self.__mover.turretBase().rigidBodyPath, self.__getCurrentTarget().position, tracking_speed = 25 )
+		h_diff, new_hpr = self._getRelativeHpr( self.__mover.turretBase().rigidBodyPath, self.__getCurrentTarget().position, tracking_speed = 25 )
 		self.__mover.turretBase().rigidBodyPath.setHpr( new_hpr )
 		return task.cont
 
