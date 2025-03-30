@@ -72,6 +72,7 @@ class PartFactory:
                 model.setScale( part.scale )
                 self.__models.append( model )
                 part.model = model
+                part.name = f"{ self.__entity.name }.{ part.partId }"
             except Exception as e:
                 print( e )
 

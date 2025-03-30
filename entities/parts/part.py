@@ -23,6 +23,7 @@ class Part:
 			self._readPartData( part_data )
 		self.__friction = 0
 		self._scale = 1
+		self.__name = None
 
 	@property
 	def objectPath( self ) -> str:
@@ -43,6 +44,14 @@ class Part:
 	@rigidBody.setter
 	def rigidBody( self, path ) -> None:
 		self.__rigidBody = path
+
+	@property
+	def name( self ) -> str:
+		return self.__name
+
+	@name.setter
+	def name( self, name: str ) -> None:
+		self.__name = name
 
 	@property
 	def rigidGroup( self ) -> str:

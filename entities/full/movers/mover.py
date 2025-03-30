@@ -4,6 +4,7 @@ from panda3d.core import Vec3
 from collections import deque
 from moverdetectors import Detectors
 from entities.modules.mobilechassis import MobileChassis
+from selectionitem import SelectionItem
 from target import Target
 from states.states import States
 from statemachine.state import State
@@ -150,6 +151,19 @@ class Mover( Entity, MovingEntity ):
 				States.CURVE_MOVEMENT: CurveMovementState( self ),
 				States.CURVE_IDLE: CurveIdleState( self )
 		}
+
+	def selectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
+		if item == self:
+			self.clearSelection()
+			return None
+		if not item.isTerrain:
+			item.handleSelection( SelectionModes.ANY )
+			self.clearSelection()
+			return item
+		else:
+			self._selectedTargets.appendleft( item )
+			item.handleSelection( SelectionModes.P2P )
+			return self
 
 	def scheduleTargetMonitoringTask( self ):
 		self.scheduleTask( self.targetMonitoringTask, checkExisting = True )
