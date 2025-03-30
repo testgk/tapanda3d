@@ -1,10 +1,8 @@
-import threading
 
-from direct.task import Task
-from panda3d.core import CollisionHandlerQueue, CollisionTraverser,Vec3
+from panda3d.core import Vec3
 
 from buttons.entitybuttons import EntityButtons
-from entities.entity import Entity
+
 from entityloader import EntityLoader
 from enums.colors import Color
 

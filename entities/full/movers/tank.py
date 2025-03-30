@@ -3,7 +3,7 @@ from entities.modules.mobilechassis import MobileChassis
 from entities.modules.turret import Turret
 from entities.full.attacker import Attacker
 from entities.full.movers.mover import Mover
-from entities.full.entitywithturret import EntityWithTurret
+from entities.entitywithturret import EntityWithTurret
 
 
 class Tank( Mover, Attacker, EntityWithTurret ):
