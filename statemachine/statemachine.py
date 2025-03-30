@@ -8,7 +8,7 @@ class StateMachine:
         self.__currentState: State = initState
         self.__currentState.enter()
 
-    def stateMachineMainLoop( self, task ):
+    def startMachine( self, task ):
         task.delayTime = 1
         #if self.__entity.isSelected():
         #    print( f"{ self.__entity.name } current state: { self.__currentState }" )

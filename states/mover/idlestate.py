@@ -12,13 +12,9 @@ class IdleState( State ):
         super().__init__( entity )
         self._nextState = "idle"
 
-    @property
-    def mover( self ) -> 'Mover':
-        return self._entity
-
     def enter( self ):
         self._entity.scheduleTargetMonitoringTask()
 
     def execute( self ):
-        if self.mover.currentTarget:
+        if self._entity.currentTarget:
             return self.doneState( States.CHECK_OBSTACLE )

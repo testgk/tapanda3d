@@ -1,6 +1,7 @@
 import random
 from abc import abstractmethod
 from collections import deque
+from typing import NoReturn
 
 from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.bullet import BulletRigidBodyNode
@@ -9,6 +10,7 @@ from panda3d.core import NodePath
 from entities.partfactory import PartFactory
 from entities.commandmanager import CommandManager
 from entities.parts.part import Part
+from movement.towermovementmanager import TowerMovementManager
 from selectionitem import SelectionItem
 from selectionmodes import SelectionModes
 from statemachine.state import State
@@ -65,12 +67,12 @@ class Entity( SelectionItem ):
 		return True
 
 	@property
-	def coreBodyPath( self ) -> NodePath:
+	def coreBodyPath( self ) -> NodePath | NoReturn:
 		if self._corePart:
 			return self._corePart.rigidBodyPath
 
 	@property
-	def coreRigidBody( self ) -> BulletRigidBodyNode:
+	def coreRigidBody( self ) -> BulletRigidBodyNode | NoReturn:
 		if self._corePart:
 			return self._corePart.rigidBody
 
@@ -81,9 +83,13 @@ class Entity( SelectionItem ):
 		except IndexError:
 			return None
 
+	@abstractmethod
+	def getFamilyType( self ):
+		raise NotImplementedError()
+
 	def _createStateMachine( self ):
 		self._stateMachine = StateMachine( self, initState = IdleState( entity = self ) )
-		self.scheduleTask( self._stateMachine.stateMachineMainLoop, appendTask = True  )
+		self.scheduleTask( self._stateMachine.startMachine, appendTask = True )
 
 	@property
 	def position( self ):
