@@ -33,7 +33,6 @@ class PartFactory:
         self.__modelData = defaultdict( list )
         self.__rigidBodyNodes = []
 
-
     def addParts( self ) -> list[ 'Part' ]:
         parts = find_entity_parts( self.__entity )
         for part in parts:

@@ -1,15 +1,14 @@
 import random
 from panda3d.core import CollisionNode, CollisionPolygon, \
-	NodePath, Vec3, GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geom, GeomNode, Vec4, Point3, \
-	GeomPoints, GeomTriangles
+	NodePath, GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geom, GeomNode, Vec4, Point3, \
+	GeomPoints
 
 from enums.colors import Color
 from enums.directions import Direction
 from polygons.custompolygon import CustomPolygon
 from polygons.custompolygonpool import CustomPolygonPool
-from selectionitem import SelectionItem
-from selectionmodes import SelectionModes
-from target import Target
+from selection.selectionitem import SelectionItem
+from selection.selectionmodes import SelectionModes
 
 
 def getPointGeomNode( point ):

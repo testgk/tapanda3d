@@ -3,16 +3,14 @@ from abc import abstractmethod
 from collections import deque
 from typing import NoReturn
 
-from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.bullet import BulletRigidBodyNode
 from panda3d.core import NodePath
 
 from entities.partfactory import PartFactory
-from entities.commandmanager import CommandManager
 from entities.parts.part import Part
-from movement.towermovementmanager import TowerMovementManager
-from selectionitem import SelectionItem
-from selectionmodes import SelectionModes
+from scheduletask import scheduleTask
+from selection.selectionitem import SelectionItem
+from selection.selectionmodes import SelectionModes
 from statemachine.state import State
 from statemachine.statemachine import StateMachine
 from states.mover.idlestate import IdleState
@@ -47,7 +45,7 @@ class Entity( SelectionItem ):
 		self._height = None
 
 	@abstractmethod
-	def _setCoreBodyPath( self ):
+	def _setCorePart( self ):
 		pass
 
 	@property
@@ -89,7 +87,7 @@ class Entity( SelectionItem ):
 
 	def _createStateMachine( self ):
 		self._stateMachine = StateMachine( self, initState = IdleState( entity = self ) )
-		self.scheduleTask( self._stateMachine.startMachine, appendTask = True )
+		scheduleTask( self, self._stateMachine.startMachine, appendTask = True )
 
 	@property
 	def position( self ):
@@ -113,12 +111,12 @@ class Entity( SelectionItem ):
 	def getStateFromEntityPool( self, stateName: str ):
 		return self._statesPool[ stateName ]
 
-	def scheduleTask( self, method, extraArgs: list = None, appendTask = True, checkExisting = False ):
-		name = f'{ self.name }_{ method.__name__ }'
-		if checkExisting:
-			if taskMgr.hasTaskNamed( name ):
-				return
-		taskMgr.add( method, name = f'{ self.name }_{ method.__name__ }', extraArgs = extraArgs, appendTask = appendTask )
+	#def scheduleTask( self, method, extraArgs: list = None, appendTask = True, checkExisting = False ):
+	#	name = f'{ self.name }_{ method.__name__ }'
+	#	if checkExisting:
+	#		if taskMgr.hasTaskNamed( name ):
+	#			return
+	#	taskMgr.add( method, name = f'{ self.name }_{ method.__name__ }', extraArgs = extraArgs, appendTask = appendTask )
 
 	def _setDamping( self ):
 		self.coreRigidBody.set_linear_damping( 0 )

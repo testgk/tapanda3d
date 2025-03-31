@@ -2,7 +2,7 @@ from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
 from panda3d.core import NurbsCurveEvaluator, Vec4, Vec3, LineSegs, NodePath
 
 from enums.colors import Color
-from spheres import create_sphere
+from spheres import createSphere
 from target import CustomTarget
 
 
@@ -85,6 +85,6 @@ def createRigidPoint( parent, color, position, radius = 5.0, slices = 16, stacks
 	body.setMass( 0.0 )
 	body_np = parent.attachNewNode( body )
 	body_np.setPos( position )
-	sphere = create_sphere( radius = radius, color = color, slices = slices, stacks = stacks )
+	sphere = createSphere( radius = radius, color = color, slices = slices, stacks = stacks )
 	sphere.reparentTo( body_np )
 	return body, body_np
