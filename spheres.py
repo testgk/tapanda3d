@@ -9,15 +9,15 @@ from panda3d.core import GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geo
 
 
 
-def create_and_setup_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
-	sphere = create_sphere( radius = radius, slices = slices, stacks = stacks )
+def createAndSetupSphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
+	sphere = createSphere( radius = radius, slices = slices, stacks = stacks )
 	sphere.reparentTo( parent )
 	sphere.setColor( color )
 	sphere.setPos( position )
 	return sphere
 
-def create_and_setup_rigid_sphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
-	sphere = create_and_setup_sphere( parent, color, position, radius = radius, slices = slices, stacks = stacks  )
+def createAndSetupRigidSphere( parent, color, position, radius = 5.0, slices = 16, stacks = 8 ):
+	sphere = createAndSetupSphere( parent, color, position, radius = radius, slices = slices, stacks = stacks )
 	shape = BulletSphereShape( radius )
 	body = BulletRigidBodyNode( 'RigidSphere' )
 	body.addShape( shape )
@@ -27,7 +27,7 @@ def create_and_setup_rigid_sphere( parent, color, position, radius = 5.0, slices
 	sphere.reparentTo( body_np )
 	return body_np
 
-def create_sphere( radius = 1.0, slices = 16, stacks = 16, color = Color.RED ):
+def createSphere( radius = 1.0, slices = 16, stacks = 16, color = Color.RED ):
 	# Set up the vertex format
 	format = GeomVertexFormat.get_v3n3()
 	vdata = GeomVertexData( "sphere", format, Geom.UH_static )

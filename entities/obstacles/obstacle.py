@@ -1,5 +1,5 @@
 from entities.locatorMode import Locators
-from selectionitem import SelectionItem
+from selection.selectionitem import SelectionItem
 
 
 class Obstacle( SelectionItem ):

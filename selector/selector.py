@@ -1,9 +1,8 @@
 import queue
 
 from camera.camera import TerrainCamera
-from entities.full.movers.mover import Mover
-from selectionitem import SelectionItem
-from selectionmodes import SelectionModes
+from selection.selectionitem import SelectionItem
+from selection.selectionmodes import SelectionModes
 
 
 class Selector:

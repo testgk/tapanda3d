@@ -1,7 +1,7 @@
 from panda3d.core import Vec3
 
-from selectionitem import SelectionItem
-from selectionmodes import SelectionModes
+from selection.selectionitem import SelectionItem
+from selection.selectionmodes import SelectionModes
 
 
 class Target:

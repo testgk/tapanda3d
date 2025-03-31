@@ -1,4 +1,4 @@
-from .states import States
+from .statenames import States
 from states.mover.idlestate import IdleState
 from states.mover.curveidlestate import CurveIdleState
 from states.mover.cautiousstate import CautiousState

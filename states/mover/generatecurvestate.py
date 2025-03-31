@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from states.states import States
+from states.statenames import States
 from states.mover.moverstate import MoverState
 from entities.locatorMode import LocatorModes, Locators
 
