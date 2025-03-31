@@ -6,11 +6,11 @@ from scheduletask import scheduleTask
 
 
 class EntityWithTurret:
-	def __init__( self, axis, turret, movementMgr ):
+	def __init__( self, axis, turret ):
 		self.__aligned = False
 		self._axis = axis
 		self._turret = turret
-		self.__movementMgr = movementMgr
+		self._movementManager = None
 
 	@entitypart
 	def turretBase( self ):
@@ -40,5 +40,5 @@ class EntityWithTurret:
 		hinge.setBreakingThreshold( float( 'inf' ) )
 		world.attachConstraint( hinge )
 
-	def schedulePointToPointTasks( self ):
-		scheduleTask( self._turret.name, self.__movementMgr.maintain_turret_angle )
+	def scheduleMaintainTurretAngleTask( self ):
+		scheduleTask( self, self._movementManager.maintain_turret_angle )

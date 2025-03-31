@@ -9,6 +9,7 @@ class Part:
 	def __init__( self, partData = None,
 	              partId: str = None,
 	              **kwargs ):
+		self._mass = None
 		self.__rigidGroup = self.__class__.__name__
 		self.__collideGroup = CollisionGroup.MODEL
 		self.__partId = partId

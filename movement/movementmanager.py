@@ -61,13 +61,6 @@ class MovementManager( TowerMovementManager ):
 		print( "distance_from_obstacle:", distance )
 		return distance
 
-	def maintain_turret_angle( self, task ):
-		if self.__mover.finishedMovement():
-			return task.done
-		h_diff, new_hpr = self._getRelativeHpr( self.__mover.turretBase().rigidBodyPath, self.__getCurrentTarget().position, tracking_speed = 25 )
-		self.__mover.turretBase().rigidBodyPath.setHpr( new_hpr )
-		return task.cont
-
 	def maintain_terrain_boundaries( self, terrainSize, task ):
 		current_pos = self.__mover.coreBodyPath.get_pos()
 		if current_pos.x <= 10:
@@ -91,7 +84,7 @@ class MovementManager( TowerMovementManager ):
 			return task.cont
 		if self.__mover.currentTarget is None:
 			return task.again
-		obstacle = self.__checkForObstacles( self.__getCurrentTarget() )
+		obstacle = self.__checkForObstacles( self._getCurrentTarget() )
 		try:
 			if obstacle is None:
 				if self.__mover.obstacle is not None:
@@ -112,13 +105,15 @@ class MovementManager( TowerMovementManager ):
 			self.__mover.bypassTarget = self.__tempTarget
 			self.__tempTarget = None
 			return task.done
-		detection = self.__detector.detectAlternativePosition( self.__getCurrentTarget() )
+		detection = self.__detector.detectAlternativePosition( self._getCurrentTarget() )
 		if detection:
 			self.__tempTarget = CustomTarget( detection.position )
 		return task.cont
 
-	def __getCurrentTarget( self ):
-		return self.__mover.currentTarget
+	def maintain_turret_angle( self, task ):
+		if self.__mover.finishedMovement():
+			return task.done
+		return super().maintain_turret_angle( task )
 
 	def generateAndCheckNewCurve( self, positions, obstacle ):
 		curve = self._curveGenerator.generateNewCurve( positions )

@@ -6,15 +6,15 @@ from buttons.entitybuttons import EntityButtons
 from entityloader import EntityLoader
 from enums.colors import Color
 
-from lights import Lights
+from gameenv.lights import Lights
 from phyisics import globalClock
-from picker import Picker
+from gameenv.picker import Picker
 from camera.camera import TerrainCamera
 from panda3d.bullet import BulletDebugNode, BulletWorld
 from buttons.camerabuttons import CameraButtons
 from selector.selector import Selector
-from terrainrigidbody import TerrainRigidBody
-from terraincolision import TerrainCollision
+from terrain.terrainrigidbody import TerrainRigidBody
+from terrain.terraincolision import TerrainCollision
 from direct.showbase.ShowBase import ShowBase
 from maps.terrainprovider import TerrainProvider
 import sys
@@ -55,7 +55,6 @@ class MyApp( ShowBase ):
 		self.task_duration = 0.2
 		self.accept( 'mouse1', self.on_map_click )
 		self.accept( 'mouse3', self.on_map_rightclick )
-		#self.taskMgr.add( self.updateMouseTask, 'updateMouseTask' )
 		self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
 		self.taskMgr.add( self.update_physics, "update_physics" )
 		self.taskMgr.doMethodLater( 0.02, self.update_physics, 'update_physics' )

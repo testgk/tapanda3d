@@ -1,11 +1,11 @@
 import math
 
 from panda3d.core import GeomVertexReader, GeomNode, NodePath, GeomVertexFormat, GeomVertexData, GeomVertexWriter, Geom, \
-	GeomTriangles, CollisionPolygon, GeomLines, Vec3, LVecBase3f
+	GeomTriangles, CollisionPolygon, GeomLines, Vec3
 
 from enums.colors import Color
-from selectionitem import SelectionItem
-from selectionmodes import SelectionModes
+from selection.selectionitem import SelectionItem
+from selection.selectionmodes import SelectionModes
 from target import Target
 
 
