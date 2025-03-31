@@ -1,8 +1,8 @@
 from enums.colors import Color
 from entities.parts.part import Part
 from entities.entity import Entity, entitypart
-from selectionitem import SelectionItem
-from selectionmodes import SelectionModes
+from selection.selectionitem import SelectionItem
+from selection.selectionmodes import SelectionModes
 
 
 class CubePart( Part ):

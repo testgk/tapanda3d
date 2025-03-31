@@ -1,10 +1,7 @@
 import math
-from direct.task import Task
-from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.core import Point3
 from camera.cameracontroller import CameraController
-from selectionitem import SelectionItem
-from selectionmodes import SelectionModes
+from selection.selectionitem import SelectionItem
 
 
 class TerrainCamera:

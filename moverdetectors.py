@@ -6,7 +6,7 @@ from panda3d.core import Vec3
 
 from entities.locatorMode import Locators
 from enums.colors import Color
-from spheres import create_and_setup_sphere
+from spheres import createAndSetupSphere
 
 
 class DetectorLimits:
@@ -18,9 +18,9 @@ class Detectors:
 		self.__freezeDetector = None
 		self.__leftLimit = None
 		self.__rightLimit = None
-		self.__verticalAngle = 0
+		self.__horizonAngle = 0
 		self.__angle_increment = 2
-		self.__horizontalAngle = -2
+		self.__verticalAngle = -2
 		self._width = width
 		self._length = length
 		self.__render = None
@@ -67,37 +67,37 @@ class Detectors:
 		if self.__freezeDetector:
 			return task.cont
 		task.delayTime = 0.01
-		self.__verticalAngle += self.__angle_increment
-		if self.__verticalAngle >= self.__rightLimit or self.__verticalAngle <= self.__leftLimit:
+		self.__horizonAngle += self.__angle_increment
+		if self.__horizonAngle >= self.__rightLimit or self.__horizonAngle <= self.__leftLimit:
 			self.__angle_increment *= -1
-		self.__setDynamicDetectorPosition( self.__verticalAngle )
+		self.__setDynamicDetectorPosition( self.__horizonAngle )
 		return task.again
 
 	def __setDynamicDetectorPosition( self, verticalAngle ):
 		radians_angle = radians( verticalAngle )
 		self.__detectors[ "dynamic" ].setPos( self._length / 2 + self._width * cos( radians_angle ),
-		                               self._width * sin( radians_angle ),
-		                               self.__horizontalAngle )
+												self._width * sin( radians_angle ),
+												self.__verticalAngle )
 
 	def setDynamicDetector( self, mode: Locators, freeze = False ):
 		self.__freezeDetector = freeze
 		if mode == Locators.Left:
 			self.__leftLimit = 0
 			self.__rightLimit = DetectorLimits.Wide
-			self.__verticalAngle = 80
-			self.__setDynamicDetectorPosition( self.__verticalAngle )
+			self.__horizonAngle = 80
+			self.__setDynamicDetectorPosition( self.__horizonAngle )
 		elif mode == Locators.Right:
 			self.__leftLimit = -DetectorLimits.Wide
 			self.__rightLimit = 0
-			self.__verticalAngle = -80
-			self.__setDynamicDetectorPosition( self.__verticalAngle )
+			self.__horizonAngle = -80
+			self.__setDynamicDetectorPosition( self.__horizonAngle )
 		elif mode == Locators.Full:
-			self.__verticalAngle = 0
+			self.__horizonAngle = 0
 			self.__rightLimit = DetectorLimits.Normal
 			self.__leftLimit = -DetectorLimits.Normal
 
 	def __createDetector( self, color, position ):
-		return create_and_setup_sphere( self.__coreBodyPath, color, position )
+		return createAndSetupSphere( self.__coreBodyPath, color, position )
 
 	def edgePos( self ):
 		return self.__detectors[ "edge" ].get_pos( self.__render )

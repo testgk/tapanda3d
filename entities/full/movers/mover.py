@@ -4,18 +4,18 @@ from panda3d.core import Vec3
 from collections import deque
 from moverdetectors import Detectors
 from entities.modules.mobilechassis import MobileChassis
-from selectionitem import SelectionItem
+from scheduletask import scheduleTask
+from selection.selectionitem import SelectionItem
 from target import Target
-from states.states import States
+from states.statenames import States
 from statemachine.state import State
 from entities.parts.part import Part
-from selectionmodes import SelectionModes
+from selection.selectionmodes import SelectionModes
 from states.mover.backupstate import BackupState
 from states.mover.checkobstaclestate import CheckObstacle
 from movement.movementmanager import MovementManager
 from entities.entity import Entity, entitypart
-from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
-from entities.locatorMode import LocatorModes, LocatorLength, Locators
+from entities.locatorMode import LocatorModes, LocatorLength
 from states import ( MovementState, CautiousState, CurveIdleState, CurveMovementState,
                     ObstacleState, IdleState, GenerateCurveState, GenerateBypassState )
 
@@ -166,17 +166,14 @@ class Mover( Entity, MovingEntity ):
 			return self
 
 	def scheduleTargetMonitoringTask( self ):
-		self.scheduleTask( self.targetMonitoringTask, checkExisting = True )
+		scheduleTask( self, self.targetMonitoringTask, checkExisting = True )
 
 	def scheduleCurveMovementMonitoringTaskTask( self ):
-		self.scheduleTask( self.curveMovementMonitoringTask, checkExisting = True )
+		scheduleTask( self, self.curveMovementMonitoringTask, checkExisting = True )
 
 	def curveMovementMonitoringTask( self, task ):
 		if not any( self.__curveTargets ):
 			return task.done
-
-		#if self.hasObstacles():
-		#	return task.done
 
 		if self.__currentTarget is None and any( self.__curveTargets ):
 			self.__currentTarget = self.__curveTargets.pop()
@@ -194,9 +191,6 @@ class Mover( Entity, MovingEntity ):
 		return task.done
 
 	def targetMonitoringTask( self, task ):
-		#if self.__bypassTarget:
-		#	return task.done
-
 		if any( self.__curveTargets ):
 			return task.done
 
@@ -231,11 +225,11 @@ class Mover( Entity, MovingEntity ):
 		self.__terrainSize = terrainSize
 
 	def schedulePointToPointTasks( self ):
-		self.scheduleTask( self._movementManager.set_velocity_toward_point_with_stop, checkExisting = True )
-		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
-		self.scheduleTask( self._movementManager.maintain_terrain_boundaries, extraArgs = [ self.__terrainSize ] )
-		self.scheduleTask( self._movementManager.monitor_obstacles )
-		self.scheduleTask( self._movementManager.maintain_turret_angle )
+		scheduleTask( self, self._movementManager.set_velocity_toward_point_with_stop, checkExisting = True )
+		scheduleTask( self, self._movementManager.track_target_coreBody_angle, checkExisting = True )
+		scheduleTask( self, self._movementManager.maintain_terrain_boundaries, extraArgs = [ self.__terrainSize ] )
+		scheduleTask( self, self._movementManager.monitor_obstacles )
+		scheduleTask( self, self._movementManager.maintain_turret_angle )
 
 	def generateCurve( self ):
 		pos1 = self.position
@@ -257,15 +251,15 @@ class Mover( Entity, MovingEntity ):
 		self.__currentTarget = None
 
 	def scheduleBackupTasks( self ):
-		self.scheduleTask( self._movementManager.set_velocity_backwards_direction )
-		self.scheduleTask( self._movementManager.monitor_obstacles )
+		scheduleTask( self, self._movementManager.set_velocity_backwards_direction )
+		scheduleTask( self, self._movementManager.monitor_obstacles )
 
 	def scheduleCheckObstaclesTasks( self ):
-		self.scheduleTask( self._movementManager.track_target_coreBody_angle, checkExisting = True )
-		self.scheduleTask( self._movementManager.monitor_obstacles )
+		scheduleTask( self, self._movementManager.track_target_coreBody_angle, checkExisting = True )
+		scheduleTask( self, self._movementManager.monitor_obstacles )
 
 	def scheduleObstacleTasks( self ):
-		self.scheduleTask( self._movementManager.target_detection )
+		scheduleTask( self, self._movementManager.target_detection )
 
 	def finishedMovement( self ):
 		return self.__currentTarget is None
@@ -294,7 +288,7 @@ class Mover( Entity, MovingEntity ):
 		self.__terrainSize = terrainSize
 		self.__initMovementManager( physicsWorld )
 		self._createStateMachine()
-		self._setCoreBodyPath()
+		self._setCorePart()
 		self.__detectors = Detectors( self.coreBodyPath, self._length, self._width, self.__render )
 
 	def clearCurrentTarget( self ):
@@ -303,14 +297,6 @@ class Mover( Entity, MovingEntity ):
 		if self.__currentTarget is self.__nextTarget:
 			self.__nextTarget = None
 		self.__currentTarget = None
-
-	def isMidRangeFromObstacle( self ) -> bool:
-		if self.__lastObstacle is None:
-			return True
-		distance = ( self.__lastObstacle.position - self.position ).length()
-		if distance > 100:
-			return True
-		return False
 
 	def closeToObstacle( self ) -> bool:
 		if not self.hasObstacles():

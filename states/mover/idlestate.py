@@ -1,10 +1,10 @@
+from states.statenames import States
+from statemachine.state import State
+
 from typing import TYPE_CHECKING
 
-from statemachine.state import State
-from states.states import States
 
 if TYPE_CHECKING:
-    from entities.full.movers.mover import Mover
     from entities.entity import Entity
 
 class IdleState( State ):
@@ -14,6 +14,7 @@ class IdleState( State ):
 
     def enter( self ):
         self._entity.scheduleTargetMonitoringTask()
+        self._entity.scheduleMaintainTurretAngleTask()
 
     def execute( self ):
         if self._entity.currentTarget:
