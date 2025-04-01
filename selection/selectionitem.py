@@ -1,6 +1,7 @@
 import queue
 from collections import deque
-from selectionmodes import SelectionModes
+
+from selection.selectionmodes import SelectionModes
 
 
 class SelectionItem:
