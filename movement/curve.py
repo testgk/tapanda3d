@@ -2,7 +2,8 @@ from panda3d.bullet import BulletSphereShape, BulletRigidBodyNode
 from panda3d.core import NurbsCurveEvaluator, Vec4, Vec3, LineSegs, NodePath
 
 from enums.colors import Color
-from spheres import createSphere
+from objects.spheres import createSphere
+from scheduletask import scheduleTask
 from target import CustomTarget
 
 
@@ -14,13 +15,16 @@ class CurveGenerator:
 		self.__curve = None
 		self.__curve_np = None
 		self.__curvePositions = []
+		self.name = "curvegen"
+		self.__curveId = 0
+		self.__displayedId = 0
+		scheduleTask( self, self.visualizeCurve )
 
 	def getCurveTargets( self ) -> list:
 		return [ CustomTarget( position = position ) for position in reversed( self.__curvePositions ) ]
 
 	def generateNewCurve( self, positions = list ):
-		self.__curve = self.__createCurve( positions )
-		self.__visualizeCurve()
+		self.__curve = self.__generateCurve( positions )
 		return self.__curve
 
 	def terminateCurve( self ):
@@ -32,7 +36,7 @@ class CurveGenerator:
 		#self.__curvePositions.clear()
 		#self.__rigidPoints.clear()
 
-	def __createCurve( self, positions ):
+	def __generateCurve( self, positions ):
 		if self.__curve_np:
 			self.__curve_np.remove_node()
 		self.__curvePositions.clear()
@@ -41,9 +45,13 @@ class CurveGenerator:
 		for i, pos in enumerate( positions ):
 			curve_evaluator.set_vertex( i, Vec4( pos[ 0 ], pos[ 1 ], pos[ 2 ] + 100, 1 ) )
 		curve_evaluator.set_order( 3 )
+		self.__curveId += 1
 		return curve_evaluator.evaluate()
 
-	def __visualizeCurve( self, num_samples: int = 100 ):
+	def visualizeCurve( self, task, num_samples: int = 100 ):
+		task.delay = 1
+		if self.__curve is None or self.__curveId == self.__displayedId:
+			return task.cont
 		print( "visualizing curve" )
 		lines = LineSegs()
 		lines.set_thickness( 2.0 )
@@ -55,13 +63,15 @@ class CurveGenerator:
 
 		self.__curve_np = NodePath( lines.create() )
 		self.__curve_np.reparent_to( self.__render )
+		self.__displayedId = self.__curveId
+		return task.again
 
 	def checkCurveObstacleContact( self, curve, obstacle, numOfPoints: int = 100 ):
 		for i in range( numOfPoints ):
 			point = None
 			sphere = None
 			try:
-				t = i / (numOfPoints - 1)  # Evenly spaced t values
+				t = i / ( numOfPoints - 1)  # Evenly spaced t values
 				pos = Vec3()
 				curve.eval_point( t, pos )
 				point, sphere = createRigidPoint( self.__render, position = pos, color = Color.BLUE )

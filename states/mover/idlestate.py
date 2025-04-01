@@ -1,3 +1,4 @@
+from entities.locatorMode import LocatorLength, LocatorModes, Locators
 from states.statenames import States
 from statemachine.state import State
 
@@ -13,6 +14,9 @@ class IdleState( State ):
         self._nextState = "idle"
 
     def enter( self ):
+        self._entity.locatorMode = LocatorModes.DynamicOnly
+        self._entity.detectorLength = LocatorLength.Medium
+        self._entity.sensors.setDynamicDetector( Locators.Full )
         self._entity.scheduleTargetMonitoringTask()
         self._entity.scheduleMaintainTurretAngleTask()
 

@@ -16,14 +16,14 @@ class CurveMovementState( MovementState ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
 		self.mover.locatorMode = LocatorModes.Edges
-		self.mover.detectors.setDynamicDetector( Locators.Full )
+		self.mover.sensors.setDynamicDetector( Locators.Full )
 		self.mover.detectorLength = LocatorLength.Medium
 		self.mover.stopDistance = False
 		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):
 		if not self.mover.insideCurve:
+			self.mover.terminateCurve()
 			return self.doneState( States.IDLE )
 		if self.mover.currentTarget != self._currentTarget:
-			self.mover.terminateCurve()
 			return self.doneState( States.CURVE_IDLE )

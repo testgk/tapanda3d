@@ -16,9 +16,9 @@ class ObstacleState( MoverState ):
         self.mover.stopMovement()
         self.mover.locatorMode = LocatorModes.Edges
         if self.mover.obstacle.detection == Locators.Right:
-            self.mover.detectors.setDynamicDetector( Locators.Left, freeze = True )
+            self.mover.sensors.setDynamicDetector( Locators.Left, freeze = True )
         else:
-            self.mover.detectors.setDynamicDetector( Locators.Right, freeze = True )
+            self.mover.sensors.setDynamicDetector( Locators.Right, freeze = True )
         self.mover.detectorLength = LocatorLength.Medium
         self.mover.speed = 20
         self.mover.stopDistance = True
@@ -29,4 +29,5 @@ class ObstacleState( MoverState ):
             if self.mover.closeToObstacle():
                 return self.doneState( States.BYPASS )
             else:
+                #return self.doneState( States.CHECK_OBSTACLE )
                 return self.doneState( States.CURVE )

@@ -11,18 +11,12 @@ class State( metaclass = EventMetaclass ):
     def done( self ) -> bool:
         return self._done
 
-    @done.setter
-    def done( self, value : bool ):
-        self._done = value
-
     @property
     def nextState( self ) -> 'str':
         return self._nextState
 
     @nextState.setter
     def nextState( self, state ) -> None:
-        if not self._entity.isValidState( state ):
-            raise Exception( f"Invalid state { state }" )
         self._nextState = state
 
     def initialize( self ):

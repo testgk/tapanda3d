@@ -4,7 +4,7 @@ from panda3d.core import Vec3
 
 from entities.locatorMode import LocatorModes
 from movement.curve import CurveGenerator
-from movement.pathdetector import PathDetector
+from movement.obstacledetector import ObstacleDetector
 from movement.towermovementmanager import TowerMovementManager
 from phyisics import globalClock
 from typing import TYPE_CHECKING
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class MovementManager( TowerMovementManager ):
 	def __init__( self, entity, world, render ):
 		super().__init__( entity )
-		self.__detector = PathDetector( entity, world, render )
+		self.__detector = ObstacleDetector( entity, world, render )
 		self._curveGenerator = CurveGenerator( world, render )
 		self.__tempTarget = None
 		self.__mover: Mover = entity
@@ -76,14 +76,14 @@ class MovementManager( TowerMovementManager ):
 		return task.cont
 
 	def monitor_obstacles( self, task ):
-		if not self.__mover.aligned:
-			return task.cont
+		#if not self.__entity.aligned:
+		#	return task.cont
 		if self.__mover.locatorMode == LocatorModes.NONE:
 			return task.done
 		if self.__mover.obstacle is not None:
 			return task.cont
-		if self.__mover.currentTarget is None:
-			return task.again
+		#if self.__entity.currentTarget is None:
+		#	return task.again
 		obstacle = self.__checkForObstacles( self._getCurrentTarget() )
 		try:
 			if obstacle is None:
@@ -124,3 +124,4 @@ class MovementManager( TowerMovementManager ):
 
 	def terminateCurve( self ):
 		self._curveGenerator.terminateCurve()
+
