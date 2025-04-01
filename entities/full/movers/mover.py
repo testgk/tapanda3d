@@ -2,7 +2,9 @@ from abc import abstractmethod
 
 from panda3d.core import Vec3
 from collections import deque
-from moverdetectors import Detectors
+
+from detection.detector import Detector
+from detection.sensors import Senesors
 from entities.modules.mobilechassis import MobileChassis
 from scheduletask import scheduleTask
 from selection.selectionitem import SelectionItem
@@ -61,7 +63,7 @@ class Mover( Entity, MovingEntity ):
 		self.__bypassTarget: Target or None = None
 		self.__curveTargets: list[ Target ] = []
 		self.__stopDistance = True
-		self.__detectors = None
+		self.__sensors = None
 
 
 	@property
@@ -109,8 +111,8 @@ class Mover( Entity, MovingEntity ):
 		self.__stopDistance = value
 
 	@property
-	def detectors( self ) -> Detectors:
-		return self.__detectors
+	def sensors( self ) -> Senesors:
+		return self.__sensors
 
 	@property
 	def obstacle( self ):
@@ -167,6 +169,7 @@ class Mover( Entity, MovingEntity ):
 
 	def scheduleTargetMonitoringTask( self ):
 		scheduleTask( self, self.targetMonitoringTask, checkExisting = True )
+		scheduleTask( self, self._movementManager.monitor_obstacles )
 
 	def scheduleCurveMovementMonitoringTaskTask( self ):
 		scheduleTask( self, self.curveMovementMonitoringTask, checkExisting = True )
@@ -228,7 +231,7 @@ class Mover( Entity, MovingEntity ):
 		scheduleTask( self, self._movementManager.set_velocity_toward_point_with_stop, checkExisting = True )
 		scheduleTask( self, self._movementManager.track_target_coreBody_angle, checkExisting = True )
 		scheduleTask( self, self._movementManager.maintain_terrain_boundaries, extraArgs = [ self.__terrainSize ] )
-		scheduleTask( self, self._movementManager.monitor_obstacles )
+		scheduleTask( self, self._movementManager.monitor_obstacles, checkExisting = True )
 		scheduleTask( self, self._movementManager.maintain_turret_angle )
 
 	def generateCurve( self ):
@@ -287,9 +290,10 @@ class Mover( Entity, MovingEntity ):
 		self.__render = render
 		self.__terrainSize = terrainSize
 		self.__initMovementManager( physicsWorld )
+		self.__sensors = Senesors( self.coreBodyPath, self._length, self._width, 0, self.__render )
+		self.__detector = Detector( self, physicsWorld, self.__render )
 		self._createStateMachine()
 		self._setCorePart()
-		self.__detectors = Detectors( self.coreBodyPath, self._length, self._width, self.__render )
 
 	def clearCurrentTarget( self ):
 		if not self.__currentTarget:

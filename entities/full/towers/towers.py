@@ -1,7 +1,9 @@
 from abc import ABC
 
+from detection.detector import Detector
+from detection.sensors import Senesors
+from entities.locatorMode import Locators
 from movement.towermovementmanager import TowerMovementManager
-from moverdetectors import Detectors
 from entities.entity import Entity, entitypart
 from entities.modules.turret import CannonTurret
 from entities.entitywithturret import EntityWithTurret
@@ -22,20 +24,25 @@ class Tower( EntityWithTurret, Entity, ABC ):
         self.__nextTarget = None
         self.__currentTarget = None
         self.__render = None
-        self.__detectors = None
+        self.__sensors = None
         turret.name = f"{ self.name }_turret"
         towerBase.name = f"{ self.name }_tower"
+
 
     @entitypart
     def towerBase( self ) -> Part:
         return self._axis
 
     @property
+    def sensors( self ) -> Senesors:
+        return self.__sensors
+
+    @property
     def currentTarget( self ) -> Target:
         return self.__currentTarget
 
     def _setCorePart( self ):
-        self._corePart =  self.turretBase()
+        self._corePart = self.turretBase()
 
     def _connectModules( self, world, axis ):
         return super()._connectModules( world, axis = axis )
@@ -45,9 +52,10 @@ class Tower( EntityWithTurret, Entity, ABC ):
         self._setCorePart()
         self._createModelBounds()
         self._initMovementManager( physicsWorld )
+        self.__sensors = Senesors( self.coreBodyPath, self._length, self._width, self._height, self.__render )
+        self.__detector = Detector( self, physicsWorld, self.__render )
         self._createStateMachine()
         self._connectModules( physicsWorld, axis = self._axis )
-        self.__detectors = Detectors( self.coreBodyPath, self._length, self._width, self.__render )
 
     def _initMovementManager( self, physicsWorld ):
         self._movementManager = TowerMovementManager( self )
@@ -68,6 +76,7 @@ class Tower( EntityWithTurret, Entity, ABC ):
 
     def scheduleTargetMonitoringTask( self ):
         scheduleTask( self, self.targetMonitoringTask, checkExisting = True )
+        scheduleTask( entity = self, method = self.__detector.detectionTask, checkExisting = True )
 
     def targetMonitoringTask( self, task ):
         if self.__nextTarget is None and any( self._selectedTargets ):

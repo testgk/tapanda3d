@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from enums.directions import mapDirections
 
@@ -20,7 +20,7 @@ class CustomPolygonPool:
             cls._instance = cls()
         return cls._instance
 
-    def getPolygonFromPool( self, row: int, column: int ) -> 'CustomCollisionPolygon':
+    def getPolygonFromPool( self, row: int, column: int ) -> Any | None:
         try:
             return CustomPolygonPool._polygons[ f"gmm{ row }x{ column }" ]
         except KeyError:

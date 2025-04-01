@@ -8,6 +8,7 @@ from panda3d.core import NodePath
 
 from entities.partfactory import PartFactory
 from entities.parts.part import Part
+from enums.colors import Color
 from scheduletask import scheduleTask
 from selection.selectionitem import SelectionItem
 from selection.selectionmodes import SelectionModes
@@ -140,34 +141,16 @@ class Entity( SelectionItem ):
 		if self.__collisionBox:
 			self.__collisionBox.hide()
 
-	def selectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
-		if item == self:
-			self.clearSelection()
-		if item != self and item.isMover:
-			item.handleSelection( SelectionModes.ANY )
-			self.clearSelection()
-			return item
-		if item.isTerrain:
-			if self.isMover:
-				self._selectedTargets.appendleft( item )
-				item.handleSelection( SelectionModes.P2P )
-				return self
-			else:
-				self.clearSelection()
-				item.handleSelection( SelectionModes.CREATE )
-				return item
-		return None
-
 	def _initStatesPool( self ):
 		self._statesPool = {
 			"idle" : IdleState,
 		}
 
-	def isValidState( self, stateName ) -> bool:
-		return stateName in self._statesPool
-
 	def completeLoading( self, physicsWorld, render, terrainSize ) -> None:
 		pass
+
+	def selectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
+		raise NotImplementedError
 
 	def _createModelBounds( self ):
 		self.__modelBounds = self.coreBodyPath.getTightBounds()
@@ -180,3 +163,6 @@ class Entity( SelectionItem ):
 
 	def _connectModules( self, physicsWorld ):
 		pass
+
+	def detectorColor( self ):
+		return None

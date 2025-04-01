@@ -117,10 +117,6 @@ class CustomPolygon( SelectionItem, Target ):
 		return True
 
 	@property
-	def isTerrain( self ):
-		return True
-
-	@property
 	def isObstacle( self ):
 		return False
 

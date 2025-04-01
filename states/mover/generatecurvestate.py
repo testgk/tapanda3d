@@ -15,12 +15,12 @@ class GenerateCurveState( MoverState ):
 	def enter( self ):
 		self.mover.speed = 0
 		self.mover.locatorMode = LocatorModes.All
-		self.mover.terminateCurve()
+		#self.mover.terminateCurve()
 		self.mover.bypassTarget = None
 
 	def execute( self ):
 		self.mover.generateCurve()
-		self.mover.detectors.setDynamicDetector( Locators.Full  )
+		self.mover.sensors.setDynamicDetector( Locators.Full )
 		if self.mover.curveTarget:
 			return self.doneState( States.OBSTACLE )
 

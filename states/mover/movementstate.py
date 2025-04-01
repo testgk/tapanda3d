@@ -15,10 +15,10 @@ class MovementState( MoverState ):
 	def enter( self ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
-		self.mover.locatorMode = LocatorModes.Edges
+		self.mover.locatorMode = LocatorModes.DynamicOnly
 		self.mover.stopDistance = True
 		self.mover.detectorLength = LocatorLength.Medium
-		self.mover.detectors.setDynamicDetector( Locators.Full )
+		self.mover.sensors.setDynamicDetector( Locators.Full )
 		self.mover.schedulePointToPointTasks()
 
 	def execute( self ):
