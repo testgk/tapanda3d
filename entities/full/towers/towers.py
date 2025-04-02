@@ -69,24 +69,32 @@ class Tower( EntityWithTurret, Entity, ABC ):
             self.clearSelection()
             return None
 
-        if not item.isTerrain:
-            self._selectedTargets.appendleft( item )
-            item.handleSelection( SelectionModes.ATTACK )
-            return self
+        self._selectedTargets.appendleft( item )
+        #item.handleSelection( SelectionModes.ATTACK )
+        return self
+
+    def clearCurrentTarget( self ):
+        if not self.__currentTarget:
+            return
+        if self.__currentTarget is self.__nextTarget:
+            self.__nextTarget = None
+        self.__currentTarget = None
 
     def scheduleTargetMonitoringTask( self ):
-        scheduleTask( self, self.targetMonitoringTask, checkExisting = True )
+        scheduleTask( entity = self, method = self.targetMonitoringTask, checkExisting = True )
         scheduleTask( entity = self, method = self.__detector.detectionTask, checkExisting = True )
+        scheduleTask( entity = self, method = self._movementManager.isAlignedToTarget, checkExisting = True )
 
     def targetMonitoringTask( self, task ):
         if self.__nextTarget is None and any( self._selectedTargets ):
             self.__nextTarget = self._selectedTargets.pop()
             return task.cont
 
-        if self.__currentTarget is None:
+        if self.__nextTarget and self.__currentTarget is None:
             self.__currentTarget = self.__nextTarget
             self.__nextTarget = None
-            return task.cont
+            self.aligned = False
+        return task.cont
 
     def _initStatesPool( self ):
         self._statesPool = {

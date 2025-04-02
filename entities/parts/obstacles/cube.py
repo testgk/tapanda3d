@@ -6,19 +6,18 @@ from selection.selectionmodes import SelectionModes
 
 
 class CubePart( Part ):
-	def __init__( self ):
-		super( CubePart, self ).__init__( partId = "cube" )
+	def __init__( self, scale ):
+		super( CubePart, self ).__init__( partId = "cube", scale = scale )
 		self._objectPath = "obstacles"
 		self._color = Color.GREEN
 		self._mass = 20000
 
 
 class Cube( Entity, SelectionItem ):
-	def __init__( self ):
+	def __init__( self, scale = 1 ):
 		super().__init__()
-		self._cube = CubePart()
+		self._cube = CubePart( scale = scale )
 		self._corePart = self._cube
-		self._scale = 1
 
 	@entitypart
 	def cubePart( self ):
@@ -39,3 +38,8 @@ class Cube( Entity, SelectionItem ):
 
 	def _createStateMachine( self ):
 		pass
+
+class BigCube( Cube ):
+	def __init__( self ):
+		super().__init__( scale = 2 )
+
