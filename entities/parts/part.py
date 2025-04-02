@@ -23,7 +23,7 @@ class Part:
 			part_data = partData.get( partId )
 			self._readPartData( part_data )
 		self.__friction = 0
-		self._scale = 1
+		self._scale = kwargs.get( 'scale', 1 )
 		self.__name = None
 
 	@property

@@ -38,6 +38,7 @@ class MovingEntity:
 class Mover( Entity, MovingEntity ):
 	def __init__( self, engine, chassis: MobileChassis ):
 		super().__init__()
+		self.__detector = None
 		self.__render = None
 		self.__curveTarget = None
 		self.__aligned: bool = False
@@ -194,6 +195,7 @@ class Mover( Entity, MovingEntity ):
 		return task.done
 
 	def targetMonitoringTask( self, task ):
+		task.delayTime = 0.1
 		if any( self.__curveTargets ):
 			return task.done
 
@@ -215,9 +217,10 @@ class Mover( Entity, MovingEntity ):
 		if any( self.moveTargets ):
 			self.__currentTarget = self.moveTargets.pop()
 			print( f"current target: { self.__currentTarget }" )
-			self.__currentTarget.handleSelection( mode = SelectionModes.P2P )
+			if self.__currentTarget:
+				self.__currentTarget.handleSelection( mode = SelectionModes.P2P )
 
-		return task.cont
+		return task.again
 
 	@property
 	def terrainSize( self ):
@@ -262,7 +265,7 @@ class Mover( Entity, MovingEntity ):
 		scheduleTask( self, self._movementManager.monitor_obstacles )
 
 	def scheduleObstacleTasks( self ):
-		scheduleTask( self, self._movementManager.target_detection )
+		scheduleTask( self, self._movementManager.target_detection, checkExisting = True )
 
 	def finishedMovement( self ):
 		return self.__currentTarget is None
@@ -290,7 +293,7 @@ class Mover( Entity, MovingEntity ):
 		self.__render = render
 		self.__terrainSize = terrainSize
 		self.__initMovementManager( physicsWorld )
-		self.__sensors = Senesors( self.coreBodyPath, self._length, self._width, 0, self.__render )
+		self.__sensors = Senesors( self.coreBodyPath, self._length, self._width, self._height, self.__render )
 		self.__detector = Detector( self, physicsWorld, self.__render )
 		self._createStateMachine()
 		self._setCorePart()

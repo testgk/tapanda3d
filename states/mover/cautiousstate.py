@@ -15,7 +15,7 @@ class CautiousState( MoverState ):
 	def enter( self ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 25
-		self.mover.locatorMode = LocatorModes.TargetOnly
+		self.mover.locatorMode = LocatorModes.Edges
 		self.mover.detectorLength = LocatorLength.Medium
 		self.mover.schedulePointToPointTasks()
 		self.mover.scheduleTargetMonitoringTask()

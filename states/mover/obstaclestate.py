@@ -14,11 +14,11 @@ class ObstacleState( MoverState ):
 
     def enter( self ):
         self.mover.stopMovement()
-        self.mover.locatorMode = LocatorModes.Edges
+        self.mover.locatorMode = LocatorModes.DynamicOnly
         if self.mover.obstacle.detection == Locators.Right:
-            self.mover.sensors.setDynamicDetector( Locators.Left, freeze = True )
+            self.mover.sensors.setDynamicDetector( Locators.Left, freeze = False )
         else:
-            self.mover.sensors.setDynamicDetector( Locators.Right, freeze = True )
+            self.mover.sensors.setDynamicDetector( Locators.Right, freeze = False )
         self.mover.detectorLength = LocatorLength.Medium
         self.mover.speed = 20
         self.mover.stopDistance = True
