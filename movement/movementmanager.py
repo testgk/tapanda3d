@@ -111,8 +111,8 @@ class MovementManager( TowerMovementManager ):
 		return task.cont
 
 	def maintain_turret_angle( self, task ):
-		if self.__mover.finishedMovement():
-			return task.done
+		#if self.__mover.finishedMovement():
+		#	return task.done
 		return super().maintain_turret_angle( task )
 
 	def generateAndCheckNewCurve( self, positions, obstacle ):

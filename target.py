@@ -13,6 +13,10 @@ class Target:
 	def position( self ):
 		return NotImplemented
 
+	@property
+	def isTerrain( self ):
+		return NotImplemented
+
 	def isSelected( self, selectionMode: SelectionModes ):
 		raise NotImplementedError()
 

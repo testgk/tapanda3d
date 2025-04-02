@@ -38,8 +38,9 @@ class MovingEntity:
 class Mover( Entity, MovingEntity ):
 	def __init__( self, engine, chassis: MobileChassis ):
 		super().__init__()
+		self.__detector = None
 		self.__render = None
-		self.__curveTarget = None
+		self.__curveRootTarget = None
 		self.__aligned: bool = False
 		self.__nextTarget = None
 		self.locatorMode: LocatorModes = LocatorModes.All
@@ -71,8 +72,8 @@ class Mover( Entity, MovingEntity ):
 		return self.__bypassTarget
 
 	@property
-	def curveTarget( self ):
-		return self.__curveTarget
+	def curveRootTarget( self ):
+		return self.__curveRootTarget
 
 	@bypassTarget.setter
 	def bypassTarget( self, target: Target ):
@@ -194,11 +195,12 @@ class Mover( Entity, MovingEntity ):
 		return task.done
 
 	def targetMonitoringTask( self, task ):
+		task.delayTime = 0.1
 		if any( self.__curveTargets ):
 			return task.done
 
 		if self.bypassTarget:
-			self.__curveTarget = self.bypassTarget
+			self.__curveRootTarget = self.bypassTarget
 			return task.done
 
 		# accept new selected target
@@ -215,9 +217,10 @@ class Mover( Entity, MovingEntity ):
 		if any( self.moveTargets ):
 			self.__currentTarget = self.moveTargets.pop()
 			print( f"current target: { self.__currentTarget }" )
-			self.__currentTarget.handleSelection( mode = SelectionModes.P2P )
+			if self.__currentTarget:
+				self.__currentTarget.handleSelection( mode = SelectionModes.P2P )
 
-		return task.cont
+		return task.again
 
 	@property
 	def terrainSize( self ):
@@ -236,12 +239,12 @@ class Mover( Entity, MovingEntity ):
 
 	def generateCurve( self ):
 		pos1 = self.position
-		pos2 = self.__curveTarget.position
+		pos2 = self.__curveRootTarget.position
 		pos3 = self.__nextTarget.position
 		if self._movementManager.generateAndCheckNewCurve( positions = [ pos1, pos2, pos3 ], obstacle = self.__obstacle ):
 			targets = self._movementManager.getCurvePoints()
 			self.__curveTargets = targets[ ::20 ]
-			self.__curveTarget = None
+			self.__curveRootTarget = None
 			self.__currentTarget = None
 			self.removeObstacle()
 			return True
@@ -262,7 +265,7 @@ class Mover( Entity, MovingEntity ):
 		scheduleTask( self, self._movementManager.monitor_obstacles )
 
 	def scheduleObstacleTasks( self ):
-		scheduleTask( self, self._movementManager.target_detection )
+		scheduleTask( self, self._movementManager.target_detection, checkExisting = True )
 
 	def finishedMovement( self ):
 		return self.__currentTarget is None
@@ -290,7 +293,7 @@ class Mover( Entity, MovingEntity ):
 		self.__render = render
 		self.__terrainSize = terrainSize
 		self.__initMovementManager( physicsWorld )
-		self.__sensors = Senesors( self.coreBodyPath, self._length, self._width, 0, self.__render )
+		self.__sensors = Senesors( self.coreBodyPath, self._length, self._width, self._height, self.__render )
 		self.__detector = Detector( self, physicsWorld, self.__render )
 		self._createStateMachine()
 		self._setCorePart()

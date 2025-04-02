@@ -19,7 +19,7 @@ class Tank( Mover, Attacker, EntityWithTurret, ABC ):
 		return self._turret.turretCannon
 
 	def _setCorePart( self ):
-		self._coreBodyPath = self._hull
+		self._coreBodyPath = self._turret
 
 	def _connectModules( self, world ):
 		EntityWithTurret._connectModules( self, world, axis = self.hull() )
