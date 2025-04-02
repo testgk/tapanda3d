@@ -3,7 +3,7 @@ from entities.full.towers.towers import TowerSmall
 from entities.parts.engine import BasicEngine
 from entities.modules.turret import CannonTurret
 from entities.modules.mobilechassis import BasicTracksChassis
-from entities.parts.obstacles.cube import Cube
+from entities.parts.obstacles.cube import Cube, BigCube
 
 
 class EntityFactory:
@@ -22,7 +22,7 @@ class EntityRegistry:
             turret = CannonTurret(),
             axis = BasicTracksChassis()
         ),
-        "cube": lambda: Cube(),
+        "cube": lambda: BigCube(),
         "tower_small": lambda: TowerSmall(),
     }
 

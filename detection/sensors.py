@@ -19,7 +19,7 @@ class Senesors:
 		self.__rightLimit = None
 		self.__horizonAngle = 0
 		self.__angle_increment = 2
-		self.__verticalAngle = -2
+		self.__verticalAngle = 20
 		self._width = width
 		self._length = length
 		self._height = height

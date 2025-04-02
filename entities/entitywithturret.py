@@ -41,4 +41,4 @@ class EntityWithTurret:
 		world.attachConstraint( hinge )
 
 	def scheduleMaintainTurretAngleTask( self ):
-		scheduleTask( self, self._movementManager.maintain_turret_angle )
+		scheduleTask( self, self._movementManager.track_target_coreBody_angle )

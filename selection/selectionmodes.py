@@ -20,6 +20,7 @@ class SelectionModes:
 		ORIGINAL_TARGET: Color.CYAN,
 		TEMP: Color.MAGENTA,
 		ANY: Color.MAGENTA,
+		ATTACK: Color.RED
 	}
 
 	@staticmethod
