@@ -25,7 +25,7 @@ class EntityLoader:
 		modelBullet = self.__render.attachNewNode( bulletNode )
 		self.__physicsWorld.attachRigidBody( bulletNode )
 		modelBullet.set_pos( point )
-		modelBullet.setZ( modelBullet.getZ() + 200  )
+		modelBullet.setZ( modelBullet.getZ() + 100  )
 		for part in parts:
 			part.rigidBodyPath = modelBullet
 			part.model.reparentTo( modelBullet )
