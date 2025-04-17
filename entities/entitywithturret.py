@@ -7,6 +7,7 @@ from scheduletask import scheduleTask
 
 class EntityWithTurret:
 	def __init__( self, axis, turret ):
+		self.__world = None
 		self.__aligned = False
 		self._axis = axis
 		self._turret = turret
@@ -25,7 +26,9 @@ class EntityWithTurret:
 	def aligned( self, value ):
 		self.__aligned = value
 
-	def _connectModules( self, world, axis ):
+	def _connectTurret( self, world, axis ):
+		if not self.__world:
+			self.__world = world
 		pivot_in_hull = Vec3( 0, 0, 1 )
 		axis_in_hull = Vec3( 0, 0, 1 )
 		pivot_in_turret = Vec3( 0, 0, 0 )
@@ -40,5 +43,11 @@ class EntityWithTurret:
 		hinge.setBreakingThreshold( float( 'inf' ) )
 		world.attachConstraint( hinge )
 
+	def keepTurret( self, task ):
+		task.delayTime = 1.0
+		self._connectTurret( self.__world, axis = self._axis )
+		return task.again
+
 	def scheduleMaintainTurretAngleTask( self ):
 		scheduleTask( self, self._movementManager.track_target_coreBody_angle )
+		scheduleTask( self, self.keepTurret )

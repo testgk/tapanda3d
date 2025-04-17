@@ -27,7 +27,7 @@ class MyApp( ShowBase ):
 		self.mapName = "heightmap1"
 		self.showTexture = True
 		if True:
-			self.mapName = "heightmap_flat_big"
+			self.mapName = "heightmap_big2"
 			self.showTexture = True
 		ShowBase.__init__( self )
 		self.__terrainPhysicsLayer = None

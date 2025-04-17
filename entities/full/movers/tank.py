@@ -12,7 +12,7 @@ class Tank( Mover, Attacker, EntityWithTurret, ABC ):
 
 	def __init__( self, engine, axis: MobileChassis, turret: Turret ):
 		super().__init__( chassis = axis, engine = engine )
-		EntityWithTurret.__init__( self, axis, turret )
+		EntityWithTurret.__init__( self, self.hull() , turret )
 
 	@entitypart
 	def cannon( self ):
@@ -22,4 +22,4 @@ class Tank( Mover, Attacker, EntityWithTurret, ABC ):
 		self._coreBodyPath = self._turret
 
 	def _connectModules( self, world ):
-		EntityWithTurret._connectModules( self, world, axis = self.hull() )
+		EntityWithTurret._connectTurret( self, world, axis = self.hull() )

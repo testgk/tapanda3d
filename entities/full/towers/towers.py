@@ -2,6 +2,7 @@ from abc import ABC
 
 from detection.detector import Detector
 from detection.sensors import Senesors
+from detection.towersensors import TowerSensors
 from entities.locatorMode import Locators
 from movement.towermovementmanager import TowerMovementManager
 from entities.entity import Entity, entitypart
@@ -44,18 +45,18 @@ class Tower( EntityWithTurret, Entity, ABC ):
     def _setCorePart( self ):
         self._corePart = self.turretBase()
 
-    def _connectModules( self, world, axis ):
-        return super()._connectModules( world, axis = axis )
+    def _connectModules( self, world ):
+        return super()._connectTurret( world, axis = self._axis )
 
     def completeLoading( self, physicsWorld, render, terrainSize ) -> None:
         self.__render = render
         self._setCorePart()
         self._createModelBounds()
         self._initMovementManager( physicsWorld )
-        self.__sensors = Senesors( self.coreBodyPath, self._length, self._width, self._height, self.__render )
+        self.__sensors = TowerSensors( self.coreBodyPath, self._length, self._width, self._height, self.__render )
         self.__detector = Detector( self, physicsWorld, self.__render )
         self._createStateMachine()
-        self._connectModules( physicsWorld, axis = self._axis )
+        self._connectModules( physicsWorld )
 
     def _initMovementManager( self, physicsWorld ):
         self._movementManager = TowerMovementManager( self )
@@ -114,7 +115,7 @@ class TowerSmall( Tower ):
 class TowerBase( Part ):
     def __init__( self ):
         super().__init__( partId = "tower_small_base" )
-        self._scale = 5
+        self._scale = 4
         self._mass = 20000
 
     @property
