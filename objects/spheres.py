@@ -64,7 +64,7 @@ def createSphere( radius = 1.0, slices = 16, stacks = 16, color = Color.RED ):
 
 	# Create a GeomNode to hold the geometry
 	node = GeomNode( "sphere" )
-	node.addGeom( geom )
+	#node.addGeom( geom )
 	np = NodePath( node )
-	np.setColor( color )
+	#np.setColor( color )
 	return np
