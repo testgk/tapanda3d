@@ -297,6 +297,7 @@ class Mover( Entity, MovingEntity ):
 		self.__detector = Detector( self, physicsWorld, self.__render )
 		self._createStateMachine()
 		self._setCorePart()
+		self.scheduleVisibility()
 
 	def clearCurrentTarget( self ):
 		if not self.__currentTarget:

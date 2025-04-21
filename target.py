@@ -33,3 +33,4 @@ class CustomTarget( Target, SelectionItem ):
 	def handleSelection( self, mode: SelectionModes = SelectionModes.ANY ):
 		pass
 
+

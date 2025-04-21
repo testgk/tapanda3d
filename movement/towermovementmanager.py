@@ -2,6 +2,8 @@ import math
 from typing import TYPE_CHECKING
 
 from panda3d.core import Vec3
+
+from movement.obstacledetector import ObstacleDetector
 from phyisics import globalClock
 
 if TYPE_CHECKING:
@@ -11,7 +13,8 @@ if TYPE_CHECKING:
 
 class TowerMovementManager:
 
-	def __init__( self, entity ):
+	def __init__( self, entity, world, render ):
+		self._detector = ObstacleDetector( entity, world, render )
 		self.__tower: Tower | Mover = entity
 
 	def track_target_coreBody_angle( self, task ):
@@ -56,3 +59,7 @@ class TowerMovementManager:
 
 	def _getCurrentTarget( self ):
 		return self.__tower.currentTarget
+
+	def detectTargets( self, task ):
+		self._detector.detectEntity()
+		return task.cont

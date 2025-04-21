@@ -17,8 +17,7 @@ if TYPE_CHECKING:
 
 class MovementManager( TowerMovementManager ):
 	def __init__( self, entity, world, render ):
-		super().__init__( entity )
-		self.__detector = ObstacleDetector( entity, world, render )
+		super().__init__( entity, world, render )
 		self._curveGenerator = CurveGenerator( world, render )
 		self.__tempTarget = None
 		self.__mover: Mover = entity
@@ -98,21 +97,19 @@ class MovementManager( TowerMovementManager ):
 			self.__mover.obstacle = obstacle
 
 	def __checkForObstacles( self, target ):
-		return self.__detector.detectObstacle( target )
+		return self._detector.detectObstacle( target )
 
 	def target_detection( self, task ):
 		if self.__tempTarget is not None:
 			self.__mover.bypassTarget = self.__tempTarget
 			self.__tempTarget = None
 			return task.done
-		detection = self.__detector.detectAlternativePosition( self._getCurrentTarget() )
+		detection = self._detector.detectAlternativePosition( self._getCurrentTarget() )
 		if detection:
 			self.__tempTarget = CustomTarget( detection.position )
 		return task.cont
 
 	def maintain_turret_angle( self, task ):
-		#if self.__mover.finishedMovement():
-		#	return task.done
 		return super().maintain_turret_angle( task )
 
 	def generateAndCheckNewCurve( self, positions, obstacle ):

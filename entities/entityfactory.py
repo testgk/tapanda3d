@@ -19,7 +19,7 @@ class EntityRegistry:
     __entityCreators = {
         "basic_tank": lambda: Tank(
             engine = BasicEngine(),
-            turret = CannonTurret(),
+            turret = CannonTurret( mass = 0 ),
             axis = BasicTracksChassis()
         ),
         "cube": lambda: BigCube(),

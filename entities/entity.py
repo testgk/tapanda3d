@@ -1,10 +1,11 @@
 import random
+import time
 from abc import abstractmethod
 from collections import deque
 from typing import NoReturn
 
 from panda3d.bullet import BulletRigidBodyNode
-from panda3d.core import NodePath
+from panda3d.core import NodePath, TransparencyAttrib
 
 from entities.partfactory import PartFactory
 from entities.parts.part import Part
@@ -27,6 +28,7 @@ def entitypart( func ):
 class Entity( SelectionItem ):
 	def __init__( self ):
 		super().__init__()
+		self.__visible = True
 		self._selectedTargets: deque = deque()
 		self._scale = 1
 		self._statesPool: dict = {}
@@ -44,6 +46,7 @@ class Entity( SelectionItem ):
 		self._length = None
 		self._width = None
 		self._height = None
+		self._visibilityTime = time.time()
 
 	@abstractmethod
 	def _setCorePart( self ):
@@ -58,7 +61,7 @@ class Entity( SelectionItem ):
 		return self._length
 
 	@property
-	def rigidBodyNodes( self )  -> dict[ str: { BulletRigidBodyNode, list[ 'Part' ] } ]:
+	def rigidBodyNodes( self ) -> dict[ str: { BulletRigidBodyNode, list[ 'Part' ] } ]:
 		return self.__rigidBodies
 
 	@property
@@ -112,13 +115,6 @@ class Entity( SelectionItem ):
 	def getStateFromEntityPool( self, stateName: str ):
 		return self._statesPool[ stateName ]
 
-	#def scheduleTask( self, method, extraArgs: list = None, appendTask = True, checkExisting = False ):
-	#	name = f'{ self.name }_{ method.__name__ }'
-	#	if checkExisting:
-	#		if taskMgr.hasTaskNamed( name ):
-	#			return
-	#	taskMgr.add( method, name = f'{ self.name }_{ method.__name__ }', extraArgs = extraArgs, appendTask = appendTask )
-
 	def _setDamping( self ):
 		self.coreRigidBody.set_linear_damping( 0 )
 		self.coreRigidBody.set_angular_damping( 0 )
@@ -127,6 +123,7 @@ class Entity( SelectionItem ):
 		return self._selectionMode != SelectionModes.NONE
 
 	def handleSelection( self, mode: SelectionModes = SelectionModes.ANY ):
+		self.handleDetection()
 		if self.isSelected( mode ):
 			self.clearSelection()
 		print( f'{ self.name } is selected' )
@@ -166,3 +163,34 @@ class Entity( SelectionItem ):
 
 	def detectorColor( self ):
 		return None
+
+	def handleDetection( self ):
+		self._visibilityTime = time.time()
+		self.show()
+
+	def scheduleVisibility( self ):
+		scheduleTask( self, self.visibilityTask )
+
+	def visibilityTask( self, task ):
+		task.delayTime = 1
+		if time.time() - self._visibilityTime > 5:
+			self.hide()
+		return task.again
+
+	def hide( self ):
+		if not self.__visible:
+			return
+		self.__visible = False
+		for model in self.__models:
+			r, g, b, a = model.getColor()
+			if a != 0.5:
+				model.setColor( r, g, b, 0.5 )
+
+	def show( self ):
+		if self.__visible:
+			return
+		self.__visible = True
+		for model in self.__models:
+			r, g, b, a = model.getColor()
+			if a != 1:
+				model.setColor( r, g, b, 1 )

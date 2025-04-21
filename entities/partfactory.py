@@ -2,7 +2,7 @@ import os
 import random
 from collections import defaultdict
 from typing import TYPE_CHECKING, Callable
-from panda3d.core import NodePath, TransformState, Vec3, CollisionBox, CollisionNode, Point3
+from panda3d.core import NodePath, TransformState, TransparencyAttrib, Vec3, CollisionBox, CollisionNode, Point3
 from panda3d.bullet import BulletRigidBodyNode, BulletTriangleMesh, BulletTriangleMeshShape
 
 
@@ -78,6 +78,7 @@ class PartFactory:
     def __loadModel( self, eggPath: super, loader, part: 'Part' ) -> NodePath:
         model = loader.loadModel( eggPath )
         model.setColor( part.color )
+        model.setTransparency( TransparencyAttrib.M_alpha )
         model.setPythonTag( 'model_part', part )
         return model
 
@@ -112,8 +113,6 @@ class PartFactory:
         body_node = BulletRigidBodyNode( f'multi_shape_body_{random.randint(1,1000)}' )
         for model in models:
             mesh = BulletTriangleMesh()
-            scale = model.get_scale()  # Get the model's scale
-            # Apply the scale transformation to the model before adding it to the Bullet mesh
             add_model_to_bullet_mesh( mesh, model )
             model_shape = BulletTriangleMeshShape( mesh, dynamic = True )
             body_node.addShape( model_shape )

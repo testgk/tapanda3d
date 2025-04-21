@@ -3,7 +3,6 @@ from abc import ABC
 from detection.detector import Detector
 from detection.sensors import Senesors
 from detection.towersensors import TowerSensors
-from entities.locatorMode import Locators
 from movement.towermovementmanager import TowerMovementManager
 from entities.entity import Entity, entitypart
 from entities.modules.turret import CannonTurret
@@ -11,7 +10,6 @@ from entities.entitywithturret import EntityWithTurret
 from entities.parts.part import Part
 from scheduletask import scheduleTask
 from selection.selectionitem import SelectionItem
-from selection.selectionmodes import SelectionModes
 from statemachine.statemachine import StateMachine
 from states import States
 from states.tower.toweridlestate import TowerIdleState
@@ -57,9 +55,10 @@ class Tower( EntityWithTurret, Entity, ABC ):
         self.__detector = Detector( self, physicsWorld, self.__render )
         self._createStateMachine()
         self._connectModules( physicsWorld )
+        self.scheduleVisibility()
 
-    def _initMovementManager( self, physicsWorld ):
-        self._movementManager = TowerMovementManager( self )
+    def _initMovementManager( self, world ):
+        self._movementManager = TowerMovementManager( self, world, self.__render )
 
     def _createStateMachine( self ):
         self._stateMachine = StateMachine( self, initState = TowerIdleState( entity = self ) )
@@ -83,7 +82,7 @@ class Tower( EntityWithTurret, Entity, ABC ):
 
     def scheduleTargetMonitoringTask( self ):
         scheduleTask( entity = self, method = self.targetMonitoringTask, checkExisting = True )
-        scheduleTask( entity = self, method = self.__detector.detectionTask, checkExisting = True )
+        scheduleTask( entity = self, method = self._movementManager.detectTargets, checkExisting = True )
         scheduleTask( entity = self, method = self._movementManager.isAlignedToTarget, checkExisting = True )
 
     def targetMonitoringTask( self, task ):

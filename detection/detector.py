@@ -7,7 +7,7 @@ from entities.locatorMode import Locators
 from enums.colors import Color
 
 
-class Detector( object ):
+class Detector:
 
 	def __init__( self, entity, world, render ):
 		self.__lastLocatorMode = None
@@ -54,8 +54,8 @@ class Detector( object ):
 												end = edge + direction * self.__entity.detectorLength ) )
 		else:
 			self.__clearRays()
+		self.__entity.analyzeDetection( result )
 		return task.cont
-
 
 	def __visualize_ray( self, start, end, color = Color.GREEN, thickness = 2.0 ):
 		#if self.__entity.hasObstacles():

@@ -59,9 +59,25 @@ class ObstacleDetector:
 				if not self.isCloser( target, item, self.__mover ):
 					continue
 				item.handleSelection()
-				print( f'detect position: { item }' )
+				print( f'detected position: { item }' )
 				return item
 		return None
 
 	def isCloser( self, origin, target1, target2 ):
 		return ( origin.position - target1.position ).length() < ( origin.position - target2.position).length()
+
+	def detectEntity( self ):
+		result, option = self.__detector.getDetection( locatorMode = Locators.Dynamic )
+		if result.hasHits():
+			for hit in result.getHits():
+				hit_node = hit.getNode()
+				try:
+					item = hit_node.getPythonTag( 'raytest_target' )
+				except AttributeError:
+					continue
+				if item is None or item.isTerrain:
+					continue
+				item.handledetection()
+				print( f'detected item: { item }' )
+				return item
+		return None

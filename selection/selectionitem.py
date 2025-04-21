@@ -33,5 +33,3 @@ class SelectionItem:
 
 	def clearSelection( self ):
 		raise NotImplementedError
-
-
