@@ -7,24 +7,25 @@ from collsiongroups import CollisionGroup
 class Part:
 
 	def __init__( self, partData = None,
-	              partId: str = None,
-	              **kwargs ):
+					partId: str = None,
+					**kwargs ):
 		self._mass = None
 		self.__rigidGroup = self.__class__.__name__
-		self.__collideGroup = CollisionGroup.MODEL
+		self.__collideGroup = kwargs.get( "collideGroup", CollisionGroup.MODEL )
 		self.__partId = partId
 		self.__model = None
 		self.__rigidBody = None
 		self.__rigidBodyPath = None
-		self._objectPath = kwargs.get( 'path', None ) or self.__class__.__name__.lower()
-		self._color = kwargs.get( 'color', None ) or Color.RED
-		self.__mass = kwargs.get( 'mass', None ) or 50
+		self._objectPath = kwargs.get( 'path', self.__class__.__name__.lower() )
+		self._color = kwargs.get( 'color', Color.RED )
+		self.__mass = kwargs.get( 'mass', 50 )
 		if partId and partData:
 			part_data = partData.get( partId )
 			self._readPartData( part_data )
 		self.__friction = 0
 		self._scale = kwargs.get( 'scale', 1 )
 		self.__name = None
+		self._pseudoPart = False
 
 	@property
 	def objectPath( self ) -> str:
@@ -85,6 +86,10 @@ class Part:
 	@property
 	def scale( self ):
 		return self._scale
+
+	@property
+	def pseudoPart( self ) -> bool:
+		return self._pseudoPart
 
 	def setRigidBodyProperties( self, rigidBody ):
 		self.__rigidBody = rigidBody

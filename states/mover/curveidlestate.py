@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from states.mover.idlestate import IdleState
-from states.statenames import States
+from states.statenames import StateNames
 
 if TYPE_CHECKING:
     from entities.full.movers.mover import Mover
@@ -12,13 +12,13 @@ class CurveIdleState( IdleState ):
 
     def enter( self ):
         self._entity.removeObstacle()
-        self._entity.scheduleCurveMovementMonitoringTaskTask()
+        self._entity.scheduleCurveMovementMonitoringTask()
 
     def execute( self ):
         if self._entity.insideCurve:
-            self.nextState = States.CURVE_MOVEMENT
+            self.nextState = StateNames.CURVE_MOVEMENT
             self._done = True
         else:
-            self.nextState = States.IDLE
+            self.nextState = StateNames.IDLE
             self._entity.terminateCurve()
             self._done = True

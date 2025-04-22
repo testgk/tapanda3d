@@ -28,7 +28,6 @@ def createAndSetupRigidSphere( parent, color, position, radius = 5.0, slices = 1
 	return body_np
 
 def createSphere( radius = 1.0, slices = 16, stacks = 16, color = Color.RED ):
-	# Set up the vertex format
 	format = GeomVertexFormat.get_v3n3()
 	vdata = GeomVertexData( "sphere", format, Geom.UH_static )
 	vdata.setNumRows( (slices + 1) * (stacks + 1) )
@@ -36,7 +35,6 @@ def createSphere( radius = 1.0, slices = 16, stacks = 16, color = Color.RED ):
 	vertex = GeomVertexWriter( vdata, "vertex" )
 	normal = GeomVertexWriter( vdata, "normal" )
 
-	# Generate vertices
 	for stack in range( stacks + 1 ):
 		phi = pi * stack / stacks
 		for slice in range( slices + 1 ):
@@ -62,9 +60,6 @@ def createSphere( radius = 1.0, slices = 16, stacks = 16, color = Color.RED ):
 
 	geom.addPrimitive( tris )
 
-	# Create a GeomNode to hold the geometry
 	node = GeomNode( "sphere" )
-	#node.addGeom( geom )
 	np = NodePath( node )
-	#np.setColor( color )
 	return np

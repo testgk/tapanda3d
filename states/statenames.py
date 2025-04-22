@@ -1,6 +1,6 @@
 
 
-class States:
+class StateNames:
 	BYPASS = "generatebypass"
 	CURVE_IDLE = "curveidle"
 	CURVE_MOVEMENT = "curvemovement"

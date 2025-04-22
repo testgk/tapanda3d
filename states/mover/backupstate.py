@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
+from states.statenames import StateNames
 from entities.locatorMode import LocatorModes
 from states.mover.moverstate import MoverState
-from states.statenames import States
+
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
@@ -22,4 +23,4 @@ class BackupState( MoverState ):
 		if not self.mover.closeToObstacle():
 			self._done = True
 			print( f'{ self._entity.name } finished backup' )
-			self.nextState = States.OBSTACLE
+			self.nextState = StateNames.OBSTACLE

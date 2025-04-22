@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
+from states.statenames import StateNames
 from entities.locatorMode import LocatorModes
 from states.mover.movementstate import MovementState
-from states.statenames import States
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
@@ -18,6 +18,6 @@ class CheckObstacle( MovementState ):
 
 	def execute( self ):
 		if self.mover.hasObstacles():
-			return self.doneState( States.OBSTACLE )
+			return self.doneState(StateNames.OBSTACLE)
 		elif self.mover.aligned:
-			return self.doneState( States.MOVEMENT )
+			return self.doneState(StateNames.MOVEMENT)

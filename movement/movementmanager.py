@@ -1,25 +1,26 @@
-
-import math
-from panda3d.core import Vec3
-
-from entities.locatorMode import LocatorModes
-from movement.curve import CurveGenerator
-from movement.obstacledetector import ObstacleDetector
-from movement.towermovementmanager import TowerMovementManager
-from phyisics import globalClock
 from typing import TYPE_CHECKING
+from panda3d.core import Vec3, Mat3
 
 from target import CustomTarget
+from movement.curve import CurveGenerator
+from entities.locatorMode import LocatorModes
+from movement.stationarymovementmanager import StationaryMovementManager
+
+
+
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
 
 
-class MovementManager( TowerMovementManager ):
-	def __init__( self, entity, world, render ):
+class MovementManager(StationaryMovementManager):
+	TARGET_DISTANCE_THRESHOLD = 20
+	ZERO_VELOCITY_VEC = Vec3( 0, 0, 0 )
+
+	def __init__( self, entity: 'Mover', world, render ):
 		super().__init__( entity, world, render )
-		self._curveGenerator = CurveGenerator( world, render )
-		self.__tempTarget = None
+		self.__curveGenerator = CurveGenerator(world, render)
+		self.__alternativeTarget = None
 		self.__mover: Mover = entity
 
 	def set_velocity_toward_point_with_stop( self, task ):
@@ -32,8 +33,8 @@ class MovementManager( TowerMovementManager ):
 		current_pos = self.__mover.position
 		direction = Vec3( target_pos.x - current_pos.x, target_pos.y - current_pos.y, 0 )
 		distance = direction.length()
-		if distance < 20:
-			if self.__mover.stopDistance:
+		if distance < self.TARGET_DISTANCE_THRESHOLD:
+			if self.__mover.stopAtDistance:
 				self.stopMovement()
 			self.__mover.clearCurrentTarget()
 			return task.cont
@@ -44,8 +45,8 @@ class MovementManager( TowerMovementManager ):
 
 	def stopMovement( self ):
 		print( f"{ self.__mover.name } is stopping" )
-		self.__mover.coreRigidBody.set_linear_velocity( Vec3( 0, 0, 0 ) )
-		self.__mover.coreRigidBody.set_angular_velocity( Vec3( 0, 0, 0 ) )
+		self.__mover.coreRigidBody.set_linear_velocity( self.ZERO_VELOCITY_VEC )
+		self.__mover.coreRigidBody.set_angular_velocity( self.ZERO_VELOCITY_VEC )
 
 	def set_velocity_backwards_direction( self, task ):
 		if not self.__mover.closeToObstacle():
@@ -60,7 +61,7 @@ class MovementManager( TowerMovementManager ):
 		print( "distance_from_obstacle:", distance )
 		return distance
 
-	def maintain_terrain_boundaries( self, terrainSize, task ):
+	def maintain_terrain_boundaries( self, terrainSize: int, task ):
 		current_pos = self.__mover.coreBodyPath.get_pos()
 		if current_pos.x <= 10:
 			self.__mover.coreBodyPath.setPos( Vec3( 11, current_pos.y, current_pos.z ) )
@@ -75,15 +76,11 @@ class MovementManager( TowerMovementManager ):
 		return task.cont
 
 	def monitor_obstacles( self, task ):
-		#if not self.__entity.aligned:
-		#	return task.cont
 		if self.__mover.locatorMode == LocatorModes.NONE:
 			return task.done
 		if self.__mover.obstacle is not None:
 			return task.cont
-		#if self.__entity.currentTarget is None:
-		#	return task.again
-		obstacle = self.__checkForObstacles( self._getCurrentTarget() )
+		obstacle = self.obstacleDetector.detectObstacle(self._getCurrentTarget())
 		try:
 			if obstacle is None:
 				if self.__mover.obstacle is not None:
@@ -95,30 +92,33 @@ class MovementManager( TowerMovementManager ):
 			if obstacle is not None:
 				print( "monitor_obstacles:", obstacle.detection )
 			self.__mover.obstacle = obstacle
+			return task.cont
 
-	def __checkForObstacles( self, target ):
-		return self._detector.detectObstacle( target )
-
-	def target_detection( self, task ):
-		if self.__tempTarget is not None:
-			self.__mover.bypassTarget = self.__tempTarget
-			self.__tempTarget = None
+	def alternateTargetDetection(self, task):
+		if self.__alternativeTarget is not None:
+			self.__mover.bypassTarget = self.__alternativeTarget
+			self.__alternativeTarget = None
 			return task.done
-		detection = self._detector.detectAlternativePosition( self._getCurrentTarget() )
-		if detection:
-			self.__tempTarget = CustomTarget( detection.position )
+		self.__findAlternativeTarget()
 		return task.cont
+
+	def __findAlternativeTarget(self) -> None:
+		vec = self.__mover.position - self.__mover.obstacle.position
+		rotation_matrix = Mat3.rotateMatNormaxis( 90, Vec3( 0, 0, 1) )
+		rotated_vec = rotation_matrix.xform( vec )
+		c = self.__mover.obstacle.position + rotated_vec
+		self.__alternativeTarget = CustomTarget( position = c )
 
 	def maintain_turret_angle( self, task ):
 		return super().maintain_turret_angle( task )
 
 	def generateAndCheckNewCurve( self, positions, obstacle ):
-		curve = self._curveGenerator.generateNewCurve( positions )
-		return self._curveGenerator.checkCurveObstacleContact( curve, obstacle )
+		curve = self.__curveGenerator.generateNewCurve( positions )
+		return self.__curveGenerator.checkCurveObstacleContact( curve, obstacle )
 
 	def getCurvePoints( self ):
-		return self._curveGenerator.getCurveTargets()
+		return self.__curveGenerator.getCurveTargets()
 
 	def terminateCurve( self ):
-		self._curveGenerator.terminateCurve()
+		self.__curveGenerator.terminateCurve()
 

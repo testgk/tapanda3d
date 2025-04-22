@@ -1,7 +1,6 @@
 from direct.gui.DirectButton import DirectButton
 
 from entities.entityfactory import EntityFactory
-from entities.parts.obstacles.cube import Cube
 from entityloader import EntityLoader
 from selector.selector import Selector
 

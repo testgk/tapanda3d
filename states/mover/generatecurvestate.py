@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from states.statenames import States
+from states.statenames import StateNames
 from states.mover.moverstate import MoverState
 from entities.locatorMode import LocatorModes, Locators
 
@@ -20,6 +20,6 @@ class GenerateCurveState( MoverState ):
 	def execute( self ):
 		self.mover.generateCurve()
 		if self.mover.curveRootTarget:
-			return self.doneState( States.BYPASS )
+			return self.doneState(StateNames.BYPASS)
 
-		return self.doneState( States.CURVE_IDLE )
+		return self.doneState(StateNames.CURVE_IDLE)

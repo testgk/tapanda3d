@@ -1,10 +1,12 @@
+from abc import abstractmethod, ABC
+
 from panda3d.core import Vec3
 
 from selection.selectionitem import SelectionItem
 from selection.selectionmodes import SelectionModes
 
 
-class Target:
+class Target( ABC ):
 	def __init__( self, isCustom = False ):
 		super().__init__()
 		self._isCustom = isCustom
@@ -14,10 +16,10 @@ class Target:
 		return NotImplemented
 
 	@property
-	def isTerrain( self ):
-		return NotImplemented
+	def isTerrain( self ) -> bool:
+		return False
 
-	def isSelected( self, selectionMode: SelectionModes ):
+	def isSelected(self, selectionMode: SelectionModes ) -> bool:
 		raise NotImplementedError()
 
 

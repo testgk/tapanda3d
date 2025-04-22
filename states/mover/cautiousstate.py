@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
-from entities.locatorMode import LocatorLength, LocatorModes
+from states.statenames import StateNames
 from states.mover.moverstate import MoverState
-from states.statenames import States
+from entities.locatorMode import LocatorLength, LocatorModes
+
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
@@ -27,4 +28,4 @@ class CautiousState( MoverState ):
 			self.mover.locatorMode = LocatorModes.Edges
 
 		if self.mover.currentTarget != self._currentTarget:
-			return self.doneState( States.IDLE )
+			return self.doneState(StateNames.IDLE)

@@ -1,12 +1,8 @@
-from math import cos, radians, sin
-
-from direct.task.TaskManagerGlobal import taskMgr
 from panda3d.core import Vec3
-
-from detection.towersensors import TowerSensors
-from entities.locatorMode import Locators
 from enums.colors import Color
-from objects.spheres import createAndSetupSphere
+from entities.locatorMode import Locators
+from detection.towersensors import TowerSensors
+from direct.task.TaskManagerGlobal import taskMgr
 
 
 class DetectorLimits:
@@ -16,6 +12,7 @@ class DetectorLimits:
 class Senesors( TowerSensors ):
 	def __init__( self, coreBodyPath, length, width, height, render  ):
 		super().__init__( coreBodyPath, length, width, height, render )
+		self._verticalAngle = 0
 
 	def __edgePos( self ):
 		return self._detectors[ "edge" ].get_pos( self._render )

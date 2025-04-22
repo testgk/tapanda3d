@@ -1,5 +1,5 @@
 from direct.task.Task import TaskManager
-from panda3d.core import Loader
+from panda3d.core import Loader, TransparencyAttrib
 
 from entities.entity import Entity
 from entities.full.movers.mover import Mover
@@ -29,4 +29,8 @@ class EntityLoader:
 		for part in parts:
 			part.rigidBodyPath = modelBullet
 			part.model.reparentTo( modelBullet )
+			if part.pseudoPart:
+				part.model.setTransparency( TransparencyAttrib.M_alpha )
+				part.model.setBin( "transparent", 0 )
+				part.model.hide()
 		return modelBullet

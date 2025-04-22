@@ -13,8 +13,14 @@ if TYPE_CHECKING:
 
 class ObstacleDetector:
 	def __init__( self, entity, world, render ):
+		self.__lastDetection = False
 		self.__mover: Mover = entity
 		self.__detector = Detector( entity, world, render )
+		self.__detectedEntity = None
+
+	@property
+	def detectedEntity( self ):
+		return self.__detectedEntity
 
 	def detectObstacle( self, target ):
 		if target is None:
@@ -35,6 +41,8 @@ class ObstacleDetector:
 					continue
 				obstacle = item
 				if self.__mover.selectedTarget( target ) and self.isCloser( self.__mover, target, obstacle ):
+					continue
+				if not self.isInbetween( self.__mover, obstacle, target ):
 					continue
 				obstacle.detection = option
 				obstacle.handleSelection()
@@ -66,8 +74,9 @@ class ObstacleDetector:
 	def isCloser( self, origin, target1, target2 ):
 		return ( origin.position - target1.position ).length() < ( origin.position - target2.position).length()
 
-	def detectEntity( self ):
-		result, option = self.__detector.getDetection( locatorMode = Locators.Dynamic )
+	def targetsDetection( self, task ):
+		result, option = self.__detector.getDetection( locatorMode = Locators.Dynamic, lastDetection = self.__lastDetection  )
+		self.__lastDetection = False
 		if result.hasHits():
 			for hit in result.getHits():
 				hit_node = hit.getNode()
@@ -77,7 +86,20 @@ class ObstacleDetector:
 					continue
 				if item is None or item.isTerrain:
 					continue
-				item.handledetection()
+				item.handleDetection()
+				self.__lastDetection = True
 				print( f'detected item: { item }' )
-				return item
-		return None
+				self.__detectedEntity = item
+				return task.again
+		self.__detectedEntity = None
+		return task.again
+
+	def isInbetween( self, __mover, obstacle, target ):
+		# Vectors from point B
+		vec_ba = ( obstacle.position - self.__mover.position ).normalized()
+		vec_bc = ( obstacle.position - target.position ).normalized()
+
+		# Calculate the angle in degrees
+		angle_deg = vec_ba.angle_deg( vec_bc )
+		print( f'angle_deg: { angle_deg }' )
+		return angle_deg > 120

@@ -1,29 +1,28 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 
+from target import Target
 from panda3d.core import Vec3
 from collections import deque
-
-from detection.detector import Detector
-from detection.sensors import Senesors
-from entities.modules.mobilechassis import MobileChassis
 from scheduletask import scheduleTask
+from detection.sensors import Senesors
+from detection.detector import Detector
+from states.statenames import StateNames
 from selection.selectionitem import SelectionItem
-from target import Target
-from states.statenames import States
+from selection.selectionmodes import SelectionModes
+from movement.movementmanager import MovementManager
+from entities.modules.mobilechassis import MobileChassis
+
 from statemachine.state import State
 from entities.parts.part import Part
-from selection.selectionmodes import SelectionModes
-from states.mover.backupstate import BackupState
-from states.mover.checkobstaclestate import CheckObstacle
-from movement.movementmanager import MovementManager
+
 from entities.entity import Entity, entitypart
 from entities.locatorMode import LocatorModes, LocatorLength
-from states import ( MovementState, CautiousState, CurveIdleState, CurveMovementState,
+from states import ( MovementState, CautiousState, CurveIdleState, CurveMovementState, BackupState, CheckObstacle,
                     ObstacleState, IdleState, GenerateCurveState, GenerateBypassState )
 
 
 
-class MovingEntity:
+class MovingEntity( ABC ):
 
 	@abstractmethod
 	def mobility( self ) -> Part:
@@ -35,7 +34,7 @@ class MovingEntity:
 		pass
 
 
-class Mover( Entity, MovingEntity ):
+class Mover( Entity, MovingEntity, ABC ):
 	def __init__( self, engine, chassis: MobileChassis ):
 		super().__init__()
 		self.__detector = None
@@ -44,7 +43,7 @@ class Mover( Entity, MovingEntity ):
 		self.__aligned: bool = False
 		self.__nextTarget = None
 		self.locatorMode: LocatorModes = LocatorModes.All
-		self.detectorLength: LocatorLength = LocatorLength.Medium
+		self.detectorLength: int = LocatorLength.Medium
 		self.__speed = None
 		self.__targetVisible = False
 		self.__modelBounds = None
@@ -68,11 +67,11 @@ class Mover( Entity, MovingEntity ):
 
 
 	@property
-	def bypassTarget( self ):
+	def bypassTarget( self ) -> Target or None:
 		return self.__bypassTarget
 
 	@property
-	def curveRootTarget( self ):
+	def curveRootTarget( self ) -> Target or None:
 		return self.__curveRootTarget
 
 	@bypassTarget.setter
@@ -80,7 +79,7 @@ class Mover( Entity, MovingEntity ):
 		self.__bypassTarget = target
 
 	@property
-	def insideCurve( self ):
+	def insideCurve( self ) -> bool:
 		return any( self.__curveTargets )
 
 	@property
@@ -88,15 +87,15 @@ class Mover( Entity, MovingEntity ):
 		return self.__speed
 
 	@speed.setter
-	def speed( self, value ):
+	def speed( self, value: int ):
 		self.__speed = value
 
 	@property
-	def aligned( self ):
+	def aligned( self ) -> bool:
 		return self.__aligned
 
 	@aligned.setter
-	def aligned( self, value ):
+	def aligned( self, value: bool ):
 		self.__aligned = value
 
 	@property
@@ -104,11 +103,11 @@ class Mover( Entity, MovingEntity ):
 		return self._moveTargets
 
 	@property
-	def stopDistance(self):
+	def stopAtDistance(self):
 		return self.__stopDistance
 
-	@stopDistance.setter
-	def stopDistance(self, value):
+	@stopAtDistance.setter
+	def stopAtDistance(self, value):
 		self.__stopDistance = value
 
 	@property
@@ -129,30 +128,22 @@ class Mover( Entity, MovingEntity ):
 	def currentTarget( self ) -> Target:
 		return self.__currentTarget
 
-	@property
-	def hpr( self ) -> Vec3:
-		if self.coreBodyPath:
-			return Vec3( self.coreBodyPath )
-
-	def __initMovementManager( self, world ):
-		self._movementManager = MovementManager( self, world, self.__render )
-
 	def decide( self, currentState: 'State' ) -> str | None:
 		if currentState is MovementState:
-			return States.IDLE
+			return StateNames.IDLE
 
 	def _initStatesPool( self ):
 		self._statesPool = {
-				States.IDLE: IdleState( self ),
-				States.MOVEMENT: MovementState( self ),
-				States.OBSTACLE: ObstacleState( self ),
-				States.CAUTIOUS: CautiousState( self ),
-				States.BYPASS: GenerateBypassState( self ),
-				States.CHECK_OBSTACLE: CheckObstacle( self ),
-				States.BACKUP: BackupState( self ),
-				States.CURVE: GenerateCurveState( self ),
-				States.CURVE_MOVEMENT: CurveMovementState( self ),
-				States.CURVE_IDLE: CurveIdleState( self )
+				StateNames.IDLE: IdleState(self),
+				StateNames.MOVEMENT: MovementState(self),
+				StateNames.OBSTACLE: ObstacleState(self),
+				StateNames.CAUTIOUS: CautiousState(self),
+				StateNames.BYPASS: GenerateBypassState(self),
+				StateNames.CHECK_OBSTACLE: CheckObstacle(self),
+				StateNames.BACKUP: BackupState(self),
+				StateNames.CURVE: GenerateCurveState(self),
+				StateNames.CURVE_MOVEMENT: CurveMovementState(self),
+				StateNames.CURVE_IDLE: CurveIdleState(self)
 		}
 
 	def selectItem( self, item: 'SelectionItem' ) -> SelectionItem | None:
@@ -172,7 +163,7 @@ class Mover( Entity, MovingEntity ):
 		scheduleTask( self, self.targetMonitoringTask, checkExisting = True )
 		scheduleTask( self, self._movementManager.monitor_obstacles )
 
-	def scheduleCurveMovementMonitoringTaskTask( self ):
+	def scheduleCurveMovementMonitoringTask( self ):
 		scheduleTask( self, self.curveMovementMonitoringTask, checkExisting = True )
 
 	def curveMovementMonitoringTask( self, task ):
@@ -219,7 +210,6 @@ class Mover( Entity, MovingEntity ):
 			print( f"current target: { self.__currentTarget }" )
 			if self.__currentTarget:
 				self.__currentTarget.handleSelection( mode = SelectionModes.P2P )
-
 		return task.again
 
 	@property
@@ -237,7 +227,7 @@ class Mover( Entity, MovingEntity ):
 		scheduleTask( self, self._movementManager.monitor_obstacles, checkExisting = True )
 		scheduleTask( self, self._movementManager.maintain_turret_angle )
 
-	def generateCurve( self ):
+	def generateCurve( self ) -> bool:
 		pos1 = self.position
 		pos2 = self.__curveRootTarget.position
 		pos3 = self.__nextTarget.position
@@ -246,6 +236,7 @@ class Mover( Entity, MovingEntity ):
 			self.__curveTargets = targets[ ::20 ]
 			self.__curveRootTarget = None
 			self.__currentTarget = None
+			self.bypassTarget = None
 			self.removeObstacle()
 			return True
 		return False
@@ -265,10 +256,7 @@ class Mover( Entity, MovingEntity ):
 		scheduleTask( self, self._movementManager.monitor_obstacles )
 
 	def scheduleObstacleTasks( self ):
-		scheduleTask( self, self._movementManager.target_detection, checkExisting = True )
-
-	def finishedMovement( self ):
-		return self.__currentTarget is None
+		scheduleTask(self, self._movementManager.alternateTargetDetection, checkExisting = True)
 
 	def hasObstacles( self ) -> bool:
 		if self.__obstacle is not None:
@@ -292,12 +280,13 @@ class Mover( Entity, MovingEntity ):
 		self._createModelBounds()
 		self.__render = render
 		self.__terrainSize = terrainSize
-		self.__initMovementManager( physicsWorld )
+		self.__detector = Detector (self, physicsWorld, self.__render )
+		self._movementManager = MovementManager( self, physicsWorld, self.__render )
 		self.__sensors = Senesors( self.coreBodyPath, self._length, self._width, self._height, self.__render )
-		self.__detector = Detector( self, physicsWorld, self.__render )
 		self._createStateMachine()
 		self._setCorePart()
 		self.scheduleVisibility()
+		self.selectionPart().model.reparentTo( self.coreBodyPath )
 
 	def clearCurrentTarget( self ):
 		if not self.__currentTarget:

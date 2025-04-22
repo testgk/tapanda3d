@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorLength, LocatorModes, Locators
 from states.mover.moverstate import MoverState
-from states.statenames import States
+from states.statenames import StateNames
 
 
 if TYPE_CHECKING:
@@ -21,9 +21,10 @@ class ObstacleState( MoverState ):
             self.mover.sensors.setDynamicDetector( Locators.Right, freeze = False )
         self.mover.detectorLength = LocatorLength.Medium
         self.mover.speed = 20
-        self.mover.stopDistance = True
+        self.mover.stopAtDistance = True
         self.mover.scheduleObstacleTasks()
 
     def execute( self ):
         if self.mover.bypassTarget:
-            return self.doneState( States.CURVE )
+            return self.doneState(StateNames.CURVE)
+        return None

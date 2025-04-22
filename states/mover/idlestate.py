@@ -1,6 +1,7 @@
-from entities.locatorMode import LocatorLength, LocatorModes, Locators
-from states.statenames import States
+from states.statenames import StateNames
 from statemachine.state import State
+from entities.locatorMode import LocatorLength, LocatorModes, Locators
+
 
 from typing import TYPE_CHECKING
 
@@ -22,4 +23,5 @@ class IdleState( State ):
 
     def execute( self ):
         if self._entity.currentTarget:
-            return self.doneState( States.CHECK_OBSTACLE )
+            return self.doneState(StateNames.CHECK_OBSTACLE)
+        return None

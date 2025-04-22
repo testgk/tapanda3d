@@ -19,7 +19,7 @@ class TowerSensors:
 		self.__rightLimit = None
 		self.__horizonAngle = 0
 		self.__angle_increment = 2
-		self.__verticalAngle = 20
+		self._verticalAngle = 20
 		self._width = width
 		self._length = length
 		self._height = height
@@ -57,11 +57,11 @@ class TowerSensors:
 		self.__setDynamicDetectorPosition( self.__horizonAngle )
 		return task.again
 
-	def __setDynamicDetectorPosition( self, verticalAngle ):
-		radians_angle = radians( verticalAngle )
+	def __setDynamicDetectorPosition( self, horizontalAngle ):
+		radians_angle = radians( horizontalAngle )
 		self._detectors[ "dynamic" ].setPos( self._length / 2 + self._width * cos( radians_angle ),
 		                                     self._width * sin( radians_angle ),
-		                                     self._height - self.__verticalAngle )
+		                                     self._height - self._verticalAngle )
 
 	def setDynamicDetector( self, mode: Locators, freeze = False ):
 		self.__freezeDetector = freeze

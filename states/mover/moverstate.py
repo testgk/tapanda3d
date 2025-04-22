@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from entities.locatorMode import LocatorModes
 from statemachine.state import State
-from states.statenames import States
+from states.statenames import StateNames
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover
