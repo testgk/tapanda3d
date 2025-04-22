@@ -78,7 +78,6 @@ class PartFactory:
     def __loadModel( self, eggPath: super, loader, part: 'Part' ) -> NodePath:
         model = loader.loadModel( eggPath )
         model.setColor( part.color )
-        model.setTransparency( TransparencyAttrib.M_alpha )
         model.setPythonTag( 'model_part', part )
         return model
 

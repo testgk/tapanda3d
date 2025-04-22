@@ -6,5 +6,4 @@ from states.mover.generatecurvestate import GenerateCurveState
 from states.mover.generatebypassstate import GenerateBypassState
 from states.mover.movementstate import MovementState
 from states.mover.obstaclestate import ObstacleState
-from states.mover.obstaclestate import  ObstacleState
 from states.mover.curvemovementstate import CurveMovementState

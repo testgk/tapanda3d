@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class TowerMovementManager:
 
 	def __init__( self, entity, world, render ):
-		self._detector = ObstacleDetector( entity, world, render )
+		self._obstacleDetector = ObstacleDetector( entity, world, render )
 		self.__tower: Tower | Mover = entity
 
 	def track_target_coreBody_angle( self, task ):
@@ -25,7 +25,7 @@ class TowerMovementManager:
 												self.__tower.currentTarget.position,
 												tracking_speed = 50 )
 		self.__tower.coreBodyPath.setHpr( new_hpr )
-		if abs( h_diff ) <= 5:
+		if abs( h_diff ) <= 1:
 			self.__tower.aligned = True
 			return task.again
 		else:
@@ -61,5 +61,5 @@ class TowerMovementManager:
 		return self.__tower.currentTarget
 
 	def detectTargets( self, task ):
-		self._detector.detectEntity()
-		return task.cont
+		detection = self._obstacleDetector.detectEntity()
+		return task.again

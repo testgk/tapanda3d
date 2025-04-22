@@ -1,9 +1,10 @@
 from entities.full.movers.tank import Tank
+from entities.parts.obstacles.cube import BigCube
 from entities.full.towers.towers import TowerSmall
 from entities.parts.engine import BasicEngine
 from entities.modules.turret import CannonTurret
 from entities.modules.mobilechassis import BasicTracksChassis
-from entities.parts.obstacles.cube import Cube, BigCube
+
 
 
 class EntityFactory:

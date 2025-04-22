@@ -172,7 +172,7 @@ class Mover( Entity, MovingEntity ):
 		scheduleTask( self, self.targetMonitoringTask, checkExisting = True )
 		scheduleTask( self, self._movementManager.monitor_obstacles )
 
-	def scheduleCurveMovementMonitoringTaskTask( self ):
+	def scheduleCurveMovementMonitoringTask( self ):
 		scheduleTask( self, self.curveMovementMonitoringTask, checkExisting = True )
 
 	def curveMovementMonitoringTask( self, task ):
@@ -246,6 +246,7 @@ class Mover( Entity, MovingEntity ):
 			self.__curveTargets = targets[ ::20 ]
 			self.__curveRootTarget = None
 			self.__currentTarget = None
+			self.bypassTarget = None
 			self.removeObstacle()
 			return True
 		return False
@@ -298,6 +299,7 @@ class Mover( Entity, MovingEntity ):
 		self._createStateMachine()
 		self._setCorePart()
 		self.scheduleVisibility()
+		self.selectionPart().model.reparentTo( self.coreBodyPath )
 
 	def clearCurrentTarget( self ):
 		if not self.__currentTarget:

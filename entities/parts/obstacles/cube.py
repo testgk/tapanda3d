@@ -1,16 +1,11 @@
+from entities.parts.cubepart import CubePart
 from enums.colors import Color
-from entities.parts.part import Part
-from entities.entity import Entity, entitypart
+from entities.entity import entitypart, Entity
 from selection.selectionitem import SelectionItem
 from selection.selectionmodes import SelectionModes
 
+from typing import TYPE_CHECKING
 
-class CubePart( Part ):
-	def __init__( self, scale ):
-		super( CubePart, self ).__init__( partId = "cube", scale = scale )
-		self._objectPath = "obstacles"
-		self._color = Color.GREEN
-		self._mass = 20000
 
 
 class Cube( Entity, SelectionItem ):
@@ -20,7 +15,7 @@ class Cube( Entity, SelectionItem ):
 		self._corePart = self._cube
 
 	@entitypart
-	def cubePart( self ):
+	def selectionPart( self ):
 		return self._cube
 
 	@property
@@ -34,7 +29,7 @@ class Cube( Entity, SelectionItem ):
 		self.model.setColor( Color.MAGENTA )
 
 	def clearSelection( self ):
-		self.model.setColor( self.cubePart().color )
+		self.model.setColor( self.selectionPart().color )
 
 	def _createStateMachine( self ):
 		pass

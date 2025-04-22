@@ -1,6 +1,6 @@
 
 import math
-from panda3d.core import Vec3
+from panda3d.core import Vec3, Mat3
 
 from entities.locatorMode import LocatorModes
 from movement.curve import CurveGenerator
@@ -75,15 +75,11 @@ class MovementManager( TowerMovementManager ):
 		return task.cont
 
 	def monitor_obstacles( self, task ):
-		#if not self.__entity.aligned:
-		#	return task.cont
 		if self.__mover.locatorMode == LocatorModes.NONE:
 			return task.done
 		if self.__mover.obstacle is not None:
 			return task.cont
-		#if self.__entity.currentTarget is None:
-		#	return task.again
-		obstacle = self.__checkForObstacles( self._getCurrentTarget() )
+		obstacle = self._obstacleDetector.detectObstacle( self._getCurrentTarget() )
 		try:
 			if obstacle is None:
 				if self.__mover.obstacle is not None:
@@ -95,18 +91,23 @@ class MovementManager( TowerMovementManager ):
 			if obstacle is not None:
 				print( "monitor_obstacles:", obstacle.detection )
 			self.__mover.obstacle = obstacle
+			return task.cont
 
 	def __checkForObstacles( self, target ):
-		return self._detector.detectObstacle( target )
+		return self._obstacleDetector.detectObstacle( target )
 
 	def target_detection( self, task ):
 		if self.__tempTarget is not None:
 			self.__mover.bypassTarget = self.__tempTarget
 			self.__tempTarget = None
 			return task.done
-		detection = self._detector.detectAlternativePosition( self._getCurrentTarget() )
-		if detection:
-			self.__tempTarget = CustomTarget( detection.position )
+		#detection = self._detector.detectAlternativePosition( self._getCurrentTarget() )
+		vec =  self.__mover.position - self.__mover.obstacle.position
+		rotation_matrix = Mat3.rotateMatNormaxis( 90, Vec3( 0, 0, 1 ) )
+		rotated_vec = rotation_matrix.xform( vec )
+		c = self.__mover.obstacle.position + rotated_vec
+		#if detection:
+		self.__tempTarget = CustomTarget( position = c )
 		return task.cont
 
 	def maintain_turret_angle( self, task ):

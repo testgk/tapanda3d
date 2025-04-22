@@ -15,7 +15,7 @@ class CurveMovementState( MovementState ):
 	def enter( self ):
 		self._currentTarget = self.mover.currentTarget
 		self.mover.speed = 75
-		self.mover.locatorMode = LocatorModes.Edges
+		self.mover.locatorMode = LocatorModes.TargetOnly
 		self.mover.sensors.setDynamicDetector( Locators.Full )
 		self.mover.detectorLength = LocatorLength.Medium
 		self.mover.stopDistance = False

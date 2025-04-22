@@ -12,7 +12,7 @@ class CurveIdleState( IdleState ):
 
     def enter( self ):
         self._entity.removeObstacle()
-        self._entity.scheduleCurveMovementMonitoringTaskTask()
+        self._entity.scheduleCurveMovementMonitoringTask()
 
     def execute( self ):
         if self._entity.insideCurve:

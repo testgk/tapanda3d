@@ -1,27 +1,25 @@
-import random
 import time
-from abc import abstractmethod
-from collections import deque
+import random
+
 from typing import NoReturn
-
-from panda3d.bullet import BulletRigidBodyNode
-from panda3d.core import NodePath, TransparencyAttrib
-
-from entities.partfactory import PartFactory
-from entities.parts.part import Part
-from enums.colors import Color
-from scheduletask import scheduleTask
-from selection.selectionitem import SelectionItem
-from selection.selectionmodes import SelectionModes
+from collections import deque
+from abc import abstractmethod
+from panda3d.core import NodePath
 from statemachine.state import State
-from statemachine.statemachine import StateMachine
+from entities.parts.part import Part
+from scheduletask import scheduleTask
 from states.mover.idlestate import IdleState
+from entities.partfactory import PartFactory
+from panda3d.bullet import BulletRigidBodyNode
+from selection.selectionitem import SelectionItem
+from statemachine.statemachine import StateMachine
+from selection.selectionmodes import SelectionModes
+from entities.parts.cubepart import CubePart, SelectionCubePart
 
 
 def entitypart( func ):
 	func._is_entitypart = True
 	return func
-
 
 
 
@@ -46,7 +44,12 @@ class Entity( SelectionItem ):
 		self._length = None
 		self._width = None
 		self._height = None
-		self._visibilityTime = time.time()
+		self._detectionTime = time.time()
+		self._cube = SelectionCubePart( scale = 2 )
+
+	@entitypart
+	def selectionPart( self ):
+		return self._cube
 
 	@abstractmethod
 	def _setCorePart( self ):
@@ -69,14 +72,16 @@ class Entity( SelectionItem ):
 		return True
 
 	@property
-	def coreBodyPath( self ) -> NodePath | NoReturn:
+	def coreBodyPath( self ) -> NodePath | None:
 		if self._corePart:
 			return self._corePart.rigidBodyPath
+		return None
 
 	@property
-	def coreRigidBody( self ) -> BulletRigidBodyNode | NoReturn:
+	def coreRigidBody( self ) -> BulletRigidBodyNode | None:
 		if self._corePart:
 			return self._corePart.rigidBody
+		return None
 
 	@property
 	def selectBox( self ):
@@ -128,15 +133,16 @@ class Entity( SelectionItem ):
 			self.clearSelection()
 		print( f'{ self.name } is selected' )
 		self._selectionMode = SelectionModes.P2P
-		self.selectBox.show()
+		self.selectionPart().model.show()
 
 	def clearSelection( self ):
 		self._selectionMode = SelectionModes.NONE
-		for model in self.__models:
-			part = model.node().getPythonTag( 'model_part' )
-			model.setColor( part.color )
-		if self.__collisionBox:
-			self.__collisionBox.hide()
+		#for model in self.__models:
+		#	part = model.node().getPythonTag( 'model_part' )
+		#	model.setColor( part.color )
+		self.selectionPart().model.hide()
+		#if self.__collisionBox:
+		#	self.__collisionBox.hide()
 
 	def _initStatesPool( self ):
 		self._statesPool = {
@@ -165,15 +171,15 @@ class Entity( SelectionItem ):
 		return None
 
 	def handleDetection( self ):
-		self._visibilityTime = time.time()
-		self.show()
+		self._detectionTime = time.time()
+		#self.show()
 
 	def scheduleVisibility( self ):
-		scheduleTask( self, self.visibilityTask )
+		scheduleTask( self, self.visibilityTask, appendTask = True )
 
 	def visibilityTask( self, task ):
 		task.delayTime = 1
-		if time.time() - self._visibilityTime > 5:
+		if time.time() - self._detectionTime > 5:
 			self.hide()
 		return task.again
 

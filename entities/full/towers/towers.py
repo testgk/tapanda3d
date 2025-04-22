@@ -52,10 +52,9 @@ class Tower( EntityWithTurret, Entity, ABC ):
         self._createModelBounds()
         self._initMovementManager( physicsWorld )
         self.__sensors = TowerSensors( self.coreBodyPath, self._length, self._width, self._height, self.__render )
-        self.__detector = Detector( self, physicsWorld, self.__render )
         self._createStateMachine()
         self._connectModules( physicsWorld )
-        self.scheduleVisibility()
+        #self.scheduleVisibility()
 
     def _initMovementManager( self, world ):
         self._movementManager = TowerMovementManager( self, world, self.__render )

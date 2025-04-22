@@ -77,7 +77,9 @@ class ObstacleDetector:
 					continue
 				if item is None or item.isTerrain:
 					continue
-				item.handledetection()
+				item.handleDetection()
+				self.__detector.setColor( Color.RED )
 				print( f'detected item: { item }' )
 				return item
+		self.__detector.setColor( Color.GREEN )
 		return None

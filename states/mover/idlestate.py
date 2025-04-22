@@ -23,3 +23,4 @@ class IdleState( State ):
     def execute( self ):
         if self._entity.currentTarget:
             return self.doneState( States.CHECK_OBSTACLE )
+        return None
