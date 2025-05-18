@@ -10,9 +10,9 @@ class TerrainCollision:
 		self.__terrain = terrain
 
 	def createTerrainCollision( self ):
-		root = self.__terrain.getRoot()
+		root = self.__terrain
 		for child in root.getChildren():
-			terrainHeight = self.get_terrain_height( child.getX(), child.getY() )
+			#terrainHeight = self.get_terrain_height( child.getX(), child.getY() )
 			if isinstance( child.node(), GeomNode ):
 				customCollisionPolygon = CustomCollisionPolygon( child )
 				customCollisionPolygon.attachCollisionNodeToTerrain()

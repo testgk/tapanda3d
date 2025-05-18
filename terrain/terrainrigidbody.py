@@ -9,7 +9,7 @@ class TerrainRigidBody:
 		self.__render = render
 
 	def createTerrainRigidBody( self ):
-		root = self.__terrain.getRoot()
+		root = self.__terrain
 		for child in root.getChildren():
 			if isinstance( child.node(), GeomNode ):
 				customRigidPolygon = CustomRigidPolygon( child )

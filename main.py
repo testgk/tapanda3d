@@ -24,21 +24,23 @@ sys.dont_write_bytecode = True
 class MyApp( ShowBase ):
 
 	def __init__( self ):
-		self.mapName = "heightmap1"
+		self.mapName = "rocky_terrain_disp_2k"
 		self.showTexture = True
 		if True:
-			self.mapName = "heightmap_flat_big"
+			self.mapName = "rocky_terrain_disp_2k"
 			self.showTexture = True
 		ShowBase.__init__( self )
 		self.__terrainPhysicsLayer = None
 		self.__terrainCollisionLayer = None
+		#model = self.loader.loadModel( "/home/gadik@liveu.tv/pyprojects/tapanda/maps/rocky_terrain_02_1k.gltf" )
+		#model.reparentTo( self.render )
 		self.__createTerrain()
-		self.disableMouse()
+		#self.disableMouse()
 		self.physics_world = BulletWorld()
 		self.physics_world.setGravity( Vec3( 0, 0, -50.00 ) )
 		self.physics_world.setGroupCollisionFlag( 1, 1, False )
 		self.terrainCamera = TerrainCamera( self.camera, self.terrainInfo.terrainCenter, self.terrainInfo.terrainSize )
-		self.cameraButtons = CameraButtons( self.terrainCamera, debugNode = self.get_debug_visualization() )
+		#self.cameraButtons = CameraButtons( self.terrainCamera, debugNode = self.get_debug_visualization() )
 		self.__lights = Lights( self.render )
 		self.__createCollisionLayer( terrain = self.terrain )
 		self.__createPhysicsLayer( blockSize = 128 )
@@ -53,19 +55,19 @@ class MyApp( ShowBase ):
 		self.entityButtons = EntityButtons( selector = self.__selector, loader = self.__entityLoader )
 
 		self.task_duration = 0.2
-		self.accept( 'mouse1', self.on_map_click )
-		self.accept( 'mouse3', self.on_map_rightclick )
+		#self.accept( 'mouse1', self.on_map_click )
+		#self.accept( 'mouse3', self.on_map_rightclick )
 		self.taskMgr.add( self.terrainCamera.updateCameraTask, "UpdateCameraTask" )
 		self.taskMgr.add( self.update_physics, "update_physics" )
 		self.taskMgr.doMethodLater( 0.02, self.update_physics, 'update_physics' )
 		self.terrainCamera.hoverAbove()
 
 	def __createTerrain( self ):
-		terrainProvider = TerrainProvider( self.loader )
+		terrainProvider = TerrainProvider( self.loader, self.render )
 		self.terrainInfo = terrainProvider.create_terrain( self.mapName, showTexture = self.showTexture )
 		self.terrain = self.terrainInfo.terrain
-		self.terrain.getRoot().reparentTo( self.render )
-		self.terrain.setFocalPoint( self.camera )
+		#self.terrain.reparentTo( self.render )
+		#self.terrain.setFocalPoint( self.camera )
 
 	def on_map_click( self ):
 		self.__selector.on_map_click()
@@ -100,7 +102,7 @@ class MyApp( ShowBase ):
 		return task.cont
 
 	def __createPhysicsLayer( self, blockSize ):
-		terrainProvider = TerrainProvider( self.loader )
+		terrainProvider = TerrainProvider( self.loader, self.render )
 		terrainInfo = terrainProvider.create_terrain( self.mapName, showTexture = False, blockSize = blockSize )
 		self.__terrainPhysicsLayer = TerrainRigidBody( terrainInfo.terrain, self.physics_world, self.render )
 		self.__terrainPhysicsLayer.createTerrainRigidBody()
