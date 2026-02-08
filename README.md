@@ -14,7 +14,9 @@ This project uses the Panda3D game engine to create a 3D terrain visualization a
 
 ## Repository
 
-This repository is maintained on GitHub and mirrored from GitLab.
+This repository is maintained on GitHub and mirrored from GitLab:
+- **GitLab (Source)**: https://gitlab.com/gdkln3030/tapanda3d1
+- **GitHub (Mirror)**: https://github.com/testgk/tapanda3d
 
 ## Requirements
 
