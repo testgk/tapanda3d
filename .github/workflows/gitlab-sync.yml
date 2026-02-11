@@ -26,7 +26,14 @@ jobs:
       
       - name: Add GitLab remote
         run: |
-          git remote add gitlab https://gitlab.com/testgk/tapanda3d.git || git remote set-url gitlab https://gitlab.com/testgk/tapanda3d.git
+          # Check if remote already exists
+          if git remote get-url gitlab >/dev/null 2>&1; then
+            echo "GitLab remote already exists, updating URL..."
+            git remote set-url gitlab https://gitlab.com/testgk/tapanda3d.git
+          else
+            echo "Adding GitLab remote..."
+            git remote add gitlab https://gitlab.com/testgk/tapanda3d.git
+          fi
       
       - name: Fetch from GitLab
         run: |
@@ -37,7 +44,7 @@ jobs:
         id: detect-branch
         run: |
           # Try to get the default branch name from GitLab
-          GITLAB_DEFAULT_BRANCH=$(git remote show gitlab | grep 'HEAD branch' | cut -d' ' -f5 || echo "master")
+          GITLAB_DEFAULT_BRANCH=$(git remote show gitlab | grep 'HEAD branch' | cut -d' ' -f5 || echo "main")
           echo "gitlab_branch=${GITLAB_DEFAULT_BRANCH}" >> $GITHUB_OUTPUT
           echo "GitLab default branch: ${GITLAB_DEFAULT_BRANCH}"
       
