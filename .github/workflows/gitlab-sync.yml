@@ -1,0 +1,53 @@
+name: Sync from GitLab
+
+on:
+  # Run every hour
+  schedule:
+    - cron: '0 * * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout GitHub repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Add GitLab remote
+        run: |
+          git remote add gitlab https://gitlab.com/testgk/tapanda3d.git || git remote set-url gitlab https://gitlab.com/testgk/tapanda3d.git
+      
+      - name: Fetch from GitLab
+        run: |
+          git fetch gitlab --prune
+      
+      - name: Sync main branch
+        run: |
+          # Get the default branch name from GitLab
+          git remote show gitlab | grep 'HEAD branch' | cut -d' ' -f5 > /tmp/gitlab_branch.txt
+          GITLAB_DEFAULT_BRANCH=$(cat /tmp/gitlab_branch.txt)
+          
+          echo "GitLab default branch: $GITLAB_DEFAULT_BRANCH"
+          
+          # Checkout the GitHub default branch
+          git checkout main 2>/dev/null || git checkout master 2>/dev/null || git checkout $(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+          
+          # Merge changes from GitLab
+          git merge gitlab/${GITLAB_DEFAULT_BRANCH} --allow-unrelated-histories -m "Sync from GitLab ${GITLAB_DEFAULT_BRANCH} branch"
+      
+      - name: Push to GitHub
+        run: |
+          git push origin HEAD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
