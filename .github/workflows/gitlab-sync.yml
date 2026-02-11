@@ -48,9 +48,14 @@ jobs:
           # Try to get the default branch name from GitLab using symbolic-ref
           GITLAB_DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/gitlab/HEAD 2>/dev/null | sed 's@^refs/remotes/gitlab/@@' || echo "")
           
-          # Fallback to parsing remote show if symbolic-ref fails
+          # Fallback to git ls-remote if symbolic-ref fails
           if [ -z "$GITLAB_DEFAULT_BRANCH" ]; then
-            GITLAB_DEFAULT_BRANCH=$(git remote show gitlab | grep 'HEAD branch' | cut -d' ' -f5 || echo "main")
+            GITLAB_DEFAULT_BRANCH=$(git ls-remote --symref gitlab HEAD 2>/dev/null | head -n1 | awk '{print $2}' | sed 's@refs/heads/@@' || echo "")
+          fi
+          
+          # Final fallback to 'main' if all else fails
+          if [ -z "$GITLAB_DEFAULT_BRANCH" ]; then
+            GITLAB_DEFAULT_BRANCH="main"
           fi
           
           echo "gitlab_branch=${GITLAB_DEFAULT_BRANCH}" >> $GITHUB_OUTPUT
@@ -59,6 +64,18 @@ jobs:
       - name: Sync default branch
         run: |
           GITLAB_BRANCH="${{ steps.detect-branch.outputs.gitlab_branch }}"
+          
+          # Validate branch name is not empty
+          if [ -z "$GITLAB_BRANCH" ]; then
+            echo "Error: Could not determine GitLab default branch"
+            exit 1
+          fi
+          
+          # Validate branch name contains only valid characters
+          if ! echo "$GITLAB_BRANCH" | grep -qE '^[a-zA-Z0-9/_.-]+$'; then
+            echo "Error: Invalid branch name detected: ${GITLAB_BRANCH}"
+            exit 1
+          fi
           
           # Get the current GitHub branch
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
