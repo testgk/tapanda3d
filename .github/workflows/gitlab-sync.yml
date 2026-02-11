@@ -43,8 +43,14 @@ jobs:
       - name: Detect GitLab default branch
         id: detect-branch
         run: |
-          # Try to get the default branch name from GitLab
-          GITLAB_DEFAULT_BRANCH=$(git remote show gitlab | grep 'HEAD branch' | cut -d' ' -f5 || echo "main")
+          # Try to get the default branch name from GitLab using symbolic-ref
+          GITLAB_DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/gitlab/HEAD 2>/dev/null | sed 's@^refs/remotes/gitlab/@@' || echo "")
+          
+          # Fallback to parsing remote show if symbolic-ref fails
+          if [ -z "$GITLAB_DEFAULT_BRANCH" ]; then
+            GITLAB_DEFAULT_BRANCH=$(git remote show gitlab | grep 'HEAD branch' | cut -d' ' -f5 || echo "main")
+          fi
+          
           echo "gitlab_branch=${GITLAB_DEFAULT_BRANCH}" >> $GITHUB_OUTPUT
           echo "GitLab default branch: ${GITLAB_DEFAULT_BRANCH}"
       
@@ -82,6 +88,17 @@ jobs:
       
       - name: Push to GitHub
         run: |
-          git push origin HEAD
+          # Get the current branch name
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "Pushing to GitHub branch: ${CURRENT_BRANCH}"
+          
+          # Verify we're on a valid branch (not detached HEAD)
+          if [ "$CURRENT_BRANCH" = "HEAD" ]; then
+            echo "Error: In detached HEAD state, cannot push"
+            exit 1
+          fi
+          
+          # Push to the current branch
+          git push origin "${CURRENT_BRANCH}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
