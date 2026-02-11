@@ -30,21 +30,48 @@ jobs:
       
       - name: Fetch from GitLab
         run: |
+          echo "Fetching from GitLab repository..."
           git fetch gitlab --prune
       
-      - name: Sync main branch
+      - name: Detect GitLab default branch
+        id: detect-branch
         run: |
-          # Get the default branch name from GitLab
-          git remote show gitlab | grep 'HEAD branch' | cut -d' ' -f5 > /tmp/gitlab_branch.txt
-          GITLAB_DEFAULT_BRANCH=$(cat /tmp/gitlab_branch.txt)
+          # Try to get the default branch name from GitLab
+          GITLAB_DEFAULT_BRANCH=$(git remote show gitlab | grep 'HEAD branch' | cut -d' ' -f5 || echo "master")
+          echo "gitlab_branch=${GITLAB_DEFAULT_BRANCH}" >> $GITHUB_OUTPUT
+          echo "GitLab default branch: ${GITLAB_DEFAULT_BRANCH}"
+      
+      - name: Sync default branch
+        run: |
+          GITLAB_BRANCH="${{ steps.detect-branch.outputs.gitlab_branch }}"
           
-          echo "GitLab default branch: $GITLAB_DEFAULT_BRANCH"
+          # Get the current GitHub branch
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "Current GitHub branch: ${CURRENT_BRANCH}"
           
-          # Checkout the GitHub default branch
-          git checkout main 2>/dev/null || git checkout master 2>/dev/null || git checkout $(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+          # Check if there are any changes to sync
+          git fetch origin
           
-          # Merge changes from GitLab
-          git merge gitlab/${GITLAB_DEFAULT_BRANCH} --allow-unrelated-histories -m "Sync from GitLab ${GITLAB_DEFAULT_BRANCH} branch"
+          if git rev-parse gitlab/${GITLAB_BRANCH} >/dev/null 2>&1; then
+            echo "Syncing from GitLab branch: ${GITLAB_BRANCH}"
+            
+            # Check if we're already up to date
+            if git merge-base --is-ancestor gitlab/${GITLAB_BRANCH} HEAD; then
+              echo "Already up to date with GitLab"
+              exit 0
+            fi
+            
+            # Attempt to merge changes
+            if git merge gitlab/${GITLAB_BRANCH} -m "Sync from GitLab ${GITLAB_BRANCH} branch [skip ci]"; then
+              echo "Successfully merged changes from GitLab"
+            else
+              echo "Merge conflict detected. Manual intervention required."
+              exit 1
+            fi
+          else
+            echo "GitLab branch ${GITLAB_BRANCH} not found"
+            exit 1
+          fi
       
       - name: Push to GitHub
         run: |
