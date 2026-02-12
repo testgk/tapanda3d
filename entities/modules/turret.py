@@ -1,4 +1,4 @@
-from collsiongroups import CollisionGroup
+from collisiongroups import CollisionGroup
 from entities.modules.module import Module
 from entities.parts.cannon import ShellCannon
 from entities.parts.part import Part
