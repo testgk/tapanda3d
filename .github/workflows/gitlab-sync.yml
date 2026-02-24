@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Configure Git
@@ -97,8 +98,15 @@ jobs:
             if git merge gitlab/${GITLAB_BRANCH} -m "Sync from GitLab ${GITLAB_BRANCH} branch [skip ci]"; then
               echo "Successfully merged changes from GitLab"
             else
-              echo "Merge conflict detected. Manual intervention required."
-              exit 1
+              # First merge failed; abort and retry with --allow-unrelated-histories
+              # (needed when GitHub and GitLab repos were initialized with different root commits)
+              git merge --abort 2>/dev/null || true
+              if git merge gitlab/${GITLAB_BRANCH} --allow-unrelated-histories -m "Sync from GitLab ${GITLAB_BRANCH} branch (unrelated histories) [skip ci]"; then
+                echo "Successfully merged changes from GitLab (unrelated histories)"
+              else
+                echo "Merge conflict detected. Manual intervention required."
+                exit 1
+              fi
             fi
           else
             echo "GitLab branch ${GITLAB_BRANCH} not found"
