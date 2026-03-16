@@ -48,6 +48,81 @@ jobs:
             git remote add gitlab https://gitlab.com/testgk/tapanda3d.git
           fi
       
+      - name: Verify GitLab token and repository access
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          # --- 1. Check whether the secret is populated at all ---
+          if [ -z "${GITLAB_TOKEN}" ]; then
+            echo "::error::GITLAB_TOKEN secret is not set."
+            echo ""
+            echo "Fix: Go to Settings → Secrets and variables → Actions → New repository secret"
+            echo "     Name:  GITLAB_TOKEN"
+            echo "     Value: your GitLab Personal Access Token (read_repository scope)"
+            exit 1
+          fi
+
+          echo "GITLAB_TOKEN secret is present. Verifying access to the GitLab repository..."
+
+          # --- 2. Call the GitLab Projects API to check token validity and repo access ---
+          HTTP_STATUS=$(curl -s -o /tmp/gitlab_api_response.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${GITLAB_TOKEN}" \
+            "https://gitlab.com/api/v4/projects/testgk%2Ftapanda3d")
+
+          case "$HTTP_STATUS" in
+            200)
+              echo "Token is valid and has access to the repository. Proceeding with fetch."
+              ;;
+            401)
+              echo "::error::GitLab returned 401 Unauthorized."
+              echo ""
+              echo "Your GITLAB_TOKEN is invalid or expired."
+              echo "Fix:"
+              echo "  1. On GitLab go to: Edit profile → Access Tokens → Add new token"
+              echo "  2. Enable the 'read_repository' scope and set a future expiry date."
+              echo "  3. Copy the token and update the GITLAB_TOKEN secret in this repository:"
+              echo "     Settings → Secrets and variables → Actions → GITLAB_TOKEN → Update secret"
+              cat /tmp/gitlab_api_response.json || true
+              exit 1
+              ;;
+            403)
+              echo "::error::GitLab returned 403 Forbidden."
+              echo ""
+              echo "Your token is valid but does not have permission to read this repository."
+              echo "Fix: Recreate the token and make sure the 'read_repository' scope is checked."
+              cat /tmp/gitlab_api_response.json || true
+              exit 1
+              ;;
+            404)
+              echo "::error::GitLab returned 404 Not Found."
+              echo ""
+              echo "Either the repository 'testgk/tapanda3d' does not exist on GitLab,"
+              echo "or your token does not have 'read_repository' scope for this project."
+              echo ""
+              echo "Fix:"
+              echo "  - Confirm the repository exists at https://gitlab.com/testgk/tapanda3d"
+              echo "  - Make sure the token's owner has at least Reporter access to the project."
+              echo "  - Make sure the token includes the 'read_repository' scope."
+              cat /tmp/gitlab_api_response.json || true
+              exit 1
+              ;;
+            *)
+              # Handle transient errors (rate-limit, server error) as warnings so the
+              # fetch can still succeed; fail clearly on any other unexpected code.
+              if [ "$HTTP_STATUS" = "429" ]; then
+                echo "::warning::GitLab API rate limit hit (429). Proceeding anyway."
+              elif [ "${HTTP_STATUS#5}" != "$HTTP_STATUS" ]; then
+                # HTTP 5xx — GitLab server error, transient
+                echo "::warning::GitLab API returned server error ${HTTP_STATUS}. Proceeding anyway."
+              else
+                echo "::error::Unexpected HTTP status ${HTTP_STATUS} from GitLab API."
+                cat /tmp/gitlab_api_response.json || true
+                exit 1
+              fi
+              cat /tmp/gitlab_api_response.json || true
+              ;;
+          esac
+
       - name: Fetch from GitLab
         run: |
           echo "Fetching from GitLab repository..."
