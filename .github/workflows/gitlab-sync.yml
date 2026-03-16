@@ -1,19 +1,9 @@
 name: Sync from GitLab
 
-# SYNC ON HOLD
-# The scheduled sync has been disabled because it is failing with:
-#   "fatal: could not read Username for 'https://gitlab.com': No such device or address"
-# Root cause: The workflow attempts to fetch from GitLab via HTTPS but no GitLab
-# credentials are available. A GITLAB_TOKEN secret (a GitLab Personal Access Token
-# with read_repository scope) must be added to this repository's secrets, and the
-# "Add GitLab remote" and "Fetch from GitLab" steps must be updated to pass the token
-# in the remote URL (e.g. https://oauth2:${GITLAB_TOKEN}@gitlab.com/...) before
-# re-enabling the schedule below.
 on:
-  # Schedule is disabled until GitLab credentials are configured.
-  # To re-enable, uncomment the lines below and add a GITLAB_TOKEN secret.
-  # schedule:
-  #   - cron: '0 * * * *'
+  # Run every hour
+  schedule:
+    - cron: '0 * * * *'
 
   # Allow manual trigger
   workflow_dispatch:
@@ -33,9 +23,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Configure Git
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global url."https://oauth2:${GITLAB_TOKEN}@gitlab.com/".insteadOf "https://gitlab.com/"
       
       - name: Add GitLab remote
         run: |
