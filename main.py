@@ -12,6 +12,7 @@ from gameenv.picker import Picker
 from camera.camera import TerrainCamera
 from panda3d.bullet import BulletDebugNode, BulletWorld
 from buttons.camerabuttons import CameraButtons
+from registration.registrationform import RegistrationForm
 from selector.selector import Selector
 from terrain.terrainrigidbody import TerrainRigidBody
 from terrain.terraincolision import TerrainCollision
@@ -24,14 +25,18 @@ sys.dont_write_bytecode = True
 class MyApp( ShowBase ):
 
 	def __init__( self ):
-		self.mapName = "heightmap1"
-		self.showTexture = True
-		if True:
-			self.mapName = "heightmap_big2"
-			self.showTexture = True
 		ShowBase.__init__( self )
+		self.__mapName = "heightmap_big2"
+		self.__showTexture = True
 		self.__terrainPhysicsLayer = None
 		self.__terrainCollisionLayer = None
+		self.__reg_form = RegistrationForm(
+			on_success = self.__start_game,
+			on_cancel  = sys.exit,
+		)
+
+	def __start_game( self, nickname ):
+		self.__reg_form = None
 		self.__createTerrain()
 		self.disableMouse()
 		self.physics_world = BulletWorld()
@@ -62,7 +67,7 @@ class MyApp( ShowBase ):
 
 	def __createTerrain( self ):
 		terrainProvider = TerrainProvider( self.loader )
-		self.terrainInfo = terrainProvider.create_terrain( self.mapName, showTexture = self.showTexture )
+		self.terrainInfo = terrainProvider.create_terrain( self.__mapName, showTexture = self.__showTexture )
 		self.terrain = self.terrainInfo.terrain
 		self.terrain.getRoot().reparentTo( self.render )
 		self.terrain.setFocalPoint( self.camera )
@@ -101,7 +106,7 @@ class MyApp( ShowBase ):
 
 	def __createPhysicsLayer( self, blockSize ):
 		terrainProvider = TerrainProvider( self.loader )
-		terrainInfo = terrainProvider.create_terrain( self.mapName, showTexture = False, blockSize = blockSize )
+		terrainInfo = terrainProvider.create_terrain( self.__mapName, showTexture = False, blockSize = blockSize )
 		self.__terrainPhysicsLayer = TerrainRigidBody( terrainInfo.terrain, self.physics_world, self.render )
 		self.__terrainPhysicsLayer.createTerrainRigidBody()
 
