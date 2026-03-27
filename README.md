@@ -4,11 +4,18 @@ A Panda3D-based terrain simulation project.
 
 ## 🔄 GitLab Sync (Automatic Mirror)
 
+[![Sync from GitLab](https://github.com/testgk/tapanda3d/actions/workflows/gitlab-sync.yml/badge.svg)](https://github.com/testgk/tapanda3d/actions/workflows/gitlab-sync.yml)
+
 > **📍 Repository Info:**
 > - **This is the GitHub repository** (`github.com/testgk/tapanda3d`)
 > - **Changes made**: Added automation workflow to THIS GitHub repository
 > - **Sync direction**: GitLab → GitHub (one-way sync FROM GitLab TO here)
 > - **Source repository**: `https://gitlab.com/testgk/tapanda3d` (GitLab)
+
+### When Was Code Last Pulled from GitLab?
+
+- **Quick check**: See the [`LAST_GITLAB_SYNC`](./LAST_GITLAB_SYNC) file in this repository — it is updated automatically by the workflow every time new changes are pulled from GitLab. It contains the UTC timestamp, the GitLab branch name, and the commit SHA that was synced.
+- **Workflow history**: Click the badge above (or visit the [Actions tab](https://github.com/testgk/tapanda3d/actions/workflows/gitlab-sync.yml)) to see the full run history with timestamps of every sync attempt.
 
 ### What Was Updated?
 
@@ -27,7 +34,8 @@ The sync runs:
 The GitHub Actions workflow automatically:
 1. Fetches the latest changes from the **GitLab** repository (`https://gitlab.com/testgk/tapanda3d`)
 2. Merges those changes into this **GitHub** repository
-3. Keeps both repositories in sync (GitLab → GitHub direction)
+3. Updates [`LAST_GITLAB_SYNC`](./LAST_GITLAB_SYNC) with the timestamp and commit SHA of the sync
+4. Keeps both repositories in sync (GitLab → GitHub direction)
 
 ### Setup Notes
 

@@ -68,6 +68,7 @@ jobs:
           echo "GitLab default branch: ${GITLAB_DEFAULT_BRANCH}"
       
       - name: Sync default branch
+        id: sync
         run: |
           GITLAB_BRANCH="${{ steps.detect-branch.outputs.gitlab_branch }}"
           
@@ -96,6 +97,7 @@ jobs:
             # Check if we're already up to date
             if git merge-base --is-ancestor gitlab/${GITLAB_BRANCH} HEAD; then
               echo "Already up to date with GitLab"
+              echo "synced=false" >> $GITHUB_OUTPUT
               exit 0
             fi
             
@@ -113,11 +115,24 @@ jobs:
                 exit 1
               fi
             fi
+            echo "synced=true" >> $GITHUB_OUTPUT
           else
             echo "GitLab branch ${GITLAB_BRANCH} not found"
+            echo "synced=false" >> $GITHUB_OUTPUT
             exit 1
           fi
       
+      - name: Record last sync timestamp
+        if: steps.sync.outputs.synced == 'true'
+        run: |
+          GITLAB_BRANCH="${{ steps.detect-branch.outputs.gitlab_branch }}"
+          GITLAB_COMMIT=$(git rev-parse gitlab/${GITLAB_BRANCH})
+          SYNC_TIME=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+          printf 'Last synced from GitLab: %s\nGitLab branch: %s\nGitLab commit: %s\n' \
+            "${SYNC_TIME}" "${GITLAB_BRANCH}" "${GITLAB_COMMIT}" > LAST_GITLAB_SYNC
+          git add LAST_GITLAB_SYNC
+          git commit --amend --no-edit
+
       - name: Push to GitHub
         run: |
           # Get the current branch name
