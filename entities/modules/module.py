@@ -1,4 +1,4 @@
-from collsiongroups import CollisionGroup
+from collisiongroups import CollisionGroup
 from entities.parts.part import Part
 
 

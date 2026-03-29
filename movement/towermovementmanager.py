@@ -2,7 +2,7 @@ import math
 from typing import TYPE_CHECKING
 
 from panda3d.core import Vec3
-from phyisics import globalClock
+from physics import globalClock
 
 if TYPE_CHECKING:
 	from entities.full.movers.mover import Mover

@@ -9,7 +9,7 @@ from panda3d.core import BitMask32, CollisionNode, CollisionPolygon, Directional
 
 
 from polygons.custompolygon import CustomPolygon
-from collsiongroups import CollisionGroup
+from collisiongroups import CollisionGroup
 from enums.colors import Color
 
 

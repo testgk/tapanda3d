@@ -1,7 +1,7 @@
 from enums.colors import Color
 from panda3d.core import BitMask32, LVector3, NodePath
 
-from collsiongroups import CollisionGroup
+from collisiongroups import CollisionGroup
 
 
 class Part:

@@ -7,7 +7,7 @@ from entityloader import EntityLoader
 from enums.colors import Color
 
 from gameenv.lights import Lights
-from phyisics import globalClock
+from physics import globalClock
 from gameenv.picker import Picker
 from camera.camera import TerrainCamera
 from panda3d.bullet import BulletDebugNode, BulletWorld

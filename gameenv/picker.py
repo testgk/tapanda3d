@@ -1,6 +1,6 @@
 from panda3d.core import CollisionHandlerQueue, CollisionNode, CollisionRay, CollisionTraverser
 
-from collsiongroups import CollisionGroup
+from collisiongroups import CollisionGroup
 
 
 class Picker:

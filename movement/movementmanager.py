@@ -6,7 +6,7 @@ from entities.locatorMode import LocatorModes
 from movement.curve import CurveGenerator
 from movement.obstacledetector import ObstacleDetector
 from movement.towermovementmanager import TowerMovementManager
-from phyisics import globalClock
+from physics import globalClock
 from typing import TYPE_CHECKING
 
 from target import CustomTarget
