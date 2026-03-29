@@ -29,6 +29,22 @@ The GitHub Actions workflow automatically:
 2. Merges those changes into this **GitHub** repository
 3. Keeps both repositories in sync (GitLab → GitHub direction)
 
+### Manual Sync Script
+
+For local development, you can use the standalone sync script:
+
+```bash
+./sync_from_gitlab.sh
+```
+
+This script:
+- Configures the GitLab remote automatically
+- Fetches the latest changes from GitLab
+- Merges them into your current branch
+- Provides clear status messages during the sync process
+
+**Note:** After running the script, you'll need to manually push changes to GitHub if desired: `git push origin <branch-name>`
+
 ### Setup Notes
 
 - The workflow uses the default `GITHUB_TOKEN` for authentication. If your repository uses branch protection rules, you may need to configure a Personal Access Token (PAT) with appropriate permissions and add it as a repository secret.
