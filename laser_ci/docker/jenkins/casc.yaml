@@ -1,0 +1,32 @@
+jenkins:
+  systemMessage: "Laser CI Integration Jenkins Server"
+  numExecutors: 2
+  scmCheckoutRetryCount: 2
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+  slaveAgentPort: 50000
+
+
+unclassified:
+  location:
+    url: "${JENKINS_PUBLIC_URL}"
+    adminAddress: "admin@laser-ci.local"
+
+  mailer:
+    smtpHost: "localhost"
+    smtpPort: "25"
+    replyToAddress: "jenkins@laser-ci.local"
+
+  scmGit:
+    globalConfigName: "Laser CI Jenkins"
+    globalConfigEmail: "jenkins@laser-ci.local"

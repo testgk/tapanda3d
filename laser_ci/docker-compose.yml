@@ -1,0 +1,157 @@
+services:
+
+  postgres:
+    image: postgres:13
+    container_name: artifactory-postgres
+    restart: unless-stopped
+    networks:
+      - ci
+    env_file:
+      - docker/jfrog/jfrog.env.config
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  artifactory:
+    image: releases-docker.jfrog.io/jfrog/artifactory-oss:7.90.8
+    container_name: artifactory
+    restart: unless-stopped
+    networks:
+      - ci
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+    env_file:
+      - docker/jfrog/jfrog.env.config
+    environment:
+      - JF_SHARED_DATABASE_TYPE=postgresql
+      - JF_SHARED_DATABASE_DRIVER=org.postgresql.Driver
+      - JF_SHARED_DATABASE_URL=jdbc:postgresql://postgres:5432/artifactory
+      - JF_SHARED_DATABASE_USERNAME=${POSTGRES_USER}
+      - JF_SHARED_DATABASE_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - artifactory-data:/var/opt/jfrog/artifactory
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/artifactory/api/system/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+
+  docker-registry:
+    image: registry:2
+    container_name: docker-registry
+    restart: unless-stopped
+    networks:
+      ci:
+        aliases:
+          - docker-registry
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+
+  jenkins-custom:
+    build:
+      context: .
+      dockerfile: docker/jenkins/Dockerfile
+    container_name: jenkins-custom
+    restart: unless-stopped
+    networks:
+      ci:
+        aliases:
+          - jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - ./my-jenkins-data:/var/jenkins_home:rw
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./certs/:/usr/local/share/ca-certificates/
+    env_file:
+      - docker/jenkins/jenkins.config.env
+    environment:
+      - JENKINS_ADMIN_ID=admin
+      - JENKINS_JOB_NAME=laser-integration-tests
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  ollama:
+    build:
+      context: docker/ollama
+      dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-localhost,127.0.0.1}
+    container_name: ollama
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - NO_PROXY=${NO_PROXY:-localhost,127.0.0.1}
+    restart: unless-stopped
+    networks:
+      - ci
+    volumes:
+      - ollama-data:/root/.ollama
+    entrypoint: >
+      /bin/sh -c "
+      ollama serve &
+      sleep 5 &&
+      ollama list | grep llama3.2:1b || ollama pull llama3.2:1b &&
+      wait
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+  gitlab-runner:
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner-1
+    restart: unless-stopped
+    networks:
+      - ci
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker/gitlab-runner/config.toml:/etc/gitlab-runner/config.toml
+      - ./certs/:/etc/gitlab-runner/certs/
+      - ./scripts:/scripts
+    depends_on:
+      jenkins-custom:
+        condition: service_healthy
+
+networks:
+  ci:
+    name: ci
+    external: false
+
+volumes:
+  postgres-data:
+    driver: local
+  artifactory-data:
+    driver: local
+  registry-data:
+    driver: local
+  ollama-data:
+    driver: local

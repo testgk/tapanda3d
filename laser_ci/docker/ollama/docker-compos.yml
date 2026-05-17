@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  ollama:
+    build: .
+    container_name: ollama-server
+
+    ports:
+      - "11434:11434"
+
+    volumes:
+      - ollama_data:/root/.ollama
+
+    environment:
+      HTTP_PROXY: "http://GADKL@rafael.co.il:GOst%23444@10.27.201.39:8080"
+      HTTPS_PROXY: "http://GADKL@rafael.co.il:GOst%23444@10.27.201.39:8080"
+
+    entrypoint: >
+      /bin/sh -c "
+      ollama serve &
+      sleep 5 &&
+      ollama list | grep llama3.2:1b || ollama pull llama3.2:1b &&
+      wait
+      "
+
+    restart: unless-stopped
+
+volumes:
+  ollama_data:

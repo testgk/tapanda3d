@@ -1,0 +1,25 @@
+stages:
+  - images
+  - build
+  - integrate
+  - deploy
+
+# Rebuilds the CI builder image when the Dockerfile or certs change.
+build_ci_image:
+  stage: images
+  image: docker:latest
+  tags:
+    - linux
+    - docker
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      changes:
+        - docker/ci-builder/Dockerfile
+        - certs/**
+    - when: never
+  script:
+    - docker build -t "$CI_BUILDER_IMAGE" -f docker/ci-builder/Dockerfile .
+    - docker push "$CI_BUILDER_IMAGE"
+
+include:
+  - local: pipelines/.gitlab-ci-simplified.yml

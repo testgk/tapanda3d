@@ -1,0 +1,249 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job">
+  <description>Laser CI integration tests triggered from GitLab</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>GITLAB_ARTIFACT_URL</name>
+          <description>GitLab API URL to download the artifacts zip</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GITLAB_ACCESS_TOKEN</name>
+          <description>GitLab token with read_api scope</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GITLAB_PIPELINE_ID</name>
+          <description>Source GitLab pipeline ID</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GITLAB_PROJECT_NAME</name>
+          <description>Source GitLab project name</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TRIGGERED_BY</name>
+          <description>Component that triggered the pipeline (lasergun | lasershark | laserwhale | brain_implant)</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GITLAB_COMMIT_SHA</name>
+          <description>Git commit SHA that triggered this build</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>GITLAB_BRANCH</name>
+          <description>Git branch that triggered this build</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers/>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+    <script><![CDATA[pipeline {
+    agent any
+
+    parameters {
+        string(name: 'GITLAB_ARTIFACT_URL',  description: 'GitLab API URL to download the artifacts zip')
+        string(name: 'GITLAB_ACCESS_TOKEN',  description: 'GitLab token with read_api scope')
+        string(name: 'GITLAB_PIPELINE_ID',   defaultValue: '', description: 'Source GitLab pipeline ID')
+        string(name: 'GITLAB_PROJECT_NAME',  defaultValue: '', description: 'Source GitLab project name')
+        string(name: 'TRIGGERED_BY',         defaultValue: '', description: 'Component that triggered the pipeline')
+        string(name: 'GITLAB_COMMIT_SHA',    defaultValue: '', description: 'Git commit SHA that triggered this build')
+        string(name: 'GITLAB_BRANCH',        defaultValue: '', description: 'Git branch that triggered this build')
+    }
+
+    environment {
+        BUILD_INFO = "Pipeline: ${GITLAB_PIPELINE_ID} | Branch: ${GITLAB_BRANCH} | Commit: ${GITLAB_COMMIT_SHA}"
+    }
+
+    stages {
+        stage('Validate parameters') {
+            steps {
+                script {
+                    echo "Build info: ${BUILD_INFO}"
+                    echo "Triggered by: ${TRIGGERED_BY ?: 'full pipeline'}"
+                    if (!params.GITLAB_ARTIFACT_URL) {
+                        error('GITLAB_ARTIFACT_URL is required')
+                    }
+                    if (!params.GITLAB_ACCESS_TOKEN) {
+                        error('GITLAB_ACCESS_TOKEN is required')
+                    }
+                }
+            }
+        }
+
+        stage('Checkout tests') {
+            steps {
+                sh '''
+                    echo "Cloning laser_ci tests from branch: ${GITLAB_BRANCH}"
+                    rm -rf laser_ci_src
+                    git clone -b ${GITLAB_BRANCH} --depth 1 https://gitlab.com/aqualaser/laser_ci.git laser_ci_src
+                    cp -r laser_ci_src/tests .
+                    cp -r laser_ci_src/scripts .
+                '''
+            }
+        }
+
+        stage('Download artifacts') {
+            steps {
+                sh '''
+                    rm -rf *.zip install
+                    curl --fail -L \
+                         --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
+                         --output artifacts.zip \
+                         "${GITLAB_ARTIFACT_URL}"
+                    unzip -q -o artifacts.zip
+                    echo "Artifact contents:"
+                    find install/ -type f | sort
+                '''
+            }
+        }
+
+        stage('Validate artifacts') {
+            steps {
+                script {
+                    sh '''
+                        if [ ! -d "install/lib" ]; then
+                            echo "install/lib not found"; exit 1
+                        fi
+                        if ! find install/ -name "*.cmake" | grep -q .; then
+                            echo "No CMake config files found"; exit 1
+                        fi
+                        if ! find install/ -name "*.h" | grep -q .; then
+                            echo "No header files found"; exit 1
+                        fi
+                    '''
+                    def component = params.TRIGGERED_BY ?: ''
+                    if (component) {
+                        sh """
+                            if ! find install/ -name "*${component}*" | grep -q .; then
+                                echo "No artifacts found for component: ${component}"; exit 1
+                            fi
+                            echo "Artifacts validated for: ${component}"
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('LaserGun test suite') {
+            steps {
+                script {
+                    def marker = params.TRIGGERED_BY ? "-m ${params.TRIGGERED_BY}" : ''
+                    sh """
+                        mkdir -p test-results
+                        python3 -m pytest tests/laser_gun/ \
+                            ${marker} \
+                            --junitxml=test-results/lasergun-results.xml \
+                            --html=test-results/lasergun-report.html \
+                            --self-contained-html \
+                            -v || true
+                    """
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'test-results/lasergun-results.xml'
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'test-results',
+                        reportFiles: 'lasergun-report.html',
+                        reportName: 'LaserGun Test Report'
+                    ])
+                }
+            }
+        }
+
+        stage('Component integration tests') {
+            steps {
+                script {
+                    def component = params.TRIGGERED_BY ?: ''
+                    def filter = component ? "-k ${component}" : ''
+                    sh """
+                        python3 -m pytest tests/integration/ \
+                            ${filter} \
+                            --junitxml=test-results/component-results.xml \
+                            --html=test-results/component-report.html \
+                            --self-contained-html \
+                            -v
+                    """
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'test-results/component-results.xml'
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'test-results',
+                        reportFiles: 'component-report.html',
+                        reportName: 'Component Integration Test Report'
+                    ])
+                }
+            }
+        }
+
+        stage('Full ecosystem integration') {
+            steps {
+                sh '''
+                    python3 -m pytest tests/integration/test_integration.py \
+                        --junitxml=test-results/ecosystem-results.xml \
+                        --html=test-results/ecosystem-report.html \
+                        --self-contained-html \
+                        -v
+                '''
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'test-results/ecosystem-results.xml'
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'test-results',
+                        reportFiles: 'ecosystem-report.html',
+                        reportName: 'Ecosystem Integration Report'
+                    ])
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo "SUCCESS: all tests passed | ${BUILD_INFO}"
+        }
+        failure {
+            echo "FAILURE: tests failed | ${BUILD_INFO}"
+        }
+        unstable {
+            echo "UNSTABLE: some tests failed | ${BUILD_INFO}"
+        }
+    }
+}]]></script>
+    <sandbox>true</sandbox>
+  </definition>
+  <disabled>false</disabled>
+  <triggers/>
+</flow-definition>

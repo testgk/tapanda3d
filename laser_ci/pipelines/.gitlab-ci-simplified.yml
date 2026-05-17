@@ -1,0 +1,116 @@
+variables:
+  PACKAGE_VERSION: "1.0.0"
+  CI_BUILDER_IMAGE: "localhost:5000/laser-ci-builder:latest"
+  JFROG_DOCKER_REGISTRY: "localhost:8082"
+  JENKINS_URL: "http://host.docker.internal:8080"
+  JENKINS_USER: "admin"
+  JENKINS_JOB_NAME: "laser-integration-tests"
+
+# =========================================================================
+# COMMON TEMPLATES
+# =========================================================================
+
+.base_job:
+  image: $CI_BUILDER_IMAGE
+  tags:
+    - linux
+    - docker
+  variables:
+    GIT_SSL_NO_VERIFY: "true"
+
+# Build template: clone, build, and install to local install/.
+# No registry publish yet — set PRODUCT to the project name.
+# Downloads dependencies from registry when TRIGGERED_BY matches PRODUCT,
+# meaning this product's deps were not freshly built in this pipeline.
+.build_product:
+  extends: .base_job
+  stage: build
+  artifacts:
+    paths:
+      - install/
+    expire_in: 1 day
+  script:
+    - if [ "$TRIGGERED_BY" = "$PRODUCT" ]; then python3 scripts/py/download.py $PRODUCT; fi
+    - python3 scripts/py/publish.py $PRODUCT --skip-publish
+
+# Deploy: push all built artifacts to JFrog Artifactory in one job.
+# Artifacts come from integration_tests which has the full install/.
+deploy:
+  extends: .base_job
+  stage: deploy
+  needs:
+    - job: integration_tests
+  variables:
+    JFROG_URL: "http://artifactory:8082"
+    JFROG_REPO: "laser-ci-generic"
+  rules:
+    - if: $TRIGGERED_BY == "lasershark"
+    - if: $TRIGGERED_BY == "lasergun"
+    - if: $TRIGGERED_BY == null
+  script:
+    - for cfg in configs/*.ini; do python3 scripts/py/push_to_jfrog.py "$(basename $cfg .ini)"; done
+
+# =========================================================================
+# STAGE 1 - BUILD
+#
+# TRIGGERED_BY=lasergun   -> rebuild lasergun + lasershark
+# TRIGGERED_BY=lasershark -> skip lasergun (use registry), rebuild lasershark
+# (no variable)           -> full run: rebuild lasergun + lasershark
+# =========================================================================
+
+build_lasergun:
+  extends: .build_product
+  variables:
+    PRODUCT: lasergun
+  rules:
+    - if: $TRIGGERED_BY == "lasergun"
+    - if: $TRIGGERED_BY == null
+
+build_lasershark:
+  extends: .build_product
+  variables:
+    PRODUCT: lasershark
+  needs:
+    - job: build_lasergun
+      optional: true
+  rules:
+    - if: $TRIGGERED_BY == "lasershark"
+    - if: $TRIGGERED_BY == "lasergun"
+    - if: $TRIGGERED_BY == null
+
+
+# =========================================================================
+# STAGE 2 - INTEGRATE
+#
+# Final integration build using pipeline artifacts from the build stage.
+# Nothing is published to the registry until this passes.
+# =========================================================================
+
+integration_tests:
+  extends: .base_job
+  stage: integrate
+  needs:
+    - job: build_lasershark
+  artifacts:
+    paths:
+      - install/
+    expire_in: 30 days
+  rules:
+    - if: $TRIGGERED_BY == "lasershark"
+    - if: $TRIGGERED_BY == "lasergun"
+    - if: $TRIGGERED_BY == null
+  script:
+    - python3 scripts/py/build.py $TRIGGERED_BY
+    - |
+      BUILD_JOB_ID=$(curl -sf --header "PRIVATE-TOKEN: $GITLAB_ACCESS_TOKEN" \
+        "$CI_SERVER_URL/api/v4/projects/$CI_PROJECT_ID/pipelines/$CI_PIPELINE_ID/jobs" \
+        | python3 -c "import sys,json; jobs=json.load(sys.stdin); print(next(j['id'] for j in jobs if j['name']=='build_lasershark' and j['status']=='success'))")
+      CI_JOB_ID=$BUILD_JOB_ID python3 scripts/py/trigger_jenkins.py
+
+
+# =========================================================================
+# STAGE 3 - DEPLOY
+#
+# Publish to the registry only after integration passes.
+# =========================================================================
+

@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    parameters {
+        string(name: 'GITLAB_ARTIFACT_URL',  description: 'GitLab API URL to download the artifacts zip')
+        string(name: 'GITLAB_ACCESS_TOKEN',  description: 'GitLab token with read_api scope')
+        string(name: 'GITLAB_PIPELINE_ID',   defaultValue: '', description: 'Source GitLab pipeline ID')
+        string(name: 'GITLAB_PROJECT_NAME',  defaultValue: '', description: 'Source GitLab project name')
+        string(name: 'TRIGGERED_BY',         defaultValue: '', description: 'Component that triggered the pipeline')
+    }
+
+    stages {
+        stage('Checkout tests') {
+            steps {
+                sh '''
+                    git clone --depth 1 https://gitlab.com/aqualaser/laser_ci.git laser_ci_src
+                    cp -r laser_ci_src/tests .
+                    cp -r laser_ci_src/scripts .
+                '''
+            }
+        }
+
+        stage('Download artifacts') {
+            steps {
+                sh '''
+                    echo "Downloading artifacts from GitLab..."
+                    curl --fail -L \
+                         --header "PRIVATE-TOKEN: ${GITLAB_ACCESS_TOKEN}" \
+                         --output artifacts.zip \
+                         "${GITLAB_ARTIFACT_URL}"
+                    unzip -q artifacts.zip
+                    echo "Artifact contents:"
+                    find install/ -type f | sort
+                '''
+            }
+        }
+
+        stage('Run integration tests') {
+            steps {
+                sh '''
+                    python3 -m pip install pytest --quiet
+                    python3 tests/integration/run_tests.py
+                '''
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'tests/integration/results/integration-results.xml'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo "Integration tests passed — GitLab pipeline ${GITLAB_PIPELINE_ID} can proceed to deploy."
+        }
+        failure {
+            echo "Integration tests FAILED — GitLab pipeline ${GITLAB_PIPELINE_ID} will be blocked."
+        }
+    }
+}

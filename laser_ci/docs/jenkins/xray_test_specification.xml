@@ -1,0 +1,730 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="LaserShark Component Tests" tests="4" time="0">
+    <testcase name="test_lasershark_initialization" time="0">
+      <summary>Test LaserShark Initialization</summary>
+      <description>Test that LaserShark can be initialized - verifies basic component setup and instantiation</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>unit_test</label>
+        <label>lasershark</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Import LaserShark class</step_description>
+          <expected_result>LaserShark class imports successfully without errors</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Create LaserShark instance</step_description>
+          <expected_result>Instance created without exceptions</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify instance attributes</step_description>
+          <expected_result>All required attributes are initialized</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_lasershark_build" time="0">
+      <summary>Test LaserShark Build Process</summary>
+      <description>Test that LaserShark builds successfully - validates build process and artifact generation</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>build_test</label>
+        <label>lasershark</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Navigate to lasershark source directory</step_description>
+          <expected_result>Source directory exists and is accessible</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Execute build command (cmake/make)</step_description>
+          <expected_result>Build completes without errors</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify build artifacts</step_description>
+          <expected_result>Library files (.a/.lib/.dll) are generated</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_lasershark_dependencies" time="0">
+      <summary>Test LaserShark Dependencies</summary>
+      <description>Test that LaserShark dependencies are available - checks for lasergun and brain_implant artifacts</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>dependency_test</label>
+        <label>lasershark</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Check for lasergun library artifact</step_description>
+          <expected_result>liblasergun.a exists in install directory</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Check for brain_implant library artifact</step_description>
+          <expected_result>libbrain_implant.a exists in install directory</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify library versions</step_description>
+          <expected_result>Both libraries have valid version information</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_lasershark_integration" time="0">
+      <summary>Test LaserShark Integration</summary>
+      <description>Integration test for LaserShark with other components - validates full system integration</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>integration_test</label>
+        <label>lasershark</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Load all dependent libraries</step_description>
+          <expected_result>All libraries load without conflicts</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Create integrated LaserShark instance</step_description>
+          <expected_result>Instance created with all dependencies</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Execute full integration workflow</step_description>
+          <expected_result>All integration steps complete successfully</expected_result>
+        </step>
+      </steps>
+    </testcase>
+  </testsuite>
+
+  <testsuite name="Laser API Tests" tests="1" time="0">
+    <testcase name="test_generic_api" time="0">
+      <summary>Test Generic Laser Creature API</summary>
+      <description>Test the generic laser creature API - validates API wrapper functionality and creature creation</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>api_test</label>
+        <label>laser_api</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Import LaserCreatureWrapper class</step_description>
+          <expected_result>Class imports successfully</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Create wrapper instance with DLL path</step_description>
+          <expected_result>Wrapper created without errors</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Create laser shark creature</step_description>
+          <expected_result>Shark creature created with specified parameters</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Verify creature properties</step_description>
+          <expected_result>All creature attributes match input parameters</expected_result>
+        </step>
+      </steps>
+    </testcase>
+  </testsuite>
+
+  <testsuite name="LaserWhale Component Tests" tests="4" time="0">
+    <testcase name="test_laserwhale_initialization" time="0">
+      <summary>Test LaserWhale Initialization</summary>
+      <description>Test that LaserWhale can be initialized - verifies aquatic creature setup and sonar capabilities</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>unit_test</label>
+        <label>laserwhale</label>
+        <label>aquatic</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Import LaserWhale class from creatures module</step_description>
+          <expected_result>LaserWhale class imports successfully</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Create LaserWhale instance with sonar parameters</step_description>
+          <expected_result>Instance created with sonar frequency and range settings</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify whale-specific attributes (sonar, migration patterns)</step_description>
+          <expected_result>All aquatic and whale attributes properly initialized</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_laserwhale_sonar_system" time="0">
+      <summary>Test LaserWhale Sonar System</summary>
+      <description>Test the integrated sonar system for navigation and communication</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>functional_test</label>
+        <label>laserwhale</label>
+        <label>sonar</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Initialize sonar system with frequency range</step_description>
+          <expected_result>Sonar system activates within specified frequency range</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test echo location functionality</step_description>
+          <expected_result>Echo location detects objects within range</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify communication signals between whales</step_description>
+          <expected_result>Communication signals transmitted and received correctly</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_laserwhale_migration_tracking" time="0">
+      <summary>Test LaserWhale Migration Tracking</summary>
+      <description>Test GPS and migration pattern tracking capabilities</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>integration_test</label>
+        <label>laserwhale</label>
+        <label>gps</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Enable GPS tracking system</step_description>
+          <expected_result>GPS coordinates captured and logged</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Record migration path data</step_description>
+          <expected_result>Migration patterns stored with timestamps</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Analyze migration efficiency</step_description>
+          <expected_result>Migration data processed for optimization insights</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_laserwhale_deep_dive_capability" time="0">
+      <summary>Test LaserWhale Deep Dive Capability</summary>
+      <description>Test pressure resistance and deep-sea operation capabilities</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>stress_test</label>
+        <label>laserwhale</label>
+        <label>pressure_test</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Simulate increasing water pressure</step_description>
+          <expected_result>Systems maintain functionality under pressure</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test depth tolerance limits</step_description>
+          <expected_result>Depth sensors accurate within tolerance</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify emergency ascent procedures</step_description>
+          <expected_result>Safe ascent initiated when pressure thresholds exceeded</expected_result>
+        </step>
+      </steps>
+    </testcase>
+  </testsuite>
+
+  <testsuite name="LaserGun Component Tests" tests="5" time="0">
+    <testcase name="test_lasergun_weapon_systems" time="0">
+      <summary>Test LaserGun Weapon Systems</summary>
+      <description>Test laser weapon functionality, power management, and targeting systems</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>functional_test</label>
+        <label>lasergun</label>
+        <label>weapon_system</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Initialize laser weapon system</step_description>
+          <expected_result>Weapon system powers up and calibrates</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test power charging sequence</step_description>
+          <expected_result>Laser charges to full power within time limits</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify targeting system accuracy</step_description>
+          <expected_result>Targeting system locks on within specified accuracy</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Execute test firing sequence</step_description>
+          <expected_result>Laser discharge occurs with proper energy output</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_lasergun_power_management" time="0">
+      <summary>Test LaserGun Power Management</summary>
+      <description>Test battery life, power efficiency, and thermal management</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>performance_test</label>
+        <label>lasergun</label>
+        <label>power_management</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Monitor battery charge levels</step_description>
+          <expected_result>Battery level accurately reported</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test power consumption during operation</step_description>
+          <expected_result>Power usage within expected parameters</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify thermal dissipation</step_description>
+          <expected_result>Temperature stays within safe operating range</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Test low power mode activation</step_description>
+          <expected_result>System enters low power mode when battery critical</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_lasergun_safety_systems" time="0">
+      <summary>Test LaserGun Safety Systems</summary>
+      <description>Test safety interlocks, authentication, and fail-safe mechanisms</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>safety_test</label>
+        <label>lasergun</label>
+        <label>critical</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Test biometric authentication</step_description>
+          <expected_result>Weapon only activates with authorized user</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Verify safety interlocks</step_description>
+          <expected_result>Safety mechanisms prevent accidental discharge</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Test emergency shutdown</step_description>
+          <expected_result>System shuts down immediately when emergency triggered</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Verify tamper detection</step_description>
+          <expected_result>Tamper attempts detected and logged</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_lasergun_calibration" time="0">
+      <summary>Test LaserGun Calibration</summary>
+      <description>Test weapon calibration procedures and accuracy verification</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>calibration_test</label>
+        <label>lasergun</label>
+        <label>accuracy</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Initiate calibration sequence</step_description>
+          <expected_result>Calibration routine starts successfully</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test alignment verification</step_description>
+          <expected_result>Laser alignment within specification</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify power output calibration</step_description>
+          <expected_result>Power output matches calibration settings</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Save calibration data</step_description>
+          <expected_result>Calibration settings persisted successfully</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_lasergun_maintenance_mode" time="0">
+      <summary>Test LaserGun Maintenance Mode</summary>
+      <description>Test diagnostic and maintenance procedures</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>maintenance_test</label>
+        <label>lasergun</label>
+        <label>diagnostic</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Enter maintenance mode</step_description>
+          <expected_result>System enters diagnostic mode</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Run system diagnostics</step_description>
+          <expected_result>All subsystems report status</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Test component health checks</step_description>
+          <expected_result>Component status accurately assessed</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Exit maintenance mode</step_description>
+          <expected_result>System returns to normal operation</expected_result>
+        </step>
+      </steps>
+    </testcase>
+  </testsuite>
+
+  <testsuite name="Brain Implant Component Tests" tests="4" time="0">
+    <testcase name="test_brain_implant_neural_interface" time="0">
+      <summary>Test Brain Implant Neural Interface</summary>
+      <description>Test neural signal processing and brain-computer interface functionality</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>functional_test</label>
+        <label>brain_implant</label>
+        <label>neural_interface</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Initialize neural interface</step_description>
+          <expected_result>Neural pathways established successfully</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test signal acquisition</step_description>
+          <expected_result>Brain signals captured and processed</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify signal interpretation</step_description>
+          <expected_result>Neural signals correctly interpreted</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Test feedback loop</step_description>
+          <expected_result>System responds to neural commands</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_brain_implant_memory_enhancement" time="0">
+      <summary>Test Brain Implant Memory Enhancement</summary>
+      <description>Test memory augmentation and cognitive enhancement features</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>performance_test</label>
+        <label>brain_implant</label>
+        <label>memory</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Activate memory enhancement module</step_description>
+          <expected_result>Memory systems engage successfully</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test data storage and retrieval</step_description>
+          <expected_result>Information stored and recalled accurately</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify cognitive processing speed</step_description>
+          <expected_result>Processing speed improved within parameters</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Test memory backup functionality</step_description>
+          <expected_result>Memory data backed up securely</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_brain_implant_security_protocols" time="0">
+      <summary>Test Brain Implant Security Protocols</summary>
+      <description>Test data encryption, access control, and privacy protection</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>security_test</label>
+        <label>brain_implant</label>
+        <label>encryption</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Test data encryption</step_description>
+          <expected_result>Neural data encrypted end-to-end</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Verify access control mechanisms</step_description>
+          <expected_result>Unauthorized access prevented</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Test privacy filters</step_description>
+          <expected_result>Sensitive data protected from external access</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Verify secure communication channels</step_description>
+          <expected_result>All communications encrypted and authenticated</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_brain_implant_system_integration" time="0">
+      <summary>Test Brain Implant System Integration</summary>
+      <description>Test integration with other laser systems and external devices</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>integration_test</label>
+        <label>brain_implant</label>
+        <label>system_integration</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Connect to laser network</step_description>
+          <expected_result>Network connection established securely</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test communication with laser creatures</step_description>
+          <expected_result>Commands sent and responses received</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify lasergun control interface</step_description>
+          <expected_result>Laser weapon controlled via neural commands</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Test multi-device coordination</step_description>
+          <expected_result>Multiple systems coordinated seamlessly</expected_result>
+        </step>
+      </steps>
+    </testcase>
+  </testsuite>
+
+  <testsuite name="Cross-Component Integration Tests" tests="3" time="0">
+    <testcase name="test_full_laser_ecosystem_integration" time="0">
+      <summary>Test Full Laser Ecosystem Integration</summary>
+      <description>Test complete integration of all laser components working together</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>integration_test</label>
+        <label>full_system</label>
+        <label>critical</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Initialize all laser components</step_description>
+          <expected_result>All components start up successfully</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Establish neural control network</step_description>
+          <expected_result>Brain implant connects to all systems</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Test coordinated operations</step_description>
+          <expected_result>Shark and whale respond to commands</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Execute full mission scenario</step_description>
+          <expected_result>All systems work together seamlessly</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_laser_system_performance" time="0">
+      <summary>Test Laser System Performance</summary>
+      <description>Test overall system performance under various conditions</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>performance_test</label>
+        <label>benchmark</label>
+        <label>load_test</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Run performance baseline tests</step_description>
+          <expected_result>System performance within expected parameters</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test under high load conditions</step_description>
+          <expected_result>System maintains performance under stress</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Monitor resource utilization</step_description>
+          <expected_result>Resource usage stays within limits</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Verify system stability</step_description>
+          <expected_result>No crashes or performance degradation</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_laser_system_error_handling" time="0">
+      <summary>Test Laser System Error Handling</summary>
+      <description>Test system resilience and error recovery mechanisms</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>error_handling</label>
+        <label>resilience</label>
+        <label>recovery</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Simulate component failures</step_description>
+          <expected_result>System detects and reports failures</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Test automatic recovery procedures</step_description>
+          <expected_result>Failed components recover automatically</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify graceful degradation</step_description>
+          <expected_result>System continues operation with reduced functionality</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Test emergency shutdown procedures</step_description>
+          <expected_result>All systems shut down safely</expected_result>
+        </step>
+      </steps>
+    </testcase>
+  </testsuite>
+
+  <testsuite name="CI/CD Pipeline Tests" tests="2" time="0">
+    <testcase name="test_ci_pipeline_execution" time="0">
+      <summary>Test CI Pipeline Execution</summary>
+      <description>Test automated build, test, and deployment pipeline</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>ci_cd</label>
+        <label>pipeline_test</label>
+        <label>automation</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Trigger CI pipeline manually</step_description>
+          <expected_result>Pipeline starts successfully</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Monitor build stage completion</step_description>
+          <expected_result>All components build without errors</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify test execution</step_description>
+          <expected_result>All tests run and pass</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Check deployment artifacts</step_description>
+          <expected_result>Deployment packages created successfully</expected_result>
+        </step>
+      </steps>
+    </testcase>
+
+    <testcase name="test_xray_integration_pipeline" time="0">
+      <summary>Test Xray Integration Pipeline</summary>
+      <description>Test automated test result reporting to Jira Xray</description>
+      <labels>
+        <label>laser_tests</label>
+        <label>xray_integration</label>
+        <label>reporting</label>
+        <label>automation</label>
+      </labels>
+      <steps>
+        <step>
+          <step_number>1</step_number>
+          <step_description>Generate test results in Xray format</step_description>
+          <expected_result>Test results formatted correctly</expected_result>
+        </step>
+        <step>
+          <step_number>2</step_number>
+          <step_description>Execute Xray CLI import</step_description>
+          <expected_result>Test results uploaded to Xray</expected_result>
+        </step>
+        <step>
+          <step_number>3</step_number>
+          <step_description>Verify test execution creation</step_description>
+          <expected_result>Test execution appears in Jira</expected_result>
+        </step>
+        <step>
+          <step_number>4</step_number>
+          <step_description>Check test case associations</step_description>
+          <expected_result>Test results linked to correct test cases</expected_result>
+        </step>
+      </steps>
+    </testcase>
+  </testsuite>
+</testsuites>
